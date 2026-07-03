@@ -1,0 +1,16 @@
+{
+    "name": "Whispers.Gameplay",
+    "rootNamespace": "",
+    "references": [
+        "GUID:85b9aa1433d42104eb067f248a97958c"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
