@@ -46,29 +46,22 @@ O jogador está isolado em uma casa, em um mundo distópico/pós-apocalíptico, 
 
 <br>
 
-## 🔁 Estrutura Principal
+## 📖 Narrativa
 
-O jogo funciona em ciclos de **Dia e Noite**.
+O mundo foi destruído ou profundamente alterado por experimentos militares que misturaram tecnologia e corpos humanos.
 
-### ☀️ Durante o Dia
+Esses experimentos criaram criaturas violentas e instáveis.
 
-O jogador pode:
+A história não é contada de forma direta. O jogador descobre fragmentos através de:
 
-- Explorar áreas externas  
-- Coletar recursos  
-- Encontrar pistas narrativas  
-- Se preparar para a noite  
+- Objetos  
+- Documentos  
+- Transmissões de rádio  
+- Mudanças no ambiente  
+- Sons  
+- Pistas visuais  
 
-### 🌑 Durante a Noite
-
-O jogador deve:
-
-- Defender a casa  
-- Escutar sinais sonoros  
-- Administrar recursos limitados  
-- Lidar com múltiplas ameaças simultâneas  
-
-> O que você faz durante o dia influencia diretamente suas chances de sobreviver à noite.
+A narrativa é construída gradualmente pelo próprio jogador.
 
 <br>
 
@@ -96,28 +89,34 @@ A narrativa é fragmentada, focada em:
 O medo não vem de jumpscares excessivos, mas de:
 
 - Sons estranhos  
-- Recursos acabando  
 - Ameaças simultâneas  
 - Sensação de perda de controle  
 
 <br>
 
-## 📖 Narrativa
+## 🔁 Estrutura Principal
 
-O mundo foi destruído ou profundamente alterado por experimentos militares que misturaram tecnologia e corpos humanos.
+O jogo funciona em ciclos de **Dia e Noite**.
 
-Esses experimentos criaram criaturas violentas e instáveis.
+### ☀️ Durante o Dia
 
-A história não é contada de forma direta. O jogador descobre fragmentos através de:
+O jogador pode:
 
-- Objetos  
-- Documentos  
-- Transmissões de rádio  
-- Mudanças no ambiente  
-- Sons  
-- Pistas visuais  
+- Explorar áreas externas  
+- Coletar recursos  
+- Encontrar pistas narrativas  
+- Se preparar para a noite  
 
-A narrativa é construída gradualmente pelo próprio jogador.
+### 🌑 Durante a Noite
+
+O jogador deve:
+
+- Defender a casa  
+- Escutar sinais sonoros  
+- Administrar recursos limitados  
+- Lidar com múltiplas ameaças simultâneas  
+
+> O que você faz durante o dia influencia diretamente suas chances de sobreviver à noite.
 
 <br>
 
