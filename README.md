@@ -11,15 +11,38 @@
 
 O jogo utiliza uma perspectiva de **primeira pessoa simulada**, com **telas fixas 2D** e interação baseada em **hotspots clicáveis**.
 
-A proposta não é focada em combate direto, mas em:
-
-- observação  
-- preparação  
-- escassez de recursos  
-- incerteza  
-- tomada de decisão sob pressão  
-
 O jogador está isolado em uma casa, em um mundo distópico/pós-apocalíptico, onde experimentos militares deram origem a entidades híbridas entre **corpos humanos e máquinas**.
+
+<br>
+
+## 📁 Estrutura de Pastas do Projeto
+
+```
+├── _Project/                      ◄ (Prefixo para separar de Assets externos)
+│   ├── Audio/
+│   ├── Art/                       ◄ (Modelos, texturas, shaders VHS, UI sprites)
+│   ├── Scenes/
+│   │   ├── Boot.unity             ◄ (Inicializa serviços globais)
+│   │   ├── MainMenu.unity
+│   │   └── Gameplay_House.unity
+│   ├── ScriptableObjects/
+│   │   ├── Events/
+│   │   ├── Variables/
+│   │   └── ViewNodes/
+│   └── Scripts/
+│       ├── Core/                  ◄ [Whispers.Core.asmdef]
+│       │   ├── ServiceLocator/
+│       │   ├── Events/
+│       │   ├── Variables/
+│       │   └── Services/
+│       ├── Gameplay/              ◄ [Whispers.Gameplay.asmdef]
+│       │   ├── Entities/          ◄ (Predator, Voyeur, Exhauster, Tricker)
+│       │   ├── House/             ◄ (Portas, Lampião, Hotspots)
+│       │   └── Player/            ◄ (Inventário, Interação)
+│       └── UI/                    ◄ [Whispers.UI.asmdef]
+│           ├── HUD/
+│           └── Menus/
+```
 
 <br>
 
@@ -138,37 +161,3 @@ Quatro entidades principais pressionam o jogador de formas diferentes:
 - Atua no **quarto**
 - Presença mais psicológica e incerta
 - Exige investigação e atenção gradual
-
-As entidades competem pelo tempo e atenção do jogador.  
-Cuidar de uma ameaça pode deixar outra vulnerável.
-
-<br>
-
-## 📁 Estrutura de Pastas do Projeto
-
-```
-├── _Project/                      ◄ (Prefixo para separar de Assets externos)
-│   ├── Audio/
-│   ├── Art/                       ◄ (Modelos, texturas, shaders VHS, UI sprites)
-│   ├── Scenes/
-│   │   ├── Boot.unity             ◄ (Inicializa serviços globais)
-│   │   ├── MainMenu.unity
-│   │   └── Gameplay_House.unity
-│   ├── ScriptableObjects/
-│   │   ├── Events/
-│   │   ├── Variables/
-│   │   └── ViewNodes/
-│   └── Scripts/
-│       ├── Core/                  ◄ [Whispers.Core.asmdef]
-│       │   ├── ServiceLocator/
-│       │   ├── Events/
-│       │   ├── Variables/
-│       │   └── Services/
-│       ├── Gameplay/              ◄ [Whispers.Gameplay.asmdef]
-│       │   ├── Entities/          ◄ (Predator, Voyeur, Exhauster, Tricker)
-│       │   ├── House/             ◄ (Portas, Lampião, Hotspots)
-│       │   └── Player/            ◄ (Inventário, Interação)
-│       └── UI/                    ◄ [Whispers.UI.asmdef]
-│           ├── HUD/
-│           └── Menus/
-```
