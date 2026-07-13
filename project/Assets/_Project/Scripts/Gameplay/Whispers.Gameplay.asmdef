@@ -1,8 +1,8 @@
 {
     "name": "Whispers.Gameplay",
-    "rootNamespace": "",
+    "rootNamespace": "Whispers.Gameplay",
     "references": [
-        "GUID:85b9aa1433d42104eb067f248a97958c"
+        "Whispers.Core"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

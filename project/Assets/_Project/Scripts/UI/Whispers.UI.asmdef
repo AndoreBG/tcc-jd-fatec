@@ -1,9 +1,9 @@
 {
     "name": "Whispers.UI",
-    "rootNamespace": "",
+    "rootNamespace": "Whispers.UI",
     "references": [
-        "GUID:85b9aa1433d42104eb067f248a97958c",
-        "GUID:7e0fde5766fab3942b26684f3e5a59ab"
+        "Whispers.Core",
+        "Whispers.Gameplay"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

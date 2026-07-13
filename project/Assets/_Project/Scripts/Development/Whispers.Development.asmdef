@@ -1,14 +1,20 @@
 {
-    "name": "Whispers.Core",
-    "rootNamespace": "Whispers.Core",
-    "references": [],
+    "name": "Whispers.Development",
+    "rootNamespace": "Whispers.Development",
+    "references": [
+        "Whispers.Core",
+        "Whispers.Gameplay",
+        "Whispers.UI"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [],
+    "defineConstraints": [
+        "UNITY_EDITOR"
+    ],
     "versionDefines": [],
     "noEngineReferences": false
 }
