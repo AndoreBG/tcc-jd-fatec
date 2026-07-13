@@ -1,0 +1,15 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7500a7e7fba32b419ad18768f2619c5, type: 3}
+  m_Name: EVT_Debug_Void
+  m_EditorClassIdentifier: Whispers.Core::Whispers.Core.Events.VoidEventChannelSO
+  _developerDescription: Evento criado para testar o sistema Services Driven
