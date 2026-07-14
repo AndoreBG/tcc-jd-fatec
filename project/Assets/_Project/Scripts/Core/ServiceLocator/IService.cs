@@ -1,17 +1,25 @@
 namespace Whispers.Core.ServiceLocator
 {
     /// <summary>
-    /// Interface base para qualquer serviço que possa ser registrado no Service Locator.
+    /// Contrato base para serviços controlados pelo ServiceLocator.
+    /// O ciclo de vida do serviço pertence ao Composition Root que o registra.
     /// </summary>
     public interface IService
     {
         /// <summary>
-        /// Chamado quando o serviço é registrado ou quando o jogo é iniciado.
+        /// Informa se o serviço concluiu sua inicialização.
+        /// </summary>
+        bool IsInitialized { get; }
+
+        /// <summary>
+        /// Inicializa recursos, inscrições e dependências do serviço.
+        /// Deve ser seguro chamar este método mais de uma vez.
         /// </summary>
         void Initialize();
 
         /// <summary>
-        /// Chamado para limpeza de memória e cancelamento de eventos ao encerrar.
+        /// Libera recursos e remove inscrições.
+        /// Deve ser seguro chamar este método mais de uma vez.
         /// </summary>
         void Dispose();
     }

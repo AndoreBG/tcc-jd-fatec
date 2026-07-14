@@ -1,42 +1,157 @@
 using UnityEngine;
-using Whispers.Core.ServiceLocator;
 
 namespace Whispers.Core.Services
 {
     /// <summary>
-    /// Serviço responsável pelo áudio do jogo, transições de tensão, 
-    /// chiados de rádio e efeitos VHS/Fita k7.
+    /// Implementação global inicial do sistema de áudio.
+    ///
+    /// Nesta etapa ele fornece apenas a infraestrutura fundamental.
+    /// O processamento analógico definitivo será implementado
+    /// posteriormente pelo Analog Audio Engine.
     /// </summary>
-    public class AudioService : MonoBehaviour, IService
+    [DisallowMultipleComponent]
+    public sealed class AudioService : MonoBehaviour, IAudioService
     {
-        [Header("Fontes de Áudio Globais")]
-        [SerializeField] private AudioSource _ambientSource;
-        [SerializeField] private AudioSource _sfxSource;
+        [Header("Fontes de áudio globais")]
+        [SerializeField]
+        private AudioSource ambientSource;
+
+        [SerializeField]
+        private AudioSource sfxSource;
+
+        public bool IsInitialized { get; private set; }
+
+        public bool IsVhsDistortionActive { get; private set; }
 
         public void Initialize()
         {
-            // Evita que este serviço seja destruído na troca de cenas (Day <-> Night)
-            DontDestroyOnLoad(gameObject);
-            Debug.Log("[AudioService] Inicializado. Sistema de som analógico pronto.");
+            if (IsInitialized)
+            {
+                return;
+            }
+
+            EnsureAudioSources();
+
+            IsVhsDistortionActive = false;
+            IsInitialized = true;
+
+            Debug.Log(
+                "[AudioService] Inicializado. Fontes globais de áudio prontas.",
+                this);
         }
 
-        public void PlaySfx(AudioClip clip, float volume = 1.0f)
+        public void PlaySfx(AudioClip clip, float volume = 1f)
         {
-            if (clip != null && _sfxSource != null)
+            if (!IsInitialized)
             {
-                _sfxSource.PlayOneShot(clip, volume);
+                Debug.LogWarning(
+                    "[AudioService] PlaySfx ignorado: serviço não inicializado.",
+                    this);
+
+                return;
             }
+
+            if (clip == null)
+            {
+                return;
+            }
+
+            if (sfxSource == null)
+            {
+                Debug.LogError(
+                    "[AudioService] A fonte de SFX não está disponível.",
+                    this);
+
+                return;
+            }
+
+            sfxSource.PlayOneShot(clip, Mathf.Clamp01(volume));
         }
 
         public void SetVHSDistortion(bool active)
         {
-            // Aqui podemos aplicar filtros low-pass/pitch wobble no ambient source!
-            Debug.Log($"[AudioService] Distorção VHS de áudio definida para: {active}");
+            if (!IsInitialized)
+            {
+                Debug.LogWarning(
+                    "[AudioService] SetVHSDistortion ignorado: " +
+                    "serviço não inicializado.",
+                    this);
+
+                return;
+            }
+
+            if (IsVhsDistortionActive == active)
+            {
+                return;
+            }
+
+            IsVhsDistortionActive = active;
+
+            // O processamento real será conectado posteriormente
+            // a um AudioMixer e aos filtros do Analog Audio Engine.
+            Debug.Log(
+                $"[AudioService] Estado da distorção VHS: {active}.",
+                this);
         }
 
         public void Dispose()
         {
-            // Limpeza ao encerrar
+            if (!IsInitialized)
+            {
+                return;
+            }
+
+            if (ambientSource != null)
+            {
+                ambientSource.Stop();
+                ambientSource.clip = null;
+            }
+
+            if (sfxSource != null)
+            {
+                sfxSource.Stop();
+            }
+
+            IsVhsDistortionActive = false;
+            IsInitialized = false;
+
+            Debug.Log("[AudioService] Finalizado.", this);
+        }
+
+        private void EnsureAudioSources()
+        {
+            if (ambientSource == null)
+            {
+                ambientSource = CreateAudioSource(loop: true);
+            }
+
+            if (sfxSource != null && sfxSource == ambientSource)
+            {
+                Debug.LogWarning(
+                    "[AudioService] Ambient e SFX utilizavam a mesma fonte. " +
+                    "Uma fonte exclusiva para SFX será criada.",
+                    this);
+
+                sfxSource = null;
+            }
+
+            if (sfxSource == null)
+            {
+                sfxSource = CreateAudioSource(loop: false);
+            }
+        }
+
+        private AudioSource CreateAudioSource(bool loop)
+        {
+            AudioSource source = gameObject.AddComponent<AudioSource>();
+
+            source.playOnAwake = false;
+            source.loop = loop;
+            source.spatialBlend = 0f;
+            source.volume = 1f;
+            source.pitch = 1f;
+
+            return source;
         }
     }
 }
