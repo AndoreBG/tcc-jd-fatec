@@ -100,3 +100,8 @@ project/InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /project/[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Editor Rich Presence plugin
+/project/.ERP*
+/project/[Aa]ssets/ERP.meta
+/project/[Aa]ssets/ERP/
