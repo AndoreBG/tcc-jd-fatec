@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Playables;
 using Whispers.Core.Events;
 using Whispers.Core.ServiceLocator;
 using Whispers.Core.Variables;
@@ -16,10 +15,16 @@ namespace Whispers.Core.GameLoop
     /// a lógica de fase vive nas classes de estado, e este serviço fica restrito a:
     /// - instanciar e manter os estados;
     /// - executar transições (com guarda contra reentrância);
+    /// - gerenciar o orçamento de ações do dia;
     /// - publicar transições em Event Channels;
     /// - refletir estado em Runtime Variables.
     ///
-    /// Criado e registrado proceduralmente pelo GameBootstrapper no GameObject [WHISPERS_CORE_SERVICES].
+    /// Dia: conta por AÇÕES, não por tempo. Quando ActionsRemaining zera, o dia
+    /// encerra automaticamente (Day → Night).
+    /// Noite: conta por tempo (NightState.Tick decrementa NightTimeRemaining).
+    ///
+    /// Criado e registrado proceduralmente pelo GameBootstrapper no GameObject
+    /// [WHISPERS_CORE_SERVICES] (DontDestroyOnLoad aplicado ao root).
     /// Consumidores resolvem <see cref="IGameLoopService"/>, nunca este tipo.
     /// </summary>
     [DisallowMultipleComponent]
@@ -29,9 +34,10 @@ namespace Whispers.Core.GameLoop
 
         // Padrões embutidos: usados quando o asset GameLoopConfigSO ainda não existe.
         // Permitem que a FSM rode imediatamente, sem assets, para testes rápidos.
+        private const int BakedDayActionLimit = 10;
+        private const int BakedStartingDay = 1;
         private const float BakedNightDuration = 120f;
         private const float BakedResolutionDuration = 2f;
-        private const int BakedStartingDay = 1;
         private const bool BakedAutoStart = false;
 
         private Dictionary<GamePhase, IGameLoopState> _states;
@@ -42,14 +48,18 @@ namespace Whispers.Core.GameLoop
         // Estado espelhado em Runtime Variables quando disponíveis.
         private int _currentDay;
         private float _nightTimeRemaining;
+        private int _dayActionLimit = BakedDayActionLimit;
+        private int _actionsRemaining;
 
         // Cache de configuração (carregada de Resources em Initialize).
         private GameLoopConfigSO _config;
         private ObservableIntSO _currentDayVar;
         private ObservableFloatSO _nightTimeRemainingVar;
+        private ObservableIntSO _actionsRemainingVar;
         private VoidEventChannelSO _onDayStarted;
         private VoidEventChannelSO _onNightStarted;
         private VoidEventChannelSO _onNightCompleted;
+        private VoidEventChannelSO _onActionsChanged;
         private float _nightDuration = BakedNightDuration;
         private float _resolutionDuration = BakedResolutionDuration;
         private int _startingDay = BakedStartingDay;
@@ -68,6 +78,13 @@ namespace Whispers.Core.GameLoop
 
         public float NightTimeRemaining => _nightTimeRemaining;
 
+        public int DayActionLimit => _dayActionLimit;
+
+        public int ActionsRemaining => _actionsRemaining;
+
+        public bool CanPerformAction =>
+            IsInitialized && _currentPhase == GamePhase.Day && _actionsRemaining > 0;
+
         // Superfície usada pelos estados (mesmo assembly: Whispers.Core).
         internal float NightDuration => _nightDuration;
         internal float ResolutionDuration => _resolutionDuration;
@@ -84,12 +101,15 @@ namespace Whispers.Core.GameLoop
 
             SetCurrentDay(0);
             SetNightTimeRemaining(0f);
+            SetActionsRemaining(0);
             _currentPhase = GamePhase.None;
             _currentState = null;
 
             IsInitialized = true;
 
-            Debug.Log("[GameLoopService] Inicializado.", this);
+            Debug.Log(
+                $"[GameLoopService] Inicializado. Orçamento de ações por dia: {_dayActionLimit}.",
+                this);
 
             if (_autoStart)
             {
@@ -115,6 +135,7 @@ namespace Whispers.Core.GameLoop
 
             SetNightTimeRemaining(0f);
             SetCurrentDay(0);
+            SetActionsRemaining(0);
             _currentPhase = GamePhase.None;
 
             _config = null;
@@ -145,6 +166,11 @@ namespace Whispers.Core.GameLoop
 
         public void EndDay()
         {
+            if (!IsInitialized)
+            {
+                return;
+            }
+
             if (_currentPhase != GamePhase.Day)
             {
                 Debug.LogWarning(
@@ -153,6 +179,79 @@ namespace Whispers.Core.GameLoop
             }
 
             TransitionTo(GamePhase.Night);
+        }
+
+        public bool CanAfford(int cost)
+        {
+            if (!IsInitialized || _currentPhase != GamePhase.Day || cost < 0)
+            {
+                return false;
+            }
+
+            // Ação gratuita: sempre permitida dentro do dia.
+            if (cost == 0)
+            {
+                return true;
+            }
+
+            return _actionsRemaining >= cost;
+        }
+
+        public bool PerformAction(int cost = 1)
+        {
+            if (!IsInitialized)
+            {
+                Debug.LogWarning(
+                    "[GameLoopService] PerformAction ignorado: serviço não inicializado.", this);
+                return false;
+            }
+
+            if (_currentPhase != GamePhase.Day)
+            {
+                // Silencioso quando intencional: a UI/Hotspots devem checar CanAfford.
+                return false;
+            }
+
+            if (cost < 0)
+            {
+                Debug.LogWarning(
+                    $"[GameLoopService] PerformAction rejeitado: custo negativo ({cost}).", this);
+                return false;
+            }
+
+            // Ação gratuita: permitida, sem débito e sem risco de encerrar o dia.
+            if (cost == 0)
+            {
+                return true;
+            }
+
+            // Débito só se houver orçamento suficiente. Nunca deixa o saldo negativo.
+            if (_actionsRemaining < cost)
+            {
+                return false;
+            }
+
+            _actionsRemaining -= cost;
+            SyncActionsRemaining();
+
+            if (_actionsRemaining <= 0)
+            {
+                Debug.Log(
+                    "[GameLoopService] Orçamento de ações esgotado. Encerrando o dia.", this);
+                EndDay();
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Restaura o orçamento de ações ao máximo. Chamado pelo <see cref="DayState"/>
+        /// ao entrar em cada novo dia.
+        /// </summary>
+        internal void ResetDayActions()
+        {
+            _actionsRemaining = _dayActionLimit;
+            SyncActionsRemaining();
         }
 
         /// <summary>
@@ -214,7 +313,9 @@ namespace Whispers.Core.GameLoop
 
             _isTransitioning = false;
 
-            Debug.Log($"[GameLoopService] Fase: {target} | Dia: {_currentDay}.", this);
+            Debug.Log(
+                $"[GameLoopService] Fase: {target} | Dia: {_currentDay} | Ações: {_actionsRemaining}/{_dayActionLimit}.",
+                this);
         }
 
         private void Update()
@@ -271,9 +372,12 @@ namespace Whispers.Core.GameLoop
 
                 _currentDayVar = null;
                 _nightTimeRemainingVar = null;
+                _actionsRemainingVar = null;
                 _onDayStarted = null;
                 _onNightStarted = null;
                 _onNightCompleted = null;
+                _onActionsChanged = null;
+                _dayActionLimit = BakedDayActionLimit;
                 _nightDuration = BakedNightDuration;
                 _resolutionDuration = BakedResolutionDuration;
                 _startingDay = BakedStartingDay;
@@ -283,9 +387,12 @@ namespace Whispers.Core.GameLoop
 
             _currentDayVar = _config.CurrentDay;
             _nightTimeRemainingVar = _config.NightTimeRemaining;
+            _actionsRemainingVar = _config.ActionsRemaining;
             _onDayStarted = _config.OnDayStarted;
             _onNightStarted = _config.OnNightStarted;
             _onNightCompleted = _config.OnNightCompleted;
+            _onActionsChanged = _config.OnActionsChanged;
+            _dayActionLimit = Mathf.Max(0, _config.DayActionLimit);
             _nightDuration = Mathf.Max(0f, _config.NightDurationSeconds);
             _resolutionDuration = Mathf.Max(0f, _config.ResolutionDurationSeconds);
             _startingDay = Mathf.Max(1, _config.StartingDay);
@@ -317,6 +424,25 @@ namespace Whispers.Core.GameLoop
             if (_nightTimeRemainingVar != null)
             {
                 _nightTimeRemainingVar.Value = value;
+            }
+        }
+
+        private void SetActionsRemaining(int value)
+        {
+            _actionsRemaining = value;
+            SyncActionsRemaining();
+        }
+
+        private void SyncActionsRemaining()
+        {
+            if (_actionsRemainingVar != null)
+            {
+                _actionsRemainingVar.Value = _actionsRemaining;
+            }
+
+            if (_onActionsChanged != null)
+            {
+                _onActionsChanged.RaiseEvent();
             }
         }
     }

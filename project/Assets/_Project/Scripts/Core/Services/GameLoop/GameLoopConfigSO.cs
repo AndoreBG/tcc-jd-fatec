@@ -29,6 +29,9 @@ namespace Whispers.Core.GameLoop
         [Tooltip("Disparado ao entrar em NightResolution (noite encerrada).")]
         [SerializeField] private VoidEventChannelSO onNightCompleted;
 
+        [Tooltip("Disparado sempre que o orçamento de ações do dia muda.")]
+        [SerializeField] private VoidEventChannelSO onActionsChanged;
+
         [Header("Runtime Variables (observáveis)")]
         [Tooltip("Dia atual. Listado no documento como Runtime Variable.")]
         [SerializeField] private ObservableIntSO currentDay;
@@ -36,7 +39,18 @@ namespace Whispers.Core.GameLoop
         [Tooltip("Tempo restante da noite. Listado no documento como Runtime Variable.")]
         [SerializeField] private ObservableFloatSO nightTimeRemaining;
 
-        [Header("Timing (segundos)")]
+        [Tooltip("Ações restantes no dia atual. Nova Runtime Variable de gameplay.")]
+        [SerializeField] private ObservableIntSO actionsRemaining;
+
+        [Header("Dia — Orçamento de Ações")]
+        [Tooltip("Quantidade de ações que o jogador pode realizar por dia. " +
+                 "O dia NÃO é cronometrado: acaba quando este orçamento zera.")]
+        [SerializeField] private int dayActionLimit = 10;
+
+        [Tooltip("Dia inicial exibido na primeira fase Day.")]
+        [SerializeField] private int startingDay = 1;
+
+        [Header("Noite — Timing (segundos)")]
         [Tooltip("Duração total da noite.")]
         [SerializeField] private float nightDurationSeconds = 120f;
 
@@ -48,19 +62,19 @@ namespace Whispers.Core.GameLoop
                  "Mantenha desligado em produção; o fluxo deve partir do MainMenu.")]
         [SerializeField] private bool autoStartOnInitialize = false;
 
-        [Tooltip("Dia inicial exibido na primeira fase Day.")]
-        [SerializeField] private int startingDay = 1;
-
         public VoidEventChannelSO OnDayStarted => onDayStarted;
         public VoidEventChannelSO OnNightStarted => onNightStarted;
         public VoidEventChannelSO OnNightCompleted => onNightCompleted;
+        public VoidEventChannelSO OnActionsChanged => onActionsChanged;
 
         public ObservableIntSO CurrentDay => currentDay;
         public ObservableFloatSO NightTimeRemaining => nightTimeRemaining;
+        public ObservableIntSO ActionsRemaining => actionsRemaining;
 
+        public int DayActionLimit => dayActionLimit;
+        public int StartingDay => startingDay;
         public float NightDurationSeconds => nightDurationSeconds;
         public float ResolutionDurationSeconds => resolutionDurationSeconds;
         public bool AutoStartOnInitialize => autoStartOnInitialize;
-        public int StartingDay => startingDay;
     }
 }
