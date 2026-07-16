@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using Whispers.Core.ServiceLocator;
 using Whispers.Core.Services;
+using Whispers.Core.GameLoop;
 using GlobalServices = Whispers.Core.ServiceLocator.ServiceLocator;
 using UObject = UnityEngine.Object;
 
@@ -40,7 +41,7 @@ namespace Whispers.Core
         private static readonly Action<GameObject>[] CoreServiceInstallers =
             new Action<GameObject>[]
             {
-                // Nenhum serviço deve iniciar neste momento.
+                root => AddComponentAndRegister<IGameLoopService, GameLoopService>(root) //,
             };
 
         private static GameObject servicesRoot;
