@@ -18,30 +18,65 @@ O jogador está isolado em uma casa, em um mundo distópico/pós-apocalíptico, 
 ## 📁 Estrutura de Pastas do Projeto
 
 ```
-├── _Project/                      ◄ (Prefixo para separar de Assets externos)
-│   ├── Audio/
-│   ├── Art/                       ◄ (Modelos, texturas, shaders VHS, UI sprites)
-│   ├── Scenes/
-│   │   ├── Boot.unity             ◄ (Inicializa serviços globais)
-│   │   ├── MainMenu.unity
-│   │   └── Gameplay_House.unity
-│   ├── ScriptableObjects/
-│   │   ├── Events/
-│   │   ├── Variables/
-│   │   └── ViewNodes/
-│   └── Scripts/
-│       ├── Core/                  ◄ [Whispers.Core.asmdef]
-│       │   ├── ServiceLocator/
-│       │   ├── Events/
-│       │   ├── Variables/
-│       │   └── Services/
-│       ├── Gameplay/              ◄ [Whispers.Gameplay.asmdef]
-│       │   ├── Entities/          ◄ (Predator, Voyeur, Exhauster, Tricker)
-│       │   ├── House/             ◄ (Portas, Lampião, Hotspots)
-│       │   └── Player/            ◄ (Inventário, Interação)
-│       └── UI/                    ◄ [Whispers.UI.asmdef]
-│           ├── HUD/
-│           └── Menus/
+Assets/_Project/
+├── Art/                Arte visual: backgrounds, sprites de entidades/itens/UI, shaders VHS
+│   ├── Backgrounds/
+│   ├── Entities/
+│   ├── Items/
+│   ├── UI/
+│   └── VHS/
+├── Audio/              Áudio: ambience, music, SFX, rádio e fitas corrompidas
+│   ├── Ambience/
+│   ├── Entities/
+│   ├── Music/
+│   ├── Radio/
+│   └── SFX/
+├── Prefabs/            Prefabs instanciáveis de gameplay, hotspots, UI e VFX
+│   ├── Gameplay/
+│   ├── Hotspots/
+│   ├── UI/
+│   └── VFX/
+├── Scenes/             Boot (Build Profile), MainMenu, Gameplay_House e Development (testes)
+│   ├── Boot.unity
+│   ├── MainMenu.unity
+│   ├── Gameplay_House.unity
+│   └── Development/
+├── ScriptableObjects/  Assets .asset: configs, events, items, variables, viewnodes
+│   ├── Configs/
+│   ├── Events/
+│   ├── Items/
+│   ├── Variables/
+│   └── ViewNodes/
+├── Resources/          Assets carregados via Resources.Load (ex.: GameLoopConfig)
+│   └── GameLoop/
+└── Scripts/
+    ├── Core/                          [Whispers.Core] — não referencia Gameplay/UI
+    │   ├── Bootstrap/
+    │   ├── Events/
+    │   ├── ServiceLocator/
+    │   ├── Services/
+    │   └── Variables/
+    ├── Gameplay/                      [Whispers.Gameplay] → referencia Core
+    │   ├── Bootstrap/
+    │   ├── Entities/                  4 ameaças, cada uma com sua FSM
+    │   │   ├── Predator/
+    │   │   ├── Voyeur/
+    │   │   ├── Exhauster/
+    │   │   └── Tricker/
+    │   ├── House/                     Estrutura e defesa da casa
+    │   │   ├── Navigation/
+    │   │   ├── Hotspots/
+    │   │   ├── Defense/
+    │   │   └── Lamp/
+    │   └── Player/                    Inventário, ferramentas e interação
+    │       ├── Inventory/
+    │       ├── Interaction/
+    │       └── Tools/
+    ├── UI/                            [Whispers.UI] → refs Core (+ Gameplay p/ ler estado)
+    │   ├── HUD/
+    │   └── Menus/
+    └── Development/                   [Whispers.Development] → observa todas as camadas
+        └── Diagnostics/
 ```
 
 <br>
