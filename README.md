@@ -19,13 +19,13 @@ O jogador está isolado em uma casa, em um mundo distópico/pós-apocalíptico, 
 
 ```
 Assets/_Project/
-├── Art/                Arte visual: backgrounds, sprites de entidades/itens/UI, shaders VHS
+├── Art/                Arte visual: backgrounds, sprites de entidades/itens/UI e efeitos analógicos
 │   ├── Backgrounds/
 │   ├── Entities/
 │   ├── Items/
 │   ├── UI/
 │   └── VHS/
-├── Audio/              Áudio: ambience, music, SFX, rádio e fitas corrompidas
+├── Audio/              Áudio: ambience, music e SFX
 │   ├── Ambience/
 │   ├── Entities/
 │   ├── Music/
@@ -36,10 +36,9 @@ Assets/_Project/
 │   ├── Hotspots/
 │   ├── UI/
 │   └── VFX/
-├── Scenes/             Boot (Build Profile), MainMenu, Gameplay_House e Development (testes)
+├── Scenes/             Boot, MainMenu e Development
 │   ├── Boot.unity
 │   ├── MainMenu.unity
-│   ├── Gameplay_House.unity
 │   └── Development/
 ├── ScriptableObjects/  Assets .asset: configs, events, items, variables, viewnodes
 │   ├── Configs/
@@ -47,35 +46,35 @@ Assets/_Project/
 │   ├── Items/
 │   ├── Variables/
 │   └── ViewNodes/
-├── Resources/          Assets carregados via Resources.Load (ex.: GameLoopConfig)
+├── Resources/          Assets carregados via Resources.Load
 │   └── GameLoop/
 └── Scripts/
-    ├── Core/                          [Whispers.Core] — não referencia Gameplay/UI
+    ├── Core/                 [Whispers.Core]
     │   ├── Bootstrap/
     │   ├── Events/
     │   ├── ServiceLocator/
     │   ├── Services/
     │   └── Variables/
-    ├── Gameplay/                      [Whispers.Gameplay] → referencia Core
+    ├── Gameplay/             [Whispers.Gameplay]
     │   ├── Bootstrap/
-    │   ├── Entities/                  4 ameaças, cada uma com sua FSM
+    │   ├── Entities/         4 ameaças, cada uma com sua FSM
     │   │   ├── Predator/
     │   │   ├── Voyeur/
     │   │   ├── Exhauster/
     │   │   └── Tricker/
-    │   ├── House/                     Estrutura e defesa da casa
+    │   ├── House/            Estrutura e defesa da casa
     │   │   ├── Navigation/
     │   │   ├── Hotspots/
     │   │   ├── Defense/
     │   │   └── Lamp/
-    │   └── Player/                    Inventário, ferramentas e interação
+    │   └── Player/           Inventário, ferramentas e interação
     │       ├── Inventory/
     │       ├── Interaction/
     │       └── Tools/
-    ├── UI/                            [Whispers.UI] → refs Core (+ Gameplay p/ ler estado)
+    ├── UI/                   [Whispers.UI]
     │   ├── HUD/
     │   └── Menus/
-    └── Development/                   [Whispers.Development] → observa todas as camadas
+    └── Development/          [Whispers.Development]
         └── Diagnostics/
 ```
 
