@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b65cb5fbe314a147905927f06defdba, type: 3}
+  m_Name: VN_Kitchen
+  m_EditorClassIdentifier: Whispers.Gameplay::Whispers.Gameplay.House.Navigation.ViewNodeSO
+  viewId: kitchen
+  displayName: Cozinha
+  backgroundSprite: {fileID: 619968477044097973, guid: 1e2f4e8f9b8fa3140bd30ba7ff31a186, type: 3}
+  developerDescription: 
+  connections:
+  - connectionId: back_corridor
+    destination: {fileID: 11400000, guid: 798213f42b0d612499249dd7e704921d, type: 2}
+    enabledByDefault: 1
+    transition:
+      transitionType: 1
+      durationSeconds: 2
+      hoverDelaySeconds: 0.1
+      transitionSfx: {fileID: 0}
+      presentationCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 4
+    hint:
+      title: Corredor
+      description: Voltar para o corredor
+      inputLabel: Mover
