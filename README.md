@@ -179,7 +179,7 @@ Quatro entidades principais pressionam o jogador de formas diferentes:
 ### 🩸 Predator
 - Atua nas **portas**
 - Pode forçar entrada
-- Exige reforço com tábuas
+- Exige bloqueio das portas
 
 ### 👁️ Voyeur
 - Atua nas **janelas**
