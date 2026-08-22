@@ -1,4 +1,3 @@
 ﻿<Solution>
-  <Project Path="Whispers.Core.csproj" />
-  <Project Path="Whispers.Development.csproj" />
+  <Project Path="com.ben-w.erp.csproj" />
 </Solution>
