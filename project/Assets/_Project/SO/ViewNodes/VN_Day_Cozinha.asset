@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10dda66f0fb4aa84fa5d2840f0b21ad0, type: 3}
+  m_Name: VN_Day_Cozinha
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.ViewNodeDefinition
+  id: day_cozinha
+  debugName: Day_Cozinha
+  cameraProfile: {fileID: 11400000, guid: 0b8dd315335422541a723688e3b04867, type: 2}
