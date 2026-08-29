@@ -8,9 +8,6 @@ namespace Whispers
     /// Base abstrata de todos os hotspots. Detecta entrada/saída/clique via EventSystem
     /// (StandaloneInputModule), respeita bloqueio de gameplay, reentrada física,
     /// modo de ativação, condições Todas/Qualquer e políticas de repetição.
-    /// Não conhece regras de navegação, inventário ou ferramentas: apenas as solicita
-    /// através de <see cref="OnActivated"/>, implementado pela subclasse.
-    /// </summary>
     public abstract class HotspotBase : MonoBehaviour,
         IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
@@ -57,13 +54,11 @@ namespace Whispers
 
         // ---------------- Avaliação de condições ----------------
 
-        /// <summary>Reavalia as condições e atualiza a disponibilidade. Chamado ao entrar no ViewNode.</summary>
         public void EvaluateConditions()
         {
             _isAvailable = EvaluateConditionsInternal();
         }
 
-        /// <summary>Validação final imediatamente antes de executar a ação.</summary>
         public bool RevalidateConditions()
         {
             _isAvailable = EvaluateConditionsInternal();
@@ -103,20 +98,25 @@ namespace Whispers
         {
             if (Scene != null && Scene.RuntimeState != null)
                 Scene.RuntimeState.Changed -= OnRuntimeChanged;
+            CancelDwell();
+            _cursorOver = false;
         }
 
-        /// <summary>Marca se o ViewNode dono está apresentado. Controlado pelo ViewNodeController.</summary>
         public void SetPresented(bool presented)
         {
             _presented = presented;
-            if (!presented) CancelDwell();
+            if (!presented)
+            {
+                CancelDwell();
+                // Não limpa _requiresExit aqui - ele será limpo apenas no OnPointerExit físico
+                // Isso garante a regra de reentrada após transição
+            }
         }
 
         private void OnRuntimeChanged()
         {
             if (!_presented) return;
             EvaluateConditions();
-            // Perda de condição durante o dwell cancela e zera o progresso.
             if (!_isAvailable) CancelDwell();
         }
 
@@ -134,6 +134,20 @@ namespace Whispers
             _dwellElapsed = 0f;
         }
 
+        private bool CanAttemptActivation()
+        {
+            if (Blocker != null && Blocker.IsBlocked) return false;
+            if (!enabledForGameplay || !_presented) return false;
+            if (_requiresExit) return false;
+            if (repeatPolicy == HotspotRepeatPolicy.Once && _consumedOnce) return false;
+            if (!_isAvailable)
+            {
+                onUnavailable?.Invoke();
+                return false;
+            }
+            return true;
+        }
+
         // ---------------- Entrada ----------------
 
         public void OnPointerEnter(PointerEventData eventData)
@@ -144,60 +158,67 @@ namespace Whispers
             bool blocked = Blocker != null && Blocker.IsBlocked;
             if (blocked)
             {
-                // Entrou durante bloqueio: não reage e exige saída física depois.
                 _requiresExit = true;
                 CancelDwell();
                 return;
             }
-            if (_requiresExit) return; // ainda aguarda saída física do cursor
 
-            TryBeginActivation();
+            if (_requiresExit)
+            {
+                CancelDwell();
+                return;
+            }
+
+            // CORREÇÃO: Separa claramente os 3 modos. Click NÃO ativa no Enter.
+            switch (activationMode)
+            {
+                case HotspotActivationMode.HoverImmediate:
+                    if (CanAttemptActivation())
+                        Activate();
+                    break;
+
+                case HotspotActivationMode.HoverWithDwell:
+                    if (CanAttemptActivation())
+                        StartDwell();
+                    break;
+
+                case HotspotActivationMode.Click:
+                    // Intencionalmente vazio: Click exige OnPointerClick válido.
+                    // Aqui poderia tocar feedback de hover, mas sem ativar.
+                    break;
+            }
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
             _cursorOver = false;
-            _requiresExit = false; // saída física libera a reentrada
+            _requiresExit = false; // saída física libera a reentrada - regra oficial
             CancelDwell();
         }
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (activationMode == HotspotActivationMode.Click)
-                TryBeginActivation();
-        }
-
-        // ---------------- Delegação ----------------
-
-        private void TryBeginActivation()
-        {
-            if (Blocker != null && Blocker.IsBlocked) return;
+            // CORREÇÃO: Click é o único modo que deve reagir ao clique
+            if (activationMode != HotspotActivationMode.Click) return;
             if (!enabledForGameplay || !_presented) return;
-            if (!_isAvailable)
-            {
-                onUnavailable?.Invoke();
-                return;
-            }
-            if (repeatPolicy == HotspotRepeatPolicy.Once && _consumedOnce) return;
+            if (_requiresExit) return; // respeita reentrada também no clique
+            if (Blocker != null && Blocker.IsBlocked) return;
+            if (!_cursorOver) return; // garante que o clique foi dentro da região
 
-            if (activationMode == HotspotActivationMode.HoverImmediate ||
-                activationMode == HotspotActivationMode.Click)
-            {
-                Activate();
-            }
-            else // HoverWithDwell
-            {
-                StartDwell();
-            }
+            if (!CanAttemptActivation()) return;
+
+            Activate();
         }
+
+        // ---------------- Ativação ----------------
 
         /// <summary>Compromete a ação após a validação final. Único ponto de execução.</summary>
         protected void Activate()
         {
             if (Blocker != null && Blocker.IsBlocked) return;
             if (!enabledForGameplay || !_presented) return;
+            if (_requiresExit) return;
 
-            // Validação final imediatamente antes da execução.
             bool ok = RevalidateConditions();
             if (!ok)
             {
@@ -227,13 +248,14 @@ namespace Whispers
                 else
                 {
                     // Desbloqueio: hotspots sob o cursor passam a exigir saída física.
+                    // Regra da arquitetura seção 5.3 e 8.5
                     if (_cursorOver) _requiresExit = true;
                 }
                 _wasBlocked = blocked;
             }
 
-            // Dwell em tempo escalado.
-            if (_dwellActive && !blocked)
+            // Dwell em tempo escalado, apenas para HoverWithDwell
+            if (_dwellActive && activationMode == HotspotActivationMode.HoverWithDwell && !blocked)
             {
                 _dwellElapsed += Time.deltaTime;
                 if (_dwellElapsed >= dwellDuration)
