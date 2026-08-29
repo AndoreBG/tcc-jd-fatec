@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: TRANS_Fade
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.TransitionProfile
   effectType: 1
-  hideDuration: 0.25
-  revealDuration: 0.25
-  intensity: 1
+  hideDuration: 0.5
+  revealDuration: 0.5
+  intensity: 5
