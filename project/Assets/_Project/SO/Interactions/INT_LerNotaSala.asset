@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dd38224f9c3b6344dae2ff49050416a9, type: 3}
   m_Name: INT_LerNotaSala
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.InteractionDefinition
-  id: int_lernotacozinha
+  id: int_lernotasala
   debugName: 
   results:
   - type: 7

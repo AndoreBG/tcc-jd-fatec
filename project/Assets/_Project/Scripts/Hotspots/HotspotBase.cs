@@ -18,12 +18,6 @@ namespace Whispers
         [SerializeField] private HotspotActivationMode activationMode = HotspotActivationMode.HoverImmediate;
         [SerializeField] private HotspotRepeatPolicy repeatPolicy = HotspotRepeatPolicy.Repeatable;
 
-        [Tooltip("Hotspot fixo de UI (ex.: mochila) que não pertence a um ViewNode: sempre apresentado e ativo.")]
-        [SerializeField] private bool alwaysPresented;
-
-        [Tooltip("UI autorizada durante bloqueio Modal (ex.: mochila alterna o próprio inventário). Outros motivos continuam bloqueando.")]
-        [SerializeField] private bool activeDuringModal;
-
         [Header("Condições")]
         [SerializeField] private HotspotConditionPolicy conditionPolicy = HotspotConditionPolicy.All;
         [SerializeField] private HotspotConditionSO[] conditions = System.Array.Empty<HotspotConditionSO>();
@@ -70,25 +64,8 @@ namespace Whispers
         protected GameplaySceneController Scene => GameplaySceneController.Instance;
         protected InputBlocker Blocker => Scene != null ? Scene.Blocker : null;
 
-        /// <summary>Flags de configuração acessíveis às subclasses (para diagnóstico).</summary>
-        protected bool AlwaysPresentedFlag => alwaysPresented;
-        protected bool ActiveDuringModalFlag => activeDuringModal;
-        protected HotspotActivationMode ActivationModeFlag => activationMode;
-
-        /// <summary>
-        /// Bloqueio de gameplay visto por este hotspot: hotspots de UI marcados como
-        /// ativos durante Modal continuam livres quando Modal é o ÚNICO motivo ativo
-        /// (UI autorizada para o motivo atual — seções 5.3 e 16 da arquitetura).
-        /// </summary>
-        protected bool IsGameplayBlocked
-        {
-            get
-            {
-                if (Blocker == null || !Blocker.IsBlocked) return false;
-                if (activeDuringModal && !Blocker.IsBlockedExcept(InputBlockReason.Modal)) return false;
-                return true;
-            }
-        }
+        /// <summary>Bloqueio de gameplay visto por este hotspot (ponto único de consulta).</summary>
+        protected bool IsGameplayBlocked => Blocker != null && Blocker.IsBlocked;
 
         /// <summary>Perfil efetivo: o próprio ou o default das configurações globais.</summary>
         private HotspotFeedbackProfile Feedback
@@ -180,10 +157,6 @@ namespace Whispers
 
         protected void OnEnable()
         {
-            // Hotspot fixo de UI (fora dos ViewNodes) nunca recebe SetPresented:
-            // nasce apresentado para poder reagir desde o boot.
-            if (alwaysPresented) _presented = true;
-
             _wasBlocked = IsGameplayBlocked;
             if (Scene != null && Scene.RuntimeState != null)
                 Scene.RuntimeState.Changed += OnRuntimeChanged;
@@ -215,7 +188,6 @@ namespace Whispers
 
         public void SetPresented(bool presented)
         {
-            if (alwaysPresented) presented = true; // hotspot fixo de UI ignora apresentação de ViewNodes
             _presented = presented;
             if (!presented)
             {

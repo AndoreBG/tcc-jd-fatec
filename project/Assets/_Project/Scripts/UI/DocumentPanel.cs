@@ -46,8 +46,11 @@ namespace Whispers
             if (bodyText != null) bodyText.text = data.body;
             if (image != null)
             {
+                // Apenas atribui o sprite (null limpa o anterior). O painel NUNCA
+                // desativa o GameObject: o campo costuma estar ligado ao papel/
+                // moldura do documento, que deve permanecer visível mesmo quando
+                // o DocumentData não tem imagem de conteúdo.
                 image.sprite = data.image;
-                image.gameObject.SetActive(data.image != null);
             }
             _pulseElapsed = 0f; // cada abertura começa apagada e "acende" (fade-in)
         }
