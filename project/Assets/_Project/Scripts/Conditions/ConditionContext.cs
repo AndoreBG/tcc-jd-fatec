@@ -25,5 +25,9 @@ namespace Whispers
         public bool WasCollected(string itemId) => _session != null && _session.WasCollected(itemId);
 
         public bool HasFact(string factId) => _session != null && _session.HasFact(factId);
+
+        /// <summary>Verdadeiro se a interação com este ID já foi concluída nesta cena.</summary>
+        public bool WasInteractionDone(string interactionId)
+            => _scene != null && _scene.Interactions != null && _scene.Interactions.HasDone(interactionId);
     }
 }

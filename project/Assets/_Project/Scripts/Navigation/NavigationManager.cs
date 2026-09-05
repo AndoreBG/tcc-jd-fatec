@@ -56,38 +56,41 @@ namespace Whispers
         private ViewNodeController _initialNode;
         public void PresentInitial() => SwapNode(_initialNode);
 
-        /// <summary>Solicita navegação validada para o destino indicado por ID.</summary>
-        public void RequestNavigate(NavigationHotspot hotspot, string destinationId)
+        /// <summary>
+        /// Solicita navegação validada para o destino indicado por ID.
+        /// Retorna verdadeiro quando a transição foi iniciada.
+        /// </summary>
+        public bool RequestNavigate(NavigationHotspot hotspot, string destinationId)
         {
             if (_transitioning)
             {
                 Debug.LogWarning($"[NavigationManager] Transição já em andamento; solicitação descartada.", this);
-                return;
+                return false;
             }
             if (string.IsNullOrEmpty(destinationId))
             {
                 Debug.LogWarning("[NavigationManager] Destino com ID vazio.", this);
-                return;
+                return false;
             }
 
             ViewNodeController destination = FindById(destinationId);
             if (destination == null)
             {
                 Debug.LogWarning($"[NavigationManager] Destino não encontrado para o id '{destinationId}'.", this);
-                return;
+                return false;
             }
             if (destination == _current)
             {
                 Debug.LogWarning($"[NavigationManager] Navegação para o próprio ViewNode ({destination.name}); descartada.", this);
-                return;
+                return false;
             }
             if (!_viewNodes.Contains(destination))
             {
                 Debug.LogWarning($"[NavigationManager] Destino não pertence à cena: {destination.name}.", this);
-                return;
+                return false;
             }
             if (Blocker != null && Blocker.IsBlocked)
-                return;
+                return false;
 
             // Perfil de transição do link (hotspot) ou o padrão da cena, ou corte seco.
             TransitionProfile profile = hotspot != null ? hotspot.TransitionProfile : null;
@@ -95,6 +98,7 @@ namespace Whispers
                 profile = Scene.SceneDefinition.defaultTransition;
 
             StartCoroutine(TransitionRoutine(destination, profile));
+            return true;
         }
 
         private IEnumerator TransitionRoutine(ViewNodeController destination, TransitionProfile profile)

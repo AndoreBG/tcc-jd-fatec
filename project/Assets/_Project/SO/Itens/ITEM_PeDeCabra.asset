@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f0860cd9ce3bf045a6d82db831cbb44, type: 3}
+  m_Name: ITEM_PeDeCabra
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.ItemDefinition
+  id: item_pedecabra
+  displayName: "P\xE9 de Cabra"
+  description: "Abre coisas que n\xE3o querem abrir."
+  icon: {fileID: 0}
+  isTool: 1
+  consumesOnUse: 0
