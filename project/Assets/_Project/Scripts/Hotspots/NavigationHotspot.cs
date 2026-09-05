@@ -19,20 +19,20 @@ namespace Whispers
         public TransitionProfile TransitionProfile => transitionProfile;
         public bool PointerInside => IsCursorOver;
 
-        protected override void OnActivated()
+        protected override bool OnActivated()
         {
             NavigationManager nav = Scene != null ? Scene.Navigation : null;
             if (nav == null)
             {
                 Debug.LogWarning("[NavigationHotspot] NavigationManager indisponível no cenário.", this);
-                return;
+                return false;
             }
             if (string.IsNullOrEmpty(destinationId))
             {
                 Debug.LogWarning($"[NavigationHotspot] Hotspot sem destino (ID vazio): {name}", this);
-                return;
+                return false;
             }
-            nav.RequestNavigate(this, destinationId);
+            return nav.RequestNavigate(this, destinationId);
         }
     }
 }

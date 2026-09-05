@@ -7,7 +7,7 @@ namespace Whispers
     /// <summary>
     /// Bloqueia a entrada de gameplay por contagem de motivos.
     /// NÃO desativa o EventSystem globalmente: hotspots de cenário são bloqueados,
-    /// mas a UI autorizada (modal) continua interativa.
+    /// mas a UI autorizada (controles do próprio modal) continua interativa.
     /// </summary>
     public class InputBlocker : MonoBehaviour
     {

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b624949c54ece214ab888d341056f522, type: 3}
+  m_Name: DOC_Nota
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.DocumentData
+  id: doc_notasala
+  title: Nota encontrada
+  body: 'Teste TESTE Teste TESTE Teste TESTE Teste TESTE Teste TESTE Teste TESTE
+    Teste TESTE Teste TESTE Teste TESTE Teste TESTE Teste TESTE Teste TESTE Teste
+    TESTE Teste TESTE Teste TESTE Teste TESTE Teste TESTE Teste TESTE Teste TESTE
+    Teste TESTE Teste TESTE Teste TESTE Teste TESTE Teste TESTE Teste TESTE Teste
+    TESTE Teste TESTE Teste TESTE Teste TESTE Teste TESTE Teste TESTE Teste TESTE
+    Teste TESTE '
+  image: {fileID: 0}

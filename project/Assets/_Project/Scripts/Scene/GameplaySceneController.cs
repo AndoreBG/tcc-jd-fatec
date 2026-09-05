@@ -17,6 +17,15 @@ namespace Whispers
         [SerializeField] private NavigationManager navigationManager;
         [SerializeField] private ViewCameraController viewCameraController;
         [SerializeField] private TransitionController transitionController;
+        [SerializeField] private InteractionManager interactionManager;
+        [SerializeField] private ModalUIController modalUI;
+
+        [Header("Configuração e feedback")]
+        [Tooltip("Configurações globais dos hotspots (dwell padrão, perfis default).")]
+        [SerializeField] private GlobalHotspotSettings globalSettings;
+
+        [Tooltip("Fonte de áudio 2D usada para sons de feedback e de interação.")]
+        [SerializeField] private AudioSource feedbackAudioSource;
 
         /// <summary>Estado temporário da cena. Criado pelo controller no boot.</summary>
         public SceneRuntimeState RuntimeState { get; private set; }
@@ -26,6 +35,9 @@ namespace Whispers
         public NavigationManager Navigation => navigationManager;
         public ViewCameraController ViewCamera => viewCameraController;
         public TransitionController Transition => transitionController;
+        public InteractionManager Interactions => interactionManager;
+        public ModalUIController ModalUI => modalUI;
+        public GlobalHotspotSettings GlobalSettings => globalSettings;
 
         protected void OnEnable()
         {
@@ -44,6 +56,14 @@ namespace Whispers
 
         private void Boot()
         {
+            // Garante que a sessão global exista (cenas de desenvolvimento/teste).
+            // Em produção, o fluxo do menu a cria antes de carregar a cena.
+            if (GameSessionManager.Instance == null)
+            {
+                new GameObject("Manager_Session").AddComponent<GameSessionManager>();
+                Debug.Log("[GameplaySceneController] GameSessionManager ausente; criado automaticamente para a cena de teste.");
+            }
+
             RuntimeState = new SceneRuntimeState();
 
             // ---- Validações (sem travar a cena) ----
@@ -55,6 +75,10 @@ namespace Whispers
                 Debug.LogError("[GameplaySceneController] NavigationManager ausente.", this);
             if (viewCameraController == null)
                 Debug.LogWarning("[GameplaySceneController] ViewCameraController ausente (câmera ficará estática).", this);
+            if (interactionManager == null)
+                Debug.LogWarning("[GameplaySceneController] InteractionManager ausente (interações e ferramentas não funcionarão).", this);
+            if (modalUI == null)
+                Debug.LogWarning("[GameplaySceneController] ModalUIController ausente (inventário e documentos não funcionarão).", this);
 
             if (sceneDefinition == null)
                 return;
@@ -64,6 +88,13 @@ namespace Whispers
             inputBlocker?.AddReason(InputBlockReason.Boot);
             navigationManager.PresentInitial();
             inputBlocker?.RemoveReason(InputBlockReason.Boot);
+        }
+
+        /// <summary>Toca um som 2D de feedback/interação na fonte local da cena.</summary>
+        public void PlayFeedback(AudioClip clip)
+        {
+            if (clip == null || feedbackAudioSource == null) return;
+            feedbackAudioSource.PlayOneShot(clip);
         }
     }
 }
