@@ -83,6 +83,12 @@ namespace Whispers
             if (sceneDefinition == null)
                 return;
 
+            // Sincroniza o período da sessão com o período declarado pela cena
+            // (Backpack = Dia; Hotbar = Noite). O fluxo global Dia ⇄ Noite (VS3)
+            // substituirá esta linha.
+            if (GameSessionManager.Instance != null)
+                GameSessionManager.Instance.period = sceneDefinition.period;
+
             // ---- Boot: mantém todos os ViewNodes não apresentados e bloqueia a entrada ----
             navigationManager.Initialize(sceneDefinition.initialViewNodeId); // ID do ViewNode inicial
             inputBlocker?.AddReason(InputBlockReason.Boot);

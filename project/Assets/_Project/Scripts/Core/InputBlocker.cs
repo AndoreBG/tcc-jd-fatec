@@ -22,6 +22,22 @@ namespace Whispers
         /// <summary>Verdadeiro se o motivo informado está ativo.</summary>
         public bool HasReason(InputBlockReason reason) => _reasons.Contains(reason);
 
+        /// <summary>
+        /// Verdadeiro se houver motivo ativo ALÉM dos informados. Usado pelo fluxo de
+        /// drop da Backpack (InteractionManager.RequestToolUseFromDrop): ToolDrag é o
+        /// estado autorizado do próprio fluxo de ferramenta — qualquer OUTRO motivo
+        /// (Boot, Transição, Modal, Pausa...) continua bloqueando.
+        /// </summary>
+        public bool IsBlockedExcept(params InputBlockReason[] exempt)
+        {
+            if (_reasons.Count == 0) return false;
+            if (exempt == null || exempt.Length == 0) return true;
+            foreach (InputBlockReason reason in _reasons)
+                if (System.Array.IndexOf(exempt, reason) < 0)
+                    return true;
+            return false;
+        }
+
         public void AddReason(InputBlockReason reason)
         {
             if (_reasons.Add(reason))

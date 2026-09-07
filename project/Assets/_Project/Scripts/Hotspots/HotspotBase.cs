@@ -242,8 +242,12 @@ namespace Whispers
             return true;
         }
 
-        /// <summary>Feedback comum de condição não atendida.</summary>
-        private void NotifyUnavailable()
+        /// <summary>
+        /// Feedback comum de condição não atendida (onUnavailable/onBlockedHint + som).
+        /// Público: usado pela ativação comum e pelo fluxo de drop da Backpack
+        /// (ToolHotspot.AttemptUseFromDrop).
+        /// </summary>
+        public void NotifyUnavailable()
         {
             onUnavailable?.Invoke();
             if (unavailableMode == HotspotUnavailableMode.BlockedWithHint)

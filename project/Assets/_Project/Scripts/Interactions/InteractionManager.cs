@@ -54,7 +54,7 @@ namespace Whispers
             }
         }
 
-        /// <summary>Executa o uso de uma ferramenta solicitado por um ToolHotspot.</summary>
+        /// <summary>Executa o uso de uma ferramenta solicitado por um ToolHotspot (hover/clique).</summary>
         public bool RequestToolUse(ToolHotspot hotspot)
         {
             if (hotspot == null)
@@ -63,6 +63,27 @@ namespace Whispers
                 return false;
             }
             if (Blocker != null && Blocker.IsBlocked) return false;
+            return ExecuteToolUse(hotspot);
+        }
+
+        /// <summary>
+        /// Uso de ferramenta via DROP do arraste da Backpack. Diferente do caminho
+        /// comum, ignora apenas o motivo ToolDrag (estado autorizado do próprio fluxo
+        /// de ferramenta); qualquer outro motivo de bloqueio continua valendo.
+        /// </summary>
+        public bool RequestToolUseFromDrop(ToolHotspot hotspot)
+        {
+            if (hotspot == null)
+            {
+                Debug.LogWarning("[InteractionManager] ToolHotspot ausente; solicitação descartada.");
+                return false;
+            }
+            if (Blocker != null && Blocker.IsBlockedExcept(InputBlockReason.ToolDrag)) return false;
+            return ExecuteToolUse(hotspot);
+        }
+
+        private bool ExecuteToolUse(ToolHotspot hotspot)
+        {
             if (_executing)
             {
                 Debug.LogWarning("[InteractionManager] Ação em andamento; solicitação descartada (sem cooldown, sem fila).");

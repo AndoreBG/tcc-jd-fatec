@@ -11,6 +11,13 @@ namespace Whispers
         Modal,
         Pause,
         Cutscene,
-        PeriodEnd
+        PeriodEnd,
+
+        /// <summary>
+        /// Ferramenta arrastada para fora da Backpack ("na mão"). Hotspots de cenário
+        /// NÃO reagem a hover/clique/dwell; o uso acontece somente pelo DROP sobre um
+        /// ToolHotspot (raycast manual do BackpackController).
+        /// </summary>
+        ToolDrag
     }
 }

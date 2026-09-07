@@ -41,6 +41,31 @@ namespace Whispers
             PlayFailFeedback();
         }
 
+        /// <summary>
+        /// Tentativa de uso disparada por um DROP do arraste da Backpack.
+        /// Revalida as condições (feedback de bloqueio local) e roteia ao
+        /// InteractionManager via RequestToolUseFromDrop, preservando as regras
+        /// de acceptedTools, condições e consumesOnUse. O bloqueio ToolDrag é
+        /// ignorado pelo manager nesse caminho (estado autorizado do fluxo).
+        /// </summary>
+        public bool AttemptUseFromDrop()
+        {
+            InteractionManager interactions = Scene != null ? Scene.Interactions : null;
+            if (interactions == null)
+            {
+                Debug.LogWarning("[ToolHotspot] InteractionManager indisponível no cenário.", this);
+                return false;
+            }
+
+            if (!RevalidateConditions())
+            {
+                NotifyUnavailable(); // conta como interação (decisão de design): o drop remove a ferramenta da mão
+                return false;
+            }
+
+            return interactions.RequestToolUseFromDrop(this);
+        }
+
         protected override bool OnActivated()
         {
             InteractionManager interactions = Scene != null ? Scene.Interactions : null;

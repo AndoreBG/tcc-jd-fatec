@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d7b1e96eee281940a2de9b2a0122d02, type: 3}
+  m_Name: BPSlot_Martelo
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.BackpackSlotDefinition
+  acceptedItem: {fileID: 11400000, guid: 4c741bec2cccd5940999b5b0b7785cc2, type: 2}
+  maxQuantity: 1
+  slotSize: {x: 90, y: 90}
+  slotBackground: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  dragEnabled: 1
+  exitThreshold: 60

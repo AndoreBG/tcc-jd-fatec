@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dd38224f9c3b6344dae2ff49050416a9, type: 3}
-  m_Name: INT_AbrirPortaCozinha
+  m_Name: INT_PegarOleo
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.InteractionDefinition
-  id: int_abrirportacozinha
+  id: int_pegaroleo
   debugName: 
   results:
-  - type: 3
-    itemId: 
-    amount: 0
-    flagId: flag_portacozinhaaberta
+  - type: 0
+    itemId: item_oleo
+    amount: 1
+    flagId: 
     factId: 
     destinationId: 
     document: {fileID: 0}
