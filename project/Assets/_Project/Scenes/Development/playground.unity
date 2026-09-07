@@ -3319,8 +3319,8 @@ RectTransform:
   m_Children:
   - {fileID: 892637074}
   - {fileID: 744285986}
-  - {fileID: 610999917}
   - {fileID: 1620088624}
+  - {fileID: 610999917}
   m_Father: {fileID: 391696333}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -3885,7 +3885,7 @@ MonoBehaviour:
   modalEscurecer: 1
   darkenObject: {fileID: 352498855}
   darkenFadeDuration: 0.15
-  darkenMaxAlpha: 0.6
+  darkenMaxAlpha: 0.75
 --- !u!1 &1626994093
 GameObject:
   m_ObjectHideFlags: 0
