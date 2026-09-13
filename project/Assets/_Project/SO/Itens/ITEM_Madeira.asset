@@ -15,6 +15,6 @@ MonoBehaviour:
   id: item_madeira
   displayName: "T\xE1bua de Madeira"
   description: Utilizado em barricadas.
-  icon: {fileID: 0}
+  icon: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
   isTool: 0
   consumesOnUse: 1
