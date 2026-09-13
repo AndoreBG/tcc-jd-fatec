@@ -6,14 +6,14 @@
 > **Plataforma:** PC  
 > **Render:** URP  
 > **Input:** Input Manager legado (`StandaloneInputModule`)  
-> **Escopo:** ViewNodes, câmera e parallax, hotspots, condições, ferramentas, transições, UI modal, áudio e checkpoint entre ciclos.  
+> **Escopo:** ViewNodes, câmera e parallax, hotspots, condições, ferramentas, inventários por período (Backpack e Hotbar), transições, UI modal, áudio e checkpoint entre ciclos.  
 > **Status:** referência oficial para implementação. Substitui a versão 1.0 e os documentos de conceito anteriores.
 
 ---
 
 ## 0. Objetivo e terminologia
 
-Este documento define o comportamento esperado dos sistemas de navegação por pontos de visão, interação por hotspots, apresentação de câmera, áudio e persistência entre os períodos de Dia e Noite.
+Este documento define o comportamento esperado dos sistemas de navegação por pontos de visão, interação por hotspots, inventários por período (Backpack e Hotbar), apresentação de câmera, áudio e persistência entre os períodos de Dia e Noite.
 
 A arquitetura privilegia simplicidade, previsibilidade e edição direta no Inspector. Não há movimentação 3D livre. O jogador navega entre composições 2D fixas, apresentadas por uma câmera compartilhada, com possibilidade de tilt, pan, shake e parallax em camadas.
 
@@ -31,6 +31,10 @@ A arquitetura privilegia simplicidade, previsibilidade e edição direta no Insp
 | **Hotspot** | Região interativa associada a navegação, interação ou uso de ferramenta. |
 | **Reentrada** | Exigência de que o cursor saia fisicamente da região e volte a entrar antes de o hotspot poder reagir. |
 | **Fato persistente** | Decisão, descoberta ou alteração que pode atravessar períodos e checkpoints sem ser um item de inventário. |
+| **Backpack** | Inventário do período Dia: modal inferior com slots travados por tipo de item, aberto por tecla de atalho. |
+| **Hotbar** | Inventário do período Noite: interface fixa no canto inferior esquerdo, sem modal. |
+| **Ferramenta na mão** | Item arrastado para fora da Backpack que acompanha o cursor entre o início do arraste e o drop. |
+| **Drop** | Ato de soltar o botão do mouse com uma ferramenta na mão, sobre um `ToolHotspot` ou fora dele. |
 
 Neste documento, Dia e Noite são chamados de **períodos**, evitando o uso ambíguo do termo “fase”.
 
@@ -47,7 +51,7 @@ Neste documento, Dia e Noite são chamados de **períodos**, evitando o uso amb�
 | 5 | Ativação de navegação | Três modos por hotspot: **hover imediato**, **hover com permanência** e **clique**. O primeiro vertical slice implementa hover imediato. |
 | 6 | Condições | `ScriptableObjects` reutilizáveis e sem estado de runtime; política **Todas/Qualquer** por hotspot; atualização por eventos; avaliação completa ao entrar no ViewNode; validação final antes da execução. |
 | 7 | Condição não atendida | Configurável por hotspot: **oculto**, **visível bloqueado** ou **visível bloqueado com pista**. |
-| 8 | Ferramentas | Seleção pelo inventário; clique aplica a ferramenta no `ToolHotspot`; falha não consome nem remove a seleção; destaque de alvos válidos é opcional por ferramenta e desligado por padrão. |
+| 8 | Ferramentas | Uso por arraste e drop: a ferramenta é pressionada na Backpack, arrastada para fora do modal e solta sobre o `ToolHotspot`. O arraste bloqueia hover e clique de todos os hotspots (motivo ToolDrag); o uso acontece somente pelo drop. Toda tentativa devolve a ferramenta à Backpack; o consumo ocorre somente em sucesso, quando a definição determinar. Destaque de alvos válidos é opcional por ferramenta e desligado por padrão. |
 | 9 | Transições | `TransitionProfile` reutilizável por link, com ocultação, ponto de troca e revelação. Entrada permanece bloqueada durante toda a transição e por **0,05 segundo em tempo não escalado** após seu término visual. |
 | 10 | Cooldown | **Não existe cooldown genérico de ViewNode ou hotspot.** Repetição é controlada por bloqueio, ação em andamento, nova entrada deliberada e reentrada do cursor. Timers específicos pertencem às mecânicas que os exigirem. |
 | 11 | Save | O slot representa sempre o **checkpoint do início do Dia atual**. Dia → Noite usa estado em memória e não sobrescreve o checkpoint. A conclusão da Noite consolida o checkpoint do próximo Dia. |
@@ -58,6 +62,8 @@ Neste documento, Dia e Noite são chamados de **períodos**, evitando o uso amb�
 | 16 | Sobreposição de hotspots | Proibida entre regiões que possam ficar interativas simultaneamente dentro do mesmo ViewNode. É erro de conteúdo e gera warning. |
 | 17 | Eventos | Eventos C# entre sistemas; `UnityEvents` apenas para respostas locais e autoradas no Inspector. |
 | 18 | Áudio | `SceneAudioController` é a autoridade local de reprodução, continuidade e mixagem. ViewNode define o ambiente-alvo; link define como ocorre a mudança; `TransitionProfile` define apenas o SFX de transição. |
+| 19 | Inventário por período | **Backpack** no Dia (modal inferior, tecla de atalho, seis slots travados por tipo de item) e **Hotbar** na Noite (interface fixa, lanterna de dínamo e recipiente de óleo). Itens são utilizáveis somente depois de encontrados. |
+| 20 | Hotbar e hotspots | As ferramentas da Hotbar não interagem com hotspots: a lanterna é efeito de apresentação sobre o ViewNode; o recipiente de óleo pertence às mecânicas futuras do lampião. |
 
 ---
 
@@ -105,8 +111,11 @@ GameplaySceneController
 ├── SceneRuntimeState
 ├── SceneAudioController
 ├── InputBlocker
+├── BackpackController (período Dia)
+│   └── slots da Backpack
+├── HotbarController (período Noite)
+│   └── efeito da lanterna
 └── ModalUIController
-    ├── InventoryPanel
     └── DocumentPanel
 ```
 
@@ -258,6 +267,8 @@ Texto de referência para UI:
 | `SceneAudioController` | `MonoBehaviour` | Autoridade local de ambiente, perspectiva acústica, equipamentos, ameaças e crossfades. |
 | `InputBlocker` | Classe comum ou `MonoBehaviour` | Mantém bloqueios por motivo e informa o estado de entrada de gameplay. |
 | `ModalUIController` | `MonoBehaviour` | Abre e fecha modais e aplica bloqueio de gameplay/mixagem apropriada. |
+| `BackpackController` | `MonoBehaviour` | Inventário do Dia: modal inferior, slots travados, arraste e drop de ferramentas. |
+| `HotbarController` | `MonoBehaviour` | Inventário da Noite: interface fixa e seleção das ferramentas do período. |
 
 ### 5.2 Sequência de boot da cena
 
@@ -284,7 +295,8 @@ Motivos previstos:
 - modal;
 - pausa;
 - cutscene;
-- encerramento de período.
+- encerramento de período;
+- arraste de ferramenta na Backpack (ToolDrag).
 
 Enquanto o gameplay estiver bloqueado:
 
@@ -293,6 +305,8 @@ Enquanto o gameplay estiver bloqueado:
 - solicitações de navegação ou interação são descartadas;
 - não existe fila;
 - UI autorizada para o motivo atual continua funcionando.
+
+Durante o arraste de ferramenta (motivo ToolDrag), hover, clique e dwell não produzem efeito em nenhum hotspot: o uso da ferramenta acontece somente pelo drop sobre um `ToolHotspot`, validado pelo manager responsável.
 
 O `InputBlocker` não desativa globalmente o `EventSystem`. Um modal bloqueia o cenário, mas seus próprios botões e itens permanecem interativos.
 
@@ -665,18 +679,18 @@ O resultado descreve a consequência, mas respeita a autoridade dos managers. Na
 
 ### 10.4 ToolHotspot
 
-Fluxo:
+Fluxo de uso por arraste e drop:
 
-1. Jogador abre o inventário.
-2. Seleciona uma ferramenta, registrada de forma transitória no `GameSessionManager`.
-3. Se `destacaAlvosValidos` estiver habilitado, alvos compatíveis do ViewNode atual recebem destaque sutil.
-4. Clique no `ToolHotspot` solicita uso ao `InteractionManager`.
-5. Manager valida bloqueio, condições e compatibilidade.
+1. O jogador abre a Backpack pela tecla de atalho, disponível somente durante o Dia.
+2. Pressiona a ferramenta em seu slot e a arrasta; uma representação fantasma acompanha o cursor.
+3. Ao cruzar o threshold de saída do slot, o modal da Backpack desce com animação e é desativado; a ferramenta permanece na mão do jogador e o motivo ToolDrag bloqueia hover, clique e dwell de todos os hotspots.
+4. O jogador solta a ferramenta sobre o `ToolHotspot` desejado.
+5. O drop solicita uso ao `InteractionManager`, que valida bloqueios — exceto o próprio ToolDrag —, condições e compatibilidade.
 6. Em sucesso, executa resultados e consome carga somente se a definição da ferramenta determinar.
-7. Em falha, apresenta feedback genérico, não consome e mantém a seleção.
-8. A falha não revela qual seria a ferramenta correta.
+7. Em falha — ferramenta incompatível, condição não atendida ou drop fora de alvo — apresenta feedback genérico e não revela qual seria a ferramenta correta.
+8. Em qualquer desfecho, a ferramenta deixa a mão do jogador e retorna à Backpack.
 
-A ferramenta selecionada é limpa na troca Dia → Noite e Noite → Dia, e não faz parte do checkpoint.
+Soltar dentro do modal cancela o arraste e mantém a Backpack aberta. A ferramenta na mão é transitória: não sobrevive à troca de período e não faz parte do checkpoint.
 
 ---
 
@@ -932,7 +946,7 @@ Sons aleatórios devem definir:
 ### 13.11 Modais
 
 - Abrir modal bloqueia hotspots do cenário, mas não necessariamente pausa o mundo.
-- Inventário e documentos podem reduzir discretamente o ambiente.
+- Backpack e documentos podem reduzir discretamente o ambiente.
 - Fita ou rádio em foco realçam `Media` e reduzem grupos concorrentes.
 - Se o gameplay continuar, sinais de ameaça continuam audíveis.
 - Fechar modal restaura a mixagem anterior e exige reentrada dos hotspots do cenário.
@@ -1004,13 +1018,13 @@ Não existe cooldown genérico na tabela de tempo.
 
 ---
 
-## 16. UI modal
+## 16. UI modal e inventários por período
+
+### 16.1 Modais
 
 | Classe | Responsabilidade |
 |---|---|
 | `ModalUIController` | Abre/fecha painéis, adiciona/remove motivo de bloqueio e solicita perfil de mixagem. |
-| `InventoryPanel` | Exibe inventário e permite selecionar/cancelar ferramenta. |
-| `InventoryItemUI` | Representa um item na interface. |
 | `DocumentPanel` | Exibe documentos, imagens, anotações, pistas e mídia apropriada. |
 
 Regras:
@@ -1021,6 +1035,44 @@ Regras:
 - Abrir modal cancela dwell.
 - Modal não pausa automaticamente o gameplay.
 - Pausa, quando existente, adiciona motivo próprio ao `InputBlocker`.
+
+### 16.2 Backpack (Dia)
+
+| Classe | Responsabilidade |
+|---|---|
+| `BackpackController` | Abre e fecha o modal por tecla de atalho, executa as animações de entrada e saída, controla o arraste da ferramenta e roteia o drop ao `InteractionManager`. |
+| `BackpackSlotDefinition` | Dados fixos de um slot: item aceito, quantidade máxima, tamanho visual, fundo, habilitação de arraste e threshold de saída. |
+| `BackpackSlotUI` | Apresentação de um slot: ícone, quantidade e marca de item não encontrado. |
+
+Regras:
+
+- A Backpack abre somente por tecla de atalho e somente durante o Dia.
+- O modal comporta seis slots travados por tipo de item: cada slot aceita exclusivamente o item definido em sua `BackpackSlotDefinition`.
+- Slots são configuráveis individualmente em características técnicas e visuais, incluindo quantidade máxima, tamanho, threshold de saída e permissão de arraste.
+- Itens ocupam seus slots somente depois de encontrados pelo jogador.
+- A abertura bloqueia todos os hotspots do cenário durante toda a animação de entrada, de baixo para cima, em tempo não escalado.
+- A retirada de uma ferramenta exige pressionar seu slot e arrastar para fora do modal, além do threshold de saída.
+- Ao sair, o modal desce com animação de cima para baixo e é desativado; a ferramenta permanece na mão do jogador.
+- Com a ferramenta na mão, nenhum hotspot reage a hover, clique ou dwell; o uso acontece somente pelo drop sobre um `ToolHotspot`.
+- Toda tentativa de uso devolve a ferramenta à Backpack; o consumo ocorre somente em uso bem-sucedido, quando a definição da ferramenta determinar.
+- Soltar dentro do modal cancela o arraste e mantém a Backpack aberta.
+
+### 16.3 Hotbar (Noite)
+
+| Classe | Responsabilidade |
+|---|---|
+| `HotbarController` | Interface fixa de seleção das ferramentas da Noite pela tecla de atalho de cada uma. |
+| `LanternEffect` | Efeito de luz da lanterna que acompanha o ponteiro e altera a leitura visual do ViewNode. |
+
+Regras:
+
+- A Hotbar é fixa no canto inferior esquerdo da tela, visível durante toda a Noite, sem modal e sem bloqueio de entrada.
+- A Hotbar comporta duas ferramentas: a lanterna de dínamo e o recipiente de óleo.
+- A seleção ocorre pela tecla de atalho da respectiva ferramenta; pressionar a mesma tecla deseleciona.
+- A lanterna de dínamo oferece luz halógena e ultravioleta, alternáveis por atalho, e projeta no ponteiro um efeito que modifica a leitura do ViewNode, causando a sensação de iluminação.
+- O efeito da lanterna é de apresentação: não altera condições, estado ou interações.
+- As ferramentas da Hotbar não interagem com nenhum tipo de hotspot.
+- As ferramentas da Hotbar são utilizáveis somente depois de encontradas pelo jogador.
 
 ---
 
@@ -1148,9 +1200,12 @@ Regras:
 ### UI
 
 - `ModalUIController`
-- `InventoryPanel`
-- `InventoryItemUI`
 - `DocumentPanel`
+- `BackpackController`
+- `BackpackSlotDefinition`
+- `BackpackSlotUI`
+- `HotbarController`
+- `LanternEffect`
 
 ---
 
@@ -1166,10 +1221,10 @@ Regras:
 8. `SceneRuntimeState` e atualização integral no `OnNodeEnter`.
 9. `HotspotConditionSO`, subclasses iniciais, Todas/Qualquer e apresentações de indisponibilidade.
 10. `InteractionManager`, `InteractionHotspot`, definições e resultados.
-11. `ItemDefinition`, inventário, `ModalUIController` e `InventoryPanel`.
-12. `ToolHotspot` com sucesso, falha genérica e destaque opcional.
+11. `ItemDefinition`, `ModalUIController` com `DocumentPanel`, e `BackpackController` com slots travados.
+12. `ToolHotspot` com drop da Backpack: sucesso, falha genérica, devolução da ferramenta e destaque opcional.
 13. `PersistentFactCondition` e fatos no estado de trabalho.
-14. Segunda cena espelhada e transferência Dia → Noite sem salvar checkpoint.
+14. Segunda cena espelhada com `HotbarController` e efeito da lanterna, e transferência Dia → Noite sem salvar checkpoint.
 15. `SaveSystem`, checkpoint de início do Dia e consolidação Noite → próximo Dia.
 16. **Meta 2 — ciclo completo:** iniciar Dia, coletar/preparar, carregar Noite em memória, concluir Noite, criar checkpoint seguinte e confirmar rollback ao sair antes da conclusão.
 17. Dwell e `HotspotFeedbackProfile`; manter ausência de cooldown.
@@ -1216,14 +1271,20 @@ Regras:
 - Estado compartilhado aparece coerentemente em todos os pontos de visão.
 - Interações em andamento não executam duas vezes.
 
-### 21.4 Ferramentas e UI
+### 21.4 Ferramentas e inventários por período
 
-- Falha de ferramenta não consome e mantém seleção.
+- O uso de ferramenta acontece somente pelo drop sobre o `ToolHotspot`.
+- Falha de ferramenta não consome e não aplica penalidade: a ferramenta retorna à Backpack.
 - Falha não revela automaticamente a solução.
+- Drop em hotspot com condição não atendida conta como tentativa e devolve a ferramenta.
+- A ferramenta sai da mão do jogador em qualquer desfecho do drop.
 - Destaque de alvo é opcional por ferramenta.
+- A Backpack abre somente durante o Dia, por tecla de atalho, e bloqueia o cenário durante as animações e o arraste.
+- A Hotbar não interfere em hotspots, condições ou interações.
+- Itens e ferramentas são utilizáveis somente depois de encontrados.
 - Modal bloqueia cenário, mas não seus controles.
 - Fechar modal exige reentrada.
-- Ferramenta selecionada é limpa na troca de período.
+- A ferramenta na mão é limpa na troca de período.
 
 ### 21.5 Checkpoint
 
@@ -1276,3 +1337,5 @@ As seguintes regras não podem ser violadas por implementações específicas:
 11. ViewNode define o áudio-alvo; link define a transição; `TransitionProfile` define somente o SFX.
 12. Tilt e parallax não podem quebrar o alinhamento dos hotspots.
 13. Nenhum erro de conteúdo pode deixar o `InputBlocker` permanentemente preso.
+14. A ferramenta na mão não reage a hover, clique ou dwell: o uso ocorre somente pelo drop sobre um `ToolHotspot`.
+15. As ferramentas da Hotbar não passam pelo sistema de hotspots; a lanterna é apenas apresentação.

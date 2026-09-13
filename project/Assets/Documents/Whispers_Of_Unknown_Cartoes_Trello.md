@@ -17,7 +17,7 @@
 
 - **Fundação:** cartões 01–04.
 - **Vertical Slice 1 — Navegação:** cartões 05–10.
-- **Vertical Slice 2 — Interação:** cartões 11–15.
+- **Vertical Slice 2 — Interação e inventários:** cartões 11–15.
 - **Vertical Slice 3 — Ciclo e checkpoint:** cartões 16–18.
 - **Vertical Slice 4 — Áudio:** cartões 19–25.
 - **Polimento e estabilização:** cartões 26–29.
@@ -70,7 +70,7 @@ Configura as cenas espelhadas de Dia e Noite com os managers locais, referência
 - O `GameplaySceneController` referencia explicitamente os managers locais.
 - O `GameplaySceneDefinition` identifica etapa, período e ViewNode inicial.
 - O EventSystem usa `StandaloneInputModule` e Input Manager legado.
-- A câmera de apresentação e os Canvases de gameplay e UI estão separados corretamente.
+- A câmera de apresentação e os Canvases de gameplay e UI estão separados corretamente, com a UI de inventário do período correspondente (Backpack no Dia; Hotbar na Noite).
 - O boot detecta referências obrigatórias ausentes sem deixar a cena bloqueada.
 
 ## Checklist
@@ -79,7 +79,7 @@ Configura as cenas espelhadas de Dia e Noite com os managers locais, referência
 - [ ] O `GameplaySceneController` referencia explicitamente os managers locais.
 - [ ] O `GameplaySceneDefinition` identifica etapa, período e ViewNode inicial.
 - [ ] O EventSystem usa `StandaloneInputModule` e Input Manager legado.
-- [ ] A câmera de apresentação e os Canvases de gameplay e UI estão separados corretamente.
+- [ ] A câmera de apresentação e os Canvases de gameplay e UI estão separados corretamente, com a UI de inventário do período correspondente (Backpack no Dia; Hotbar na Noite).
 - [ ] O boot detecta referências obrigatórias ausentes sem deixar a cena bloqueada.
 
 ---
@@ -101,7 +101,7 @@ Implementa o `GameSessionManager` como único singleton e mantém a cópia de tr
 - O manager sobrevive às trocas de cena sem duplicação.
 - Inventário, IDs coletados e fatos persistentes possuem estado de trabalho em memória.
 - Slot, etapa e Dia atuais estão disponíveis para o fluxo global.
-- A ferramenta selecionada é transitória e pode ser limpa na troca de período.
+- A ferramenta na mão é transitória: não sobrevive ao fim do arraste, à troca de período nem ao checkpoint.
 - O manager não mantém referências a ViewNodes, hotspots ou managers locais.
 
 ## Checklist
@@ -110,7 +110,7 @@ Implementa o `GameSessionManager` como único singleton e mantém a cópia de tr
 - [ ] O manager sobrevive às trocas de cena sem duplicação.
 - [ ] Inventário, IDs coletados e fatos persistentes possuem estado de trabalho em memória.
 - [ ] Slot, etapa e Dia atuais estão disponíveis para o fluxo global.
-- [ ] A ferramenta selecionada é transitória e pode ser limpa na troca de período.
+- [ ] A ferramenta na mão é transitória: não sobrevive ao fim do arraste, à troca de período nem ao checkpoint.
 - [ ] O manager não mantém referências a ViewNodes, hotspots ou managers locais.
 
 ---
@@ -420,7 +420,7 @@ Implementa `InteractionHotspot`, definições de interação e resultados execut
 
 ---
 
-# Cartão 13 — Implementa inventário e UI modal
+# Cartão 13 — Implementa os inventários por período (Backpack e Hotbar)
 
 **Coluna inicial:** 📋 Programação  
 **Etiqueta:** Prioridade Alta
@@ -429,27 +429,41 @@ Implementa `InteractionHotspot`, definições de interação e resultados execut
 
 ### Objetivo
 
-Implementa o inventário e os modais sem permitir que a UI interaja acidentalmente com hotspots do cenário.
+Implementa a Backpack do Dia — modal inferior com slots travados por tipo de item e uso de ferramentas por arraste e drop — e a Hotbar da Noite — interface fixa com a lanterna de dínamo e o recipiente de óleo — sem permitir que a UI interaja acidentalmente com hotspots do cenário.
 
 ### Critério de pronto
 
-- O inventário apresenta IDs, quantidades, ícones e descrições a partir de `ItemDefinition`.
-- Abrir modal adiciona motivo de bloqueio e cancela dwell.
-- Hotspots do cenário ficam bloqueados enquanto controles do modal funcionam.
-- Fechar modal remove somente seu próprio motivo de bloqueio.
-- Hotspots sob o cursor exigem saída e nova entrada após o fechamento.
-- `InventoryPanel` permite selecionar e cancelar ferramenta.
+- A Backpack abre somente por tecla de atalho e apenas durante o Dia.
+- A Backpack comporta 6 slots travados por tipo de item, configuráveis por `BackpackSlotDefinition`: quantidade máxima, tamanho do slot, fundo, habilitação de arraste e threshold de saída.
+- Itens ocupam seus slots somente depois de encontrados pelo jogador.
+- Abrir a Backpack bloqueia todos os hotspots do cenário durante toda a animação de entrada, de baixo para cima.
+- Ferramentas saem da Backpack ao serem pressionadas e arrastadas para fora do modal, além do threshold do slot.
+- Ao sair, o modal desce com animação de cima para baixo e é desativado; a ferramenta permanece na mão do jogador.
+- Com a ferramenta na mão, somente o drop sobre um `ToolHotspot` executa uso; hover e clique de hotspots permanecem bloqueados.
+- Toda tentativa de uso devolve a ferramenta à Backpack; o consumo ocorre somente em sucesso, quando a definição determinar.
+- Soltar dentro do modal cancela o arraste e mantém a Backpack aberta; soltar fora de alvo devolve a ferramenta sem penalidade.
+- A Hotbar é fixa no canto inferior esquerdo, sem modal e sem bloqueio de entrada.
+- Lanterna de dínamo e recipiente de óleo são selecionados pela tecla de atalho da respectiva ferramenta; pressionar a mesma tecla deseleciona.
+- A lanterna alterna entre os modos halogênio e UV e projeta no ponteiro um efeito de luz que modifica a leitura do ViewNode.
+- As ferramentas da Hotbar não interagem com nenhum tipo de hotspot.
 - `DocumentPanel` apresenta documentos e mídia sem depender do ViewNode permanecer ativo.
 - Abrir modal não altera automaticamente o `timeScale`.
 
 ## Checklist
 
-- [ ] O inventário apresenta IDs, quantidades, ícones e descrições a partir de `ItemDefinition`.
-- [ ] Abrir modal adiciona motivo de bloqueio e cancela dwell.
-- [ ] Hotspots do cenário ficam bloqueados enquanto controles do modal funcionam.
-- [ ] Fechar modal remove somente seu próprio motivo de bloqueio.
-- [ ] Hotspots sob o cursor exigem saída e nova entrada após o fechamento.
-- [ ] `InventoryPanel` permite selecionar e cancelar ferramenta.
+- [ ] A Backpack abre somente por tecla de atalho e apenas durante o Dia.
+- [ ] A Backpack comporta 6 slots travados por tipo de item, configuráveis por `BackpackSlotDefinition`: quantidade máxima, tamanho do slot, fundo, habilitação de arraste e threshold de saída.
+- [ ] Itens ocupam seus slots somente depois de encontrados pelo jogador.
+- [ ] Abrir a Backpack bloqueia todos os hotspots do cenário durante toda a animação de entrada, de baixo para cima.
+- [ ] Ferramentas saem da Backpack ao serem pressionadas e arrastadas para fora do modal, além do threshold do slot.
+- [ ] Ao sair, o modal desce com animação de cima para baixo e é desativado; a ferramenta permanece na mão do jogador.
+- [ ] Com a ferramenta na mão, somente o drop sobre um `ToolHotspot` executa uso; hover e clique de hotspots permanecem bloqueados.
+- [ ] Toda tentativa de uso devolve a ferramenta à Backpack; o consumo ocorre somente em sucesso, quando a definição determinar.
+- [ ] Soltar dentro do modal cancela o arraste e mantém a Backpack aberta; soltar fora de alvo devolve a ferramenta sem penalidade.
+- [ ] A Hotbar é fixa no canto inferior esquerdo, sem modal e sem bloqueio de entrada.
+- [ ] Lanterna de dínamo e recipiente de óleo são selecionados pela tecla de atalho da respectiva ferramenta; pressionar a mesma tecla deseleciona.
+- [ ] A lanterna alterna entre os modos halogênio e UV e projeta no ponteiro um efeito de luz que modifica a leitura do ViewNode.
+- [ ] As ferramentas da Hotbar não interagem com nenhum tipo de hotspot.
 - [ ] `DocumentPanel` apresenta documentos e mídia sem depender do ViewNode permanecer ativo.
 - [ ] Abrir modal não altera automaticamente o `timeScale`.
 
@@ -468,9 +482,9 @@ Implementa o uso de ferramentas, hover com permanência e feedback padronizado s
 
 ### Critério de pronto
 
-- `ToolHotspot` consulta a ferramenta selecionada e valida compatibilidade.
+- O drop sobre o `ToolHotspot` roteia o uso ao `InteractionManager`, que valida a ferramenta na mão e a compatibilidade.
 - Sucesso consome carga somente quando a definição determinar.
-- Falha apresenta mensagem genérica, não consome e mantém a seleção.
+- Falha apresenta mensagem genérica, não consome e devolve a ferramenta à Backpack.
 - Destaque de alvos válidos respeita a opção da ferramenta e permanece desligado por padrão.
 - Dwell usa tempo escalado e zera ao sair, bloquear ou perder condição.
 - `HotspotFeedbackProfile` controla cursor, progresso, hover e sons abstratos.
@@ -479,9 +493,11 @@ Implementa o uso de ferramentas, hover com permanência e feedback padronizado s
 
 ## Checklist
 
-- [ ] `ToolHotspot` consulta a ferramenta selecionada e valida compatibilidade.
+- [ ] O drop sobre o `ToolHotspot` roteia o uso ao `InteractionManager`, que valida a ferramenta na mão e a compatibilidade.
+- [ ] O arraste de ferramenta bloqueia hover, clique e dwell de todos os hotspots; o uso acontece somente pelo drop.
+- [ ] Drop em `ToolHotspot` com condição não atendida conta como tentativa e devolve a ferramenta.
 - [ ] Sucesso consome carga somente quando a definição determinar.
-- [ ] Falha apresenta mensagem genérica, não consome e mantém a seleção.
+- [ ] Falha apresenta mensagem genérica, não consome e devolve a ferramenta à Backpack.
 - [ ] Destaque de alvos válidos respeita a opção da ferramenta e permanece desligado por padrão.
 - [ ] Dwell usa tempo escalado e zera ao sair, bloquear ou perder condição.
 - [ ] `HotspotFeedbackProfile` controla cursor, progresso, hover e sons abstratos.
@@ -507,8 +523,10 @@ Valida condições, estado compartilhado, inventário, modais, ferramentas, dwel
 - Retornar a um ViewNode resolve condições alteradas enquanto ele estava oculto.
 - Um objeto compartilhado apresenta o mesmo estado em diferentes pontos de visão.
 - Interações não executam duas vezes por clique ou hover residual.
-- Uso de ferramenta válido e inválido produz os resultados esperados.
-- Modal bloqueia o cenário sem bloquear seus próprios controles.
+- Drop de ferramenta válido executa a interação; ferramenta inválida e drop fora de alvo devolvem a ferramenta à Backpack sem penalidade.
+- A Backpack bloqueia o cenário da abertura ao fim do drop; a Hotbar não bloqueia entrada nem interage com hotspots.
+- A Backpack não abre durante a Noite.
+- Itens não encontrados não aparecem na Backpack e não ficam utilizáveis na Hotbar.
 - Dwell cancela corretamente em saída, bloqueio e perda de condição.
 - Não existe comportamento dependente de cooldown genérico.
 
@@ -518,8 +536,10 @@ Valida condições, estado compartilhado, inventário, modais, ferramentas, dwel
 - [ ] Retornar a um ViewNode resolve condições alteradas enquanto ele estava oculto.
 - [ ] Um objeto compartilhado apresenta o mesmo estado em diferentes pontos de visão.
 - [ ] Interações não executam duas vezes por clique ou hover residual.
-- [ ] Uso de ferramenta válido e inválido produz os resultados esperados.
-- [ ] Modal bloqueia o cenário sem bloquear seus próprios controles.
+- [ ] Drop de ferramenta válido executa a interação; ferramenta inválida e drop fora de alvo devolvem a ferramenta à Backpack sem penalidade.
+- [ ] A Backpack bloqueia o cenário da abertura ao fim do drop; a Hotbar não bloqueia entrada nem interage com hotspots.
+- [ ] A Backpack não abre durante a Noite.
+- [ ] Itens não encontrados não aparecem na Backpack e não ficam utilizáveis na Hotbar.
 - [ ] Dwell cancela corretamente em saída, bloqueio e perda de condição.
 - [ ] Não existe comportamento dependente de cooldown genérico.
 
@@ -543,7 +563,7 @@ Implementa fatos persistentes e mantém em memória as consequências do Dia nec
 - Inventário, coletados e fatos atravessam a troca de cena em memória.
 - `SceneRuntimeState` do Dia é descartado e não atravessa automaticamente.
 - A cena da Noite lê o estado de trabalho e aplica suas condições iniciais.
-- A ferramenta selecionada é limpa antes de carregar a Noite.
+- A ferramenta na mão é devolvida à Backpack antes de carregar a Noite.
 - A passagem Dia → Noite não sobrescreve o checkpoint em disco.
 
 ## Checklist
@@ -553,7 +573,7 @@ Implementa fatos persistentes e mantém em memória as consequências do Dia nec
 - [ ] Inventário, coletados e fatos atravessam a troca de cena em memória.
 - [ ] `SceneRuntimeState` do Dia é descartado e não atravessa automaticamente.
 - [ ] A cena da Noite lê o estado de trabalho e aplica suas condições iniciais.
-- [ ] A ferramenta selecionada é limpa antes de carregar a Noite.
+- [ ] A ferramenta na mão é devolvida à Backpack antes de carregar a Noite.
 - [ ] A passagem Dia → Noite não sobrescreve o checkpoint em disco.
 
 ---
@@ -1019,7 +1039,7 @@ Valida todos os invariantes da arquitetura em um ciclo jogável com navegação,
 |---:|---|---|
 | 1 | 01–04 | Roadmap e fundação |
 | 2 | 05–10 | Vertical Slice 1 — navegação, câmera e parallax |
-| 3 | 11–15 | Vertical Slice 2 — condições, interação, inventário e ferramentas |
+| 3 | 11–15 | Vertical Slice 2 — condições, interação, Backpack, Hotbar e ferramentas |
 | 4 | 16–18 | Vertical Slice 3 — Dia/Noite e checkpoint diário |
 | 5 | 19–25 | Vertical Slice 4 — arquitetura e conteúdo de áudio |
 | 6 | 26–29 | VHS, profiling e validação final |
