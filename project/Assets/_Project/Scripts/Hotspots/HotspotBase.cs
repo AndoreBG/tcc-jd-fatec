@@ -7,9 +7,10 @@ namespace Whispers
 {
     /// <summary>
     /// Base abstrata de todos os hotspots. Detecta entrada/saída/clique via EventSystem
-    /// (StandaloneInputModule), respeita bloqueio de gameplay, reentrada física,
+    /// (StandaloneInputModule), respeita bloqueio de gameplay e reentrada apenas em hover,
     /// modo de ativação, condições Todas/Qualquer, políticas de repetição,
     /// apresentação de indisponibilidade e feedback abstrato opcional (perfil).
+    /// </summary>
     public abstract class HotspotBase : MonoBehaviour,
         IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
@@ -48,7 +49,7 @@ namespace Whispers
         // ---- Estado de runtime ----
         private bool _presented;
         private bool _cursorOver;
-        private bool _requiresExit;
+        private bool _requiresExit; // Aplicável somente aos modos de ativação por hover.
         private bool _consumedOnce;
         private bool _isAvailable = true;
         private bool _wasBlocked;
@@ -66,6 +67,11 @@ namespace Whispers
 
         /// <summary>Bloqueio de gameplay visto por este hotspot (ponto único de consulta).</summary>
         protected bool IsGameplayBlocked => Blocker != null && Blocker.IsBlocked;
+
+        private bool UsesHoverReentry => activationMode == HotspotActivationMode.HoverImmediate ||
+                                         activationMode == HotspotActivationMode.HoverWithDwell;
+
+        private bool IsWaitingForReentry => UsesHoverReentry && _requiresExit;
 
         /// <summary>Perfil efetivo: o próprio ou o default das configurações globais.</summary>
         private HotspotFeedbackProfile Feedback
@@ -192,8 +198,8 @@ namespace Whispers
             if (!presented)
             {
                 CancelDwell();
-                // Não limpa _requiresExit aqui - ele será limpo apenas no OnPointerExit físico
-                // Isso garante a regra de reentrada após transição
+                // Preserva a reentrada pendente dos modos hover ao sair do ViewNode.
+                // Modos de clique ignoram essa marca.
             }
         }
 
@@ -232,7 +238,7 @@ namespace Whispers
         {
             if (IsGameplayBlocked) return false;
             if (!enabledForGameplay || !_presented) return false;
-            if (_requiresExit) return false;
+            if (IsWaitingForReentry) return false;
             if (repeatPolicy == HotspotRepeatPolicy.Once && _consumedOnce) return false;
             if (!_isAvailable)
             {
@@ -269,12 +275,12 @@ namespace Whispers
             bool blocked = IsGameplayBlocked;
             if (blocked)
             {
-                _requiresExit = true;
+                _requiresExit = UsesHoverReentry;
                 CancelDwell();
                 return;
             }
 
-            if (_requiresExit)
+            if (IsWaitingForReentry)
             {
                 CancelDwell();
                 return;
@@ -303,7 +309,7 @@ namespace Whispers
         public void OnPointerExit(PointerEventData eventData)
         {
             _cursorOver = false;
-            _requiresExit = false; // saída física libera a reentrada - regra oficial
+            _requiresExit = false; // libera a reentrada pendente dos modos hover
             CancelDwell();
             RestoreCursor();
         }
@@ -313,7 +319,6 @@ namespace Whispers
             // Click é o único modo que deve reagir ao clique
             if (activationMode != HotspotActivationMode.Click) return;
             if (!enabledForGameplay || !_presented) return;
-            if (_requiresExit) return; // respeita reentrada também no clique
             if (IsGameplayBlocked) return;
             if (!_cursorOver) return; // garante que o clique foi dentro da região
 
@@ -332,7 +337,7 @@ namespace Whispers
         {
             if (IsGameplayBlocked) return;
             if (!enabledForGameplay || !_presented) return;
-            if (_requiresExit) return;
+            if (IsWaitingForReentry) return;
 
             bool ok = RevalidateConditions();
             if (!ok)
@@ -368,19 +373,20 @@ namespace Whispers
             EnsureSessionSubscription(); // sessão pode ser criada após o OnEnable (boot)
 
             bool blocked = IsGameplayBlocked;
+            if (!UsesHoverReentry) _requiresExit = false;
 
             if (blocked != _wasBlocked)
             {
                 if (blocked)
                 {
                     CancelDwell();
-                    if (_cursorOver) _requiresExit = true;
+                    if (_cursorOver && UsesHoverReentry) _requiresExit = true;
                 }
                 else
                 {
-                    // Desbloqueio: hotspots sob o cursor passam a exigir saída física.
-                    // Regra da arquitetura seção 5.3 e 8.5
-                    if (_cursorOver) _requiresExit = true;
+                    // Desbloqueio: somente os modos hover exigem saída e nova entrada.
+                    // Click continua dependendo do clique, não de movimento do cursor.
+                    if (_cursorOver && UsesHoverReentry) _requiresExit = true;
                 }
                 _wasBlocked = blocked;
             }
