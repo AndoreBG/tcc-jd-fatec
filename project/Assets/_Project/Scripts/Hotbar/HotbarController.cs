@@ -73,11 +73,26 @@ namespace Whispers
                 }
             }
 
+            GameplaySceneController scene = GameplaySceneController.Instance;
+            if (scene != null && scene.Blocker != null && scene.Blocker.IsBlocked)
+            {
+                RefreshVisuals();
+                return;
+            }
+
             if (Input.GetKeyDown(lanternKey)) ToggleTool(Tool.Lantern);
             if (Input.GetKeyDown(oilKey)) ToggleTool(Tool.Oil);
             if (Input.GetKeyDown(lanternModeKey) && _selected == Tool.Lantern)
                 SetMode(_mode == LanternMode.Halogen ? LanternMode.Uv : LanternMode.Halogen);
 
+            RefreshVisuals();
+        }
+
+        public void PrepareForPeriodChange()
+        {
+            _selected = Tool.None;
+            _mode = LanternMode.Halogen;
+            lanternEffect?.Hide();
             RefreshVisuals();
         }
 

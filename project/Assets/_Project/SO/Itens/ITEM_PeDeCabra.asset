@@ -15,6 +15,6 @@ MonoBehaviour:
   id: item_pedecabra
   displayName: "P\xE9 de Cabra"
   description: Pode ser utilizado para abrir passagens.
-  icon: {fileID: 0}
+  icon: {fileID: -1347191966666272780, guid: a7ef9c04f757eae4390e0c11440341df, type: 3}
   isTool: 1
   consumesOnUse: 0

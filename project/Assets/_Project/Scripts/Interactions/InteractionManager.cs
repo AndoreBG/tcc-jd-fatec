@@ -40,6 +40,7 @@ namespace Whispers
             {
                 // Validacão final no ponto de execução (seção 10.2 da arquitetura).
                 if (!hotspot.RevalidateConditions()) return false;
+                if (!ValidateResults(hotspot.Definition.results)) return false;
 
                 // A partir daqui a ação está comprometida.
                 InteractionDefinition definition = hotspot.Definition;
@@ -98,7 +99,7 @@ namespace Whispers
                 // Sem ferramenta selecionada ou incompatível: falha genérica.
                 // Não consome, não remove a seleção e não revela a ferramenta correta.
                 ItemDefinition tool = hotspot.FindAcceptedTool(session != null ? session.selectedTool : null);
-                if (tool == null)
+                if (tool == null || session == null || !session.HasItem(tool.id))
                 {
                     hotspot.NotifyFailure();
                     return false;
@@ -112,6 +113,8 @@ namespace Whispers
                     Debug.LogWarning($"[InteractionManager] ToolHotspot '{hotspot.name}' sem InteractionDefinition de sucesso.", hotspot);
                     return false;
                 }
+
+                if (!ValidateResults(definition.results)) return false;
 
                 // Ação comprometida: executa resultados.
                 ExecuteResults(definition.results);
@@ -149,7 +152,7 @@ namespace Whispers
                         break;
 
                     case InteractionResultType.MarkCollected:
-                        if (session != null) session.MarkCollected(result.itemId);
+                        if (session != null) session.MarkCollected(result.collectionId);
                         break;
 
                     case InteractionResultType.SetRuntimeFlag:
@@ -175,12 +178,56 @@ namespace Whispers
                         break;
 
                     case InteractionResultType.RequestPeriodEnd:
-                        // Autoridade do fluxo global (VS3, cartão 16). Registrado como
-                        // ponto de extensão: o resultado existe, a execução ainda não.
-                        Debug.LogWarning("[InteractionManager] RequestPeriodEnd recebido; encerramento de período será executado pelo fluxo global no VS3 (cartão 16).");
+                        Scene?.RequestPeriodEnd();
                         break;
                 }
             }
+        }
+
+        // Valida antes de executar para não entregar um item de uma ocorrência já coletada.
+        private bool ValidateResults(InteractionResult[] results)
+        {
+            if (results == null) return true;
+            var collectionIds = new HashSet<string>();
+            for (int i = 0; i < results.Length; i++)
+            {
+                InteractionResult result = results[i];
+                if (result == null) continue;
+                if (result.type == InteractionResultType.MarkCollected)
+                {
+                    if (string.IsNullOrWhiteSpace(result.collectionId) || !collectionIds.Add(result.collectionId))
+                    {
+                        Debug.LogWarning("[InteractionManager] MarkCollected precisa de collectionId único e não vazio.");
+                        return false;
+                    }
+                    if (GameSessionManager.Instance == null || GameSessionManager.Instance.WasCollected(result.collectionId))
+                        return false;
+                }
+                if ((result.type == InteractionResultType.AddItem || result.type == InteractionResultType.RemoveItem) &&
+                    (string.IsNullOrWhiteSpace(result.itemId) || result.amount <= 0))
+                {
+                    Debug.LogWarning("[InteractionManager] Resultado de inventário inválido.");
+                    return false;
+                }
+                if (result.type == InteractionResultType.RequestPeriodEnd)
+                {
+                    if (i != results.Length - 1 || Scene == null || !Scene.CanEndPeriod)
+                    {
+                        Debug.LogWarning("[InteractionManager] Encerramento indisponível ou não é o último resultado.");
+                        return false;
+                    }
+                    foreach (InteractionResult other in results)
+                    {
+                        if (other != null && (other.type == InteractionResultType.RequestNavigate ||
+                            other.type == InteractionResultType.OpenDocument))
+                        {
+                            Debug.LogWarning("[InteractionManager] Não misture navegação/documento com encerramento na mesma interação.");
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
         }
 
         /// <summary>Registra a interação concluída e notifica a cena para reavaliar condições.</summary>

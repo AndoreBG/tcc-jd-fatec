@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: DEF_Day_Playground
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.GameplaySceneDefinition
   sceneId: day_playground
-  stageId: day_playground
+  stageId: playground
   period: 0
   initialViewNodeId: vn_corredorfront
   defaultTransition: {fileID: 11400000, guid: 1d8ecbbcdd378c047a08d52a5a189cae, type: 2}
