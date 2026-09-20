@@ -9,8 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cc538de23c34c864ab21c6fd6d6c5794, type: 3}
-  m_Name: COND_TemPeDeCabra
-  m_EditorClassIdentifier: Assembly-CSharp::Whispers.HasItemCondition
-  itemId: item_pedecabra
-  expectTrue: 0
+  m_Script: {fileID: 11500000, guid: 5e8ce4f8c7bf87349831034224c89711, type: 3}
+  m_Name: FACT_ReforocuJanelaCorredor
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.PersistentFactCondition
+  factId: fato_janela_corredor_reforcada
+  expectTrue: 1

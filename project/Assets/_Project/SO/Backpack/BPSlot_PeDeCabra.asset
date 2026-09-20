@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.BackpackSlotDefinition
   acceptedItem: {fileID: 11400000, guid: b1c187da871d3f04d881991eef8ad243, type: 2}
   maxQuantity: 1
-  slotSize: {x: 90, y: 90}
-  slotBackground: {fileID: 0}
+  slotSize: {x: 120, y: 120}
+  slotBackground: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
   dragEnabled: 1
   exitThreshold: 60

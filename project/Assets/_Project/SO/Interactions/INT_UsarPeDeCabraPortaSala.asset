@@ -15,11 +15,12 @@ MonoBehaviour:
   id: int_usarpedecabraportasala
   debugName: 
   results:
-  - type: 3
+  - type: 5
     itemId: 
+    collectionId: 
     amount: 0
-    flagId: flag_usoupedecabraportasala
-    factId: 
+    flagId: 
+    factId: fato_porta_sala_preparada
     destinationId: 
     document: {fileID: 0}
   sfx: {fileID: 0}

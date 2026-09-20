@@ -17,7 +17,16 @@ MonoBehaviour:
   results:
   - type: 0
     itemId: item_pedecabra
+    collectionId: 
     amount: 1
+    flagId: 
+    factId: 
+    destinationId: 
+    document: {fileID: 0}
+  - type: 2
+    itemId: 
+    collectionId: coleta_pedecabra_playground
+    amount: 0
     flagId: 
     factId: 
     destinationId: 

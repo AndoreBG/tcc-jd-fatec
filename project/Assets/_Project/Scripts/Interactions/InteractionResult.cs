@@ -15,7 +15,7 @@ namespace Whispers
         AddItem,
         /// <summary>Remove amount unidades do item itemId do inventário de trabalho.</summary>
         RemoveItem,
-        /// <summary>Registra itemId como coletado (impede reaparecimento no ciclo).</summary>
+        /// <summary>Registra collectionId como coletado (ID da ocorrência no mundo).</summary>
         MarkCollected,
         /// <summary>Liga uma flag temporária da cena (flagId).</summary>
         SetRuntimeFlag,
@@ -29,8 +29,7 @@ namespace Whispers
         OpenDocument,
         /// <summary>
         /// Solicita o encerramento do período ao fluxo global.
-        /// A execução efetiva (troca Dia ⇄ Noite) chega com o VS3 (cartão 16);
-        /// até lá, o manager registra um warning de não implementado.
+        /// Deve ser o último resultado. A gravação aguarda o término da interação.
         /// </summary>
         RequestPeriodEnd
     }
@@ -45,8 +44,11 @@ namespace Whispers
         [Tooltip("Tipo de consequência executada pelo InteractionManager.")]
         public InteractionResultType type;
 
-        [Tooltip("Item usado por AddItem, RemoveItem e MarkCollected.")]
+        [Tooltip("Tipo de item usado por AddItem e RemoveItem.")]
         public string itemId;
+
+        [Tooltip("ID único da ocorrência no mundo, usado por MarkCollected. Ex.: coleta_madeira_sotao.")]
+        public string collectionId;
 
         [Tooltip("Quantidade usada por AddItem e RemoveItem.")]
         public int amount = 1;

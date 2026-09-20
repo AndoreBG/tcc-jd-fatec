@@ -11,7 +11,7 @@ namespace Whispers
     /// </summary>
     public class InputBlocker : MonoBehaviour
     {
-        private readonly HashSet<InputBlockReason> _reasons = new HashSet<InputBlockReason>();
+        private readonly Dictionary<InputBlockReason, int> _reasons = new Dictionary<InputBlockReason, int>();
 
         /// <summary>Verdadeiro se houver ao menos um motivo de bloqueio ativo.</summary>
         public bool IsBlocked => _reasons.Count > 0;
@@ -20,7 +20,7 @@ namespace Whispers
         public event Action<bool> BlockChanged;
 
         /// <summary>Verdadeiro se o motivo informado está ativo.</summary>
-        public bool HasReason(InputBlockReason reason) => _reasons.Contains(reason);
+        public bool HasReason(InputBlockReason reason) => _reasons.ContainsKey(reason);
 
         /// <summary>
         /// Verdadeiro se houver motivo ativo ALÉM dos informados. Usado pelo fluxo de
@@ -32,7 +32,7 @@ namespace Whispers
         {
             if (_reasons.Count == 0) return false;
             if (exempt == null || exempt.Length == 0) return true;
-            foreach (InputBlockReason reason in _reasons)
+            foreach (InputBlockReason reason in _reasons.Keys)
                 if (System.Array.IndexOf(exempt, reason) < 0)
                     return true;
             return false;
@@ -40,18 +40,17 @@ namespace Whispers
 
         public void AddReason(InputBlockReason reason)
         {
-            if (_reasons.Add(reason))
-            {
-                BlockChanged?.Invoke(IsBlocked);
-            }
+            _reasons.TryGetValue(reason, out int count);
+            _reasons[reason] = count + 1;
+            BlockChanged?.Invoke(IsBlocked);
         }
 
         public void RemoveReason(InputBlockReason reason)
         {
-            if (_reasons.Remove(reason))
-            {
-                BlockChanged?.Invoke(IsBlocked);
-            }
+            if (!_reasons.TryGetValue(reason, out int count)) return;
+            if (count > 1) _reasons[reason] = count - 1;
+            else _reasons.Remove(reason);
+            BlockChanged?.Invoke(IsBlocked);
         }
     }
 }

@@ -8,12 +8,9 @@ namespace Whispers
     /// Autoridade dos modais de gameplay: abre/fecha painéis, adiciona e remove
     /// o motivo Modal do InputBlocker (bloqueia o cenário, não os controles do
     /// próprio modal) e não altera timeScale.
-    /// A UI da mochila/inventário foi REMOVIDA (será substituída por outra
-    /// mecânica); restam aqui o painel de documentos — aberto por
-    /// InteractionResult.OpenDocument e fechado SOMENTE pela tecla ESC — e o
-    /// escurecimento ModalEscurecer, que serve a qualquer modal aberto.
-    /// A camada de dados do inventário (GameSessionManager) e a ferramenta
-    /// selecionada seguem intactas e dormentes até a nova mecânica.
+    /// Controla documentos e escurecimento; a Backpack possui controller próprio.
+    /// O encerramento de período fecha a apresentação imediatamente e libera
+    /// somente o bloqueio Modal pertencente a este controller.
     /// </summary>
     public class ModalUIController : MonoBehaviour
     {
@@ -82,7 +79,8 @@ namespace Whispers
         public void OpenDocument(DocumentData data)
         {
             if (data == null) return;
-            if (Blocker != null && Blocker.HasReason(InputBlockReason.Transition)) return;
+            if (_documentOpen) { documentPanel.Show(data); return; }
+            if (Blocker != null && Blocker.IsBlocked) return;
 
             if (documentPanel == null)
             {
@@ -104,6 +102,17 @@ namespace Whispers
             _documentOpen = false;
             Blocker?.RemoveReason(InputBlockReason.Modal);
             UpdateDarken();
+        }
+
+        /// <summary>Fechamento imediato para troca de período, sem iniciar outra animação.</summary>
+        public void CloseForPeriodChange()
+        {
+            if (_darkenRoutine != null) { StopCoroutine(_darkenRoutine); _darkenRoutine = null; }
+            if (documentPanel != null) documentPanel.gameObject.SetActive(false);
+            if (_documentOpen) Blocker?.RemoveReason(InputBlockReason.Modal);
+            _documentOpen = false;
+            if (_darkenGroup != null) _darkenGroup.alpha = 0f;
+            if (darkenObject != null) darkenObject.SetActive(false);
         }
 
         // ---------------- Escurecimento ----------------
@@ -146,15 +155,7 @@ namespace Whispers
 
         private void OnDisable()
         {
-            // Garantia: a cena nunca fica bloqueada por um modal que foi desligado à força.
-            if (_documentOpen) CloseDocument();
-
-            if (_darkenRoutine != null)
-            {
-                StopCoroutine(_darkenRoutine);
-                _darkenRoutine = null;
-            }
-            if (darkenObject != null) darkenObject.SetActive(false);
+            CloseForPeriodChange();
         }
     }
 }

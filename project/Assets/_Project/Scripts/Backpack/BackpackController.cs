@@ -130,6 +130,16 @@ namespace Whispers
             }
         }
 
+        /// <summary>Encerra UI/arraste sem consumo. Chamado antes do carregamento global.</summary>
+        public void PrepareForPeriodChange()
+        {
+            if (_animRoutine != null) { StopCoroutine(_animRoutine); _animRoutine = null; }
+            CleanupDrag();
+            RemoveModalReason();
+            if (panel != null) panel.anchoredPosition = new Vector2(panel.anchoredPosition.x, closedY);
+            _state = BpState.Closed;
+        }
+
         // ---------------- Abrir / fechar ----------------
 
         private void TryOpen()
@@ -141,7 +151,7 @@ namespace Whispers
                 Debug.Log("[Backpack] A Backpack só pode ser aberta durante o Dia.");
                 return;
             }
-            if (Blocker.HasReason(InputBlockReason.Transition)) return;
+            if (Blocker.IsBlocked) return;
 
             AddModalReason(); // todos os hotspots do cenário param de reagir
             _state = BpState.Opening;
@@ -191,6 +201,7 @@ namespace Whispers
         public void BeginDragFromSlot(BackpackSlotDefinition slotDefinition)
         {
             if (_state != BpState.Open || slotDefinition == null || !slotDefinition.dragEnabled) return;
+            if (Blocker != null && Blocker.IsBlockedExcept(InputBlockReason.Modal)) return;
 
             ItemDefinition item = slotDefinition.acceptedItem;
             if (item == null || Session == null || Session.GetQuantity(item.id) <= 0) return;
@@ -360,7 +371,7 @@ namespace Whispers
                 if (def == null || def.acceptedItem == null) continue;
 
                 int quantity = Session.GetQuantity(def.acceptedItem.id);
-                bool found = quantity > 0 || Session.WasCollected(def.acceptedItem.id);
+                bool found = quantity > 0 || Session.WasItemFound(def.acceptedItem.id);
                 if (quantity > def.maxQuantity) overLimit = true;
 
                 ui.Refresh(def.acceptedItem, Mathf.Min(quantity, def.maxQuantity), found);

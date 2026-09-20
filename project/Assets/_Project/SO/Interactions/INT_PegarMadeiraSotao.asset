@@ -15,17 +15,19 @@ MonoBehaviour:
   id: int_pegarmaideirasotao
   debugName: 
   results:
-  - type: 3
-    itemId: 
-    amount: 0
-    flagId: flag_pegoumaideirasotao
+  - type: 0
+    itemId: item_madeira
+    collectionId: 
+    amount: 1
+    flagId: 
     factId: 
     destinationId: 
     document: {fileID: 0}
-  - type: 0
-    itemId: item_madeira
-    amount: 1
-    flagId: flag_pegoumaideirasotao
+  - type: 2
+    itemId: 
+    collectionId: coleta_madeira_sotao
+    amount: 0
+    flagId: 
     factId: 
     destinationId: 
     document: {fileID: 0}
