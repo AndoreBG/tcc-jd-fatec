@@ -495,6 +495,11 @@ MonoBehaviour:
       m_Calls: []
   destinationId: vn_quarto
   transitionProfile: {fileID: 11400000, guid: 1d8ecbbcdd378c047a08d52a5a189cae, type: 2}
+  link:
+    destinationId: vn_quarto
+    transitionProfile: {fileID: 11400000, guid: 1d8ecbbcdd378c047a08d52a5a189cae, type: 2}
+    audioMode: 0
+    specialAudioId: 
 --- !u!114 &198916421
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -970,6 +975,11 @@ MonoBehaviour:
       m_Calls: []
   destinationId: vn_sala
   transitionProfile: {fileID: 11400000, guid: 1d8ecbbcdd378c047a08d52a5a189cae, type: 2}
+  link:
+    destinationId: vn_sala
+    transitionProfile: {fileID: 11400000, guid: 1d8ecbbcdd378c047a08d52a5a189cae, type: 2}
+    audioMode: 1
+    specialAudioId: 
 --- !u!114 &314688728
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1425,6 +1435,7 @@ GameObject:
   m_Component:
   - component: {fileID: 391696333}
   - component: {fileID: 391696332}
+  - component: {fileID: 391696334}
   m_Layer: 0
   m_Name: Gameplay
   m_TagString: Untagged
@@ -1451,6 +1462,7 @@ MonoBehaviour:
   transitionController: {fileID: 1709031448}
   interactionManager: {fileID: 416328798}
   modalUI: {fileID: 1620088625}
+  sceneAudioController: {fileID: 391696334}
   cycleDefinition: {fileID: 11400000, guid: 78640dafc1f5af647995893fbb625887, type: 2}
   backpack: {fileID: 1914810880}
   hotbar: {fileID: 898848916}
@@ -1477,6 +1489,75 @@ Transform:
   - {fileID: 883584498}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &391696334
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 391696331}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4caf70defc253cf853edb1a2817e7c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.SceneAudioController
+  mixer: {fileID: 24100000, guid: 7c8c640b8a6f437092ea97b37d3dca1b, type: 2}
+  ambienceGroup: {fileID: 24300003, guid: 7c8c640b8a6f437092ea97b37d3dca1b, type: 2}
+  threatsGroup: {fileID: 24300004, guid: 7c8c640b8a6f437092ea97b37d3dca1b, type: 2}
+  interactionsGroup: {fileID: 24300005, guid: 7c8c640b8a6f437092ea97b37d3dca1b, type: 2}
+  equipmentGroup: {fileID: 24300006, guid: 7c8c640b8a6f437092ea97b37d3dca1b, type: 2}
+  radioGroup: {fileID: 24300008, guid: 7c8c640b8a6f437092ea97b37d3dca1b, type: 2}
+  tapesGroup: {fileID: 24300009, guid: 7c8c640b8a6f437092ea97b37d3dca1b, type: 2}
+  transitionGroup: {fileID: 24300010, guid: 7c8c640b8a6f437092ea97b37d3dca1b, type: 2}
+  uiGroup: {fileID: 24300011, guid: 7c8c640b8a6f437092ea97b37d3dca1b, type: 2}
+  musicGroup: {fileID: 24300012, guid: 7c8c640b8a6f437092ea97b37d3dca1b, type: 2}
+  normalSnapshot: {fileID: 24500001, guid: 7c8c640b8a6f437092ea97b37d3dca1b, type: 2}
+  modalSnapshot: {fileID: 24500002, guid: 7c8c640b8a6f437092ea97b37d3dca1b, type: 2}
+  mediaFocusSnapshot: {fileID: 24500003, guid: 7c8c640b8a6f437092ea97b37d3dca1b, type: 2}
+  pausedSnapshot: {fileID: 24500004, guid: 7c8c640b8a6f437092ea97b37d3dca1b, type: 2}
+  transitionSnapshot: {fileID: 24500005, guid: 7c8c640b8a6f437092ea97b37d3dca1b, type: 2}
+  continuousLayers:
+  - id: ambient_period
+    clip: {fileID: 0}
+    role: 0
+    loop: 1
+    playOnInitialize: 1
+    volume: 1
+    pan: 0
+  - id: ambient_structure
+    clip: {fileID: 0}
+    role: 0
+    loop: 1
+    playOnInitialize: 1
+    volume: 0.8
+    pan: 0
+  - id: ambient_exterior
+    clip: {fileID: 0}
+    role: 0
+    loop: 1
+    playOnInitialize: 1
+    volume: 0.7
+    pan: 0
+  - id: ambient_electricity
+    clip: {fileID: 0}
+    role: 0
+    loop: 1
+    playOnInitialize: 1
+    volume: 0.5
+    pan: 0
+  - id: details_local
+    clip: {fileID: 0}
+    role: 0
+    loop: 1
+    playOnInitialize: 1
+    volume: 0.45
+    pan: 0
+  runtimeRoot: {fileID: 0}
+  profileTransitionDuration: 0.2
+  oneShotPoolSize: 8
+  maxPersistentSources: 8
+  sceneExitFadeDuration: 0.2
+  debugCatalog: {fileID: 11400000, guid: af28d756716c512ea9f7713852c64c29, type: 2}
 --- !u!1 &409635229
 GameObject:
   m_ObjectHideFlags: 0
@@ -1548,6 +1629,11 @@ MonoBehaviour:
       m_Calls: []
   destinationId: vn_corredorfront
   transitionProfile: {fileID: 11400000, guid: 1d8ecbbcdd378c047a08d52a5a189cae, type: 2}
+  link:
+    destinationId: vn_corredorfront
+    transitionProfile: {fileID: 11400000, guid: 1d8ecbbcdd378c047a08d52a5a189cae, type: 2}
+    audioMode: 2
+    specialAudioId: 
 --- !u!114 &409635232
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2667,6 +2753,11 @@ MonoBehaviour:
       m_Calls: []
   destinationId: vn_corredorfront
   transitionProfile: {fileID: 11400000, guid: 1d8ecbbcdd378c047a08d52a5a189cae, type: 2}
+  link:
+    destinationId: 
+    transitionProfile: {fileID: 0}
+    audioMode: 0
+    specialAudioId: 
 --- !u!114 &784636591
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2981,6 +3072,11 @@ MonoBehaviour:
       m_Calls: []
   destinationId: vn_banheiro
   transitionProfile: {fileID: 11400000, guid: 1d8ecbbcdd378c047a08d52a5a189cae, type: 2}
+  link:
+    destinationId: 
+    transitionProfile: {fileID: 0}
+    audioMode: 0
+    specialAudioId: 
 --- !u!114 &882616109
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3295,6 +3391,11 @@ MonoBehaviour:
       m_Calls: []
   destinationId: vn_corredorback
   transitionProfile: {fileID: 11400000, guid: 1d8ecbbcdd378c047a08d52a5a189cae, type: 2}
+  link:
+    destinationId: vn_corredorback
+    transitionProfile: {fileID: 11400000, guid: 1d8ecbbcdd378c047a08d52a5a189cae, type: 2}
+    audioMode: 3
+    specialAudioId: transition_glitch
 --- !u!114 &926146374
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3541,6 +3642,11 @@ MonoBehaviour:
       m_Calls: []
   destinationId: vn_cozinha
   transitionProfile: {fileID: 11400000, guid: 1d8ecbbcdd378c047a08d52a5a189cae, type: 2}
+  link:
+    destinationId: 
+    transitionProfile: {fileID: 0}
+    audioMode: 0
+    specialAudioId: 
 --- !u!114 &984433214
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4146,6 +4252,11 @@ MonoBehaviour:
       m_Calls: []
   destinationId: vn_corredorfront
   transitionProfile: {fileID: 11400000, guid: 1d8ecbbcdd378c047a08d52a5a189cae, type: 2}
+  link:
+    destinationId: 
+    transitionProfile: {fileID: 0}
+    audioMode: 0
+    specialAudioId: 
 --- !u!114 &1299935628
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4728,6 +4839,11 @@ MonoBehaviour:
       m_Calls: []
   destinationId: vn_corredorback
   transitionProfile: {fileID: 11400000, guid: 1d8ecbbcdd378c047a08d52a5a189cae, type: 2}
+  link:
+    destinationId: 
+    transitionProfile: {fileID: 0}
+    audioMode: 0
+    specialAudioId: 
 --- !u!114 &1443801085
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4816,6 +4932,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.CycleTestUI
   scene: {fileID: 391696332}
   toggleKey: 289
+  debugEntityId: entity_debug_threat
+  debugAnchorIds:
+  - window_sala
+  - window_quarto
+  - window_corredor
 --- !u!1 &1489028358
 GameObject:
   m_ObjectHideFlags: 0
@@ -4966,6 +5087,11 @@ MonoBehaviour:
       m_Calls: []
   destinationId: vn_sotao
   transitionProfile: {fileID: 11400000, guid: 1d8ecbbcdd378c047a08d52a5a189cae, type: 2}
+  link:
+    destinationId: 
+    transitionProfile: {fileID: 0}
+    audioMode: 0
+    specialAudioId: 
 --- !u!114 &1592177717
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5386,6 +5512,11 @@ MonoBehaviour:
       m_Calls: []
   destinationId: vn_corredorback
   transitionProfile: {fileID: 11400000, guid: 1d8ecbbcdd378c047a08d52a5a189cae, type: 2}
+  link:
+    destinationId: 
+    transitionProfile: {fileID: 0}
+    audioMode: 0
+    specialAudioId: 
 --- !u!114 &1749395484
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5495,6 +5626,11 @@ MonoBehaviour:
       m_Calls: []
   destinationId: vn_corredorback
   transitionProfile: {fileID: 11400000, guid: 1d8ecbbcdd378c047a08d52a5a189cae, type: 2}
+  link:
+    destinationId: 
+    transitionProfile: {fileID: 0}
+    audioMode: 0
+    specialAudioId: 
 --- !u!114 &1762211710
 MonoBehaviour:
   m_ObjectHideFlags: 0

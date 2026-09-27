@@ -21,9 +21,22 @@ namespace Whispers
         [Tooltip("Intensidade/parâmetros visuais do efeito (reservado).")]
         [SerializeField] private float intensity = 1f;
 
+        [Header("Áudio")]
+        [Tooltip("SFX da transição. Não controla o ambiente permanente.")]
+        [SerializeField] private AudioClip transitionSfx;
+
+        [Tooltip("Momento em que o SFX da transição começa.")]
+        [SerializeField] private TransitionSfxTiming transitionSfxTiming = TransitionSfxTiming.OnTransitionStart;
+
+        [Range(0f, 2f)]
+        [SerializeField] private float transitionSfxVolume = 1f;
+
         public TransitionEffectType EffectType => effectType;
         public float HideDuration => hideDuration;
         public float RevealDuration => revealDuration;
         public float Intensity => intensity;
+        public AudioClip TransitionSfx => transitionSfx;
+        public TransitionSfxTiming TransitionSfxTiming => transitionSfxTiming;
+        public float TransitionSfxVolume => transitionSfxVolume;
     }
 }

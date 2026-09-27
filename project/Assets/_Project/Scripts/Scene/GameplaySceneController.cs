@@ -17,6 +17,7 @@ namespace Whispers
         [SerializeField] private TransitionController transitionController;
         [SerializeField] private InteractionManager interactionManager;
         [SerializeField] private ModalUIController modalUI;
+        [SerializeField] private SceneAudioController sceneAudioController;
 
         [Header("VS3 — mesmo ciclo nas duas cenas")]
         [SerializeField] private GameCycleDefinition cycleDefinition;
@@ -35,6 +36,7 @@ namespace Whispers
         public TransitionController Transition => transitionController;
         public InteractionManager Interactions => interactionManager;
         public ModalUIController ModalUI => modalUI;
+        public SceneAudioController Audio => sceneAudioController;
         public GlobalHotspotSettings GlobalSettings => globalSettings;
         public string FlowError { get; private set; }
         public bool IsFlowBusy { get; private set; }
@@ -64,6 +66,8 @@ namespace Whispers
         {
             if (Session == null) new GameObject("Manager_Session").AddComponent<GameSessionManager>();
             RuntimeState = new SceneRuntimeState();
+            if (sceneAudioController == null)
+                sceneAudioController = GetComponentInChildren<SceneAudioController>(true);
             if (inputBlocker != null)
             {
                 inputBlocker.AddReason(InputBlockReason.Boot);
@@ -78,6 +82,7 @@ namespace Whispers
                 else
                 {
                     transitionController?.SetCover(1f);
+                    sceneAudioController?.Initialize(sceneDefinition);
                     navigationManager.Initialize(sceneDefinition.initialViewNodeId);
                     navigationManager.PresentInitial();
                     if (navigationManager.Current == null) error = "Boot: ViewNode inicial não encontrado.";
@@ -203,8 +208,8 @@ namespace Whispers
             backpack?.PrepareForPeriodChange();
             modalUI?.CloseForPeriodChange();
             hotbar?.PrepareForPeriodChange();
+            sceneAudioController?.BeginSceneExit();
             Session?.PrepareForPeriodChange();
-            // Saída controlada de ambiente/equipamentos pertence ao VS4.
         }
 
         private void AddPeriodEndBlock()
@@ -232,7 +237,13 @@ namespace Whispers
 
         public void PlayFeedback(AudioClip clip)
         {
-            if (clip != null && feedbackAudioSource != null) feedbackAudioSource.PlayOneShot(clip);
+            if (clip == null) return;
+            if (sceneAudioController != null)
+            {
+                sceneAudioController.PlayUi(clip);
+                return;
+            }
+            if (feedbackAudioSource != null) feedbackAudioSource.PlayOneShot(clip);
         }
     }
 }

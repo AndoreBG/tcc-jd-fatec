@@ -16,3 +16,6 @@ MonoBehaviour:
   hideDuration: 0
   revealDuration: 0
   intensity: 1
+  transitionSfx: {fileID: 0}
+  transitionSfxTiming: 0
+  transitionSfxVolume: 1

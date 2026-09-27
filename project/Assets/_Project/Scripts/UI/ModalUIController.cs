@@ -92,6 +92,7 @@ namespace Whispers
             documentPanel.Show(data);
             _documentOpen = true;
             Blocker?.AddReason(InputBlockReason.Modal);
+            Scene?.Audio?.SetMixState(AudioMixState.Modal);
             UpdateDarken();
         }
 
@@ -101,6 +102,9 @@ namespace Whispers
             if (documentPanel != null) documentPanel.gameObject.SetActive(false);
             _documentOpen = false;
             Blocker?.RemoveReason(InputBlockReason.Modal);
+            Scene?.Audio?.SetMixState(Blocker != null && Blocker.HasReason(InputBlockReason.Pause)
+                ? AudioMixState.Paused
+                : AudioMixState.Normal);
             UpdateDarken();
         }
 
@@ -111,6 +115,7 @@ namespace Whispers
             if (documentPanel != null) documentPanel.gameObject.SetActive(false);
             if (_documentOpen) Blocker?.RemoveReason(InputBlockReason.Modal);
             _documentOpen = false;
+            Scene?.Audio?.SetMixState(AudioMixState.Normal, true);
             if (_darkenGroup != null) _darkenGroup.alpha = 0f;
             if (darkenObject != null) darkenObject.SetActive(false);
         }

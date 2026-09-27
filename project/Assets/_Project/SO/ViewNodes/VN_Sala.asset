@@ -15,3 +15,4 @@ MonoBehaviour:
   id: vn_sala
   debugName: VN_Sala
   cameraProfile: {fileID: 11400000, guid: 0b8dd315335422541a723688e3b04867, type: 2}
+  audioProfile: {fileID: 11400000, guid: cf86e7b915ce55a1a05305986860d6ec, type: 2}

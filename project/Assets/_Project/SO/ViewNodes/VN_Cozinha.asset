@@ -15,3 +15,4 @@ MonoBehaviour:
   id: vn_cozinha
   debugName: VN_Cozinha
   cameraProfile: {fileID: 11400000, guid: 0b8dd315335422541a723688e3b04867, type: 2}
+  audioProfile: {fileID: 11400000, guid: 33a7217abe2751868636c8349e94115b, type: 2}

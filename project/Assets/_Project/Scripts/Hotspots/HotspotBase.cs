@@ -287,6 +287,9 @@ namespace Whispers
             }
 
             ApplyHoverCursor();
+            HotspotFeedbackProfile hoverFeedback = Feedback;
+            if (hoverFeedback != null && hoverFeedback.hoverClip != null && Scene != null)
+                Scene.PlayFeedback(hoverFeedback.hoverClip);
 
             switch (activationMode)
             {

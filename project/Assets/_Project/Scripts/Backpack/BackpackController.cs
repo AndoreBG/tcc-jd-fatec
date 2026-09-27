@@ -154,6 +154,7 @@ namespace Whispers
             if (Blocker.IsBlocked) return;
 
             AddModalReason(); // todos os hotspots do cenário param de reagir
+            Scene?.Audio?.SetMixState(AudioMixState.Modal);
             _state = BpState.Opening;
             if (_animRoutine != null) StopCoroutine(_animRoutine);
             _animRoutine = StartCoroutine(MovePanel(openY, () => _state = BpState.Open));
@@ -167,6 +168,7 @@ namespace Whispers
             _animRoutine = StartCoroutine(MovePanel(closedY, () =>
             {
                 RemoveModalReason(); // bloqueio cobre toda a animação (arquitetura §5.3)
+                RestoreMixAfterModal();
                 _state = BpState.Closed;
             }));
         }
@@ -260,7 +262,11 @@ namespace Whispers
         {
             _state = BpState.DragOutside;
             if (_animRoutine != null) StopCoroutine(_animRoutine);
-            _animRoutine = StartCoroutine(MovePanel(closedY, RemoveModalReason)); // ToolDrag permanece
+            _animRoutine = StartCoroutine(MovePanel(closedY, () =>
+            {
+                RemoveModalReason();
+                RestoreMixAfterModal();
+            })); // ToolDrag permanece
         }
 
         /// <summary>Botão solto: drop sobre ToolHotspot ou cancelamento (dentro do modal).</summary>
@@ -407,6 +413,13 @@ namespace Whispers
                 Blocker?.RemoveReason(InputBlockReason.Modal);
                 _modalAdded = false;
             }
+        }
+
+        private void RestoreMixAfterModal()
+        {
+            Scene?.Audio?.SetMixState(Blocker != null && Blocker.HasReason(InputBlockReason.Pause)
+                ? AudioMixState.Paused
+                : AudioMixState.Normal);
         }
 
         private void AddToolDragReason()

@@ -17,5 +17,8 @@ namespace Whispers
 
         [Tooltip("Perfil de câmera aplicado enquanto este ViewNode é apresentado.")]
         public ViewCameraProfile cameraProfile;
+
+        [Tooltip("Perfil acústico aplicado enquanto este ViewNode é apresentado.")]
+        public ViewAudioProfile audioProfile;
     }
 }

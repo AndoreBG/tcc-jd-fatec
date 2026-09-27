@@ -15,3 +15,4 @@ MonoBehaviour:
   id: vn_banheiro
   debugName: VN_Banheiro
   cameraProfile: {fileID: 11400000, guid: 0b8dd315335422541a723688e3b04867, type: 2}
+  audioProfile: {fileID: 11400000, guid: 08b3c42ebfab5bc58792b29aac01a7d3, type: 2}

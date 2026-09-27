@@ -15,3 +15,4 @@ MonoBehaviour:
   id: vn_corredorback
   debugName: VN_CorredorBack
   cameraProfile: {fileID: 11400000, guid: 0b8dd315335422541a723688e3b04867, type: 2}
+  audioProfile: {fileID: 11400000, guid: 4f5b87ff9c6a54548fdcf528f4a377e6, type: 2}

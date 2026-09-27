@@ -46,7 +46,11 @@ namespace Whispers
                 InteractionDefinition definition = hotspot.Definition;
                 ExecuteResults(definition.results);
                 MarkDone(definition);
-                if (definition.sfx != null) Scene?.PlayFeedback(definition.sfx);
+                if (definition.sfx != null)
+                {
+                    if (Scene != null && Scene.Audio != null) Scene.Audio.PlayInteraction(definition.sfx);
+                    else Scene?.PlayFeedback(definition.sfx);
+                }
                 return true;
             }
             finally
@@ -121,7 +125,11 @@ namespace Whispers
                 if (tool.consumesOnUse && session != null)
                     session.RemoveItem(tool.id, 1);
                 MarkDone(definition);
-                if (definition.sfx != null) Scene?.PlayFeedback(definition.sfx);
+                if (definition.sfx != null)
+                {
+                    if (Scene != null && Scene.Audio != null) Scene.Audio.PlayInteraction(definition.sfx);
+                    else Scene?.PlayFeedback(definition.sfx);
+                }
                 return true;
             }
             finally

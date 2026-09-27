@@ -22,9 +22,13 @@ namespace Whispers
         private InputBlocker Blocker => Scene != null ? Scene.Blocker : null;
         private TransitionController Overlay => Scene != null ? Scene.Transition : null;
         private ViewCameraController Camera => Scene != null ? Scene.ViewCamera : null;
+        private SceneAudioController Audio => Scene != null ? Scene.Audio : null;
 
         public ViewNodeController Current => _current;
         public bool IsTransitioning => _transitioning;
+
+        /// <summary>Lista somente para diagnóstico e ferramentas de desenvolvimento.</summary>
+        public ViewNodeController[] GetViewNodes() => _viewNodes.ToArray();
 
         /// <summary>Localiza os ViewNodes da cena e prepara para apresentar o inicial.</summary>
         /// <param name="initialNodeId">ID estável da ViewNodeDefinition do nó inicial.</param>
@@ -54,7 +58,7 @@ namespace Whispers
         }
 
         private ViewNodeController _initialNode;
-        public void PresentInitial() => SwapNode(_initialNode);
+        public void PresentInitial() => SwapNode(_initialNode, AudioTransitionMode.Immediate, null);
 
         /// <summary>
         /// Solicita navegação validada para o destino indicado por ID.
@@ -97,21 +101,31 @@ namespace Whispers
             if (profile == null && Scene != null && Scene.SceneDefinition != null)
                 profile = Scene.SceneDefinition.defaultTransition;
 
-            StartCoroutine(TransitionRoutine(destination, profile));
+            AudioTransitionMode audioMode = hotspot != null
+                ? hotspot.AudioTransitionMode
+                : AudioTransitionMode.Keep;
+            string specialAudioId = hotspot != null ? hotspot.SpecialAudioId : null;
+
+            StartCoroutine(TransitionRoutine(destination, profile, audioMode, specialAudioId));
             return true;
         }
 
-        private IEnumerator TransitionRoutine(ViewNodeController destination, TransitionProfile profile)
+        private IEnumerator TransitionRoutine(ViewNodeController destination, TransitionProfile profile,
+            AudioTransitionMode audioMode, string specialAudioId)
         {
             _transitioning = true;
             Blocker?.AddReason(InputBlockReason.Transition);
+            Audio?.SetMixState(AudioMixState.Transition);
 
             bool useFade = profile != null && profile.EffectType == TransitionEffectType.Fade;
             float hideDur = Mathf.Max(0f, profile != null ? profile.HideDuration : 0f);
             float revealDur = Mathf.Max(0f, profile != null ? profile.RevealDuration : 0f);
 
+            PlayTransitionSfx(profile, TransitionSfxTiming.OnTransitionStart);
+
             if (useFade)
             {
+                PlayTransitionSfx(profile, TransitionSfxTiming.OnHideStart);
                 yield return FadeCover(0f, 1f, hideDur);
             }
             else
@@ -119,10 +133,12 @@ namespace Whispers
                 if (Overlay != null) Overlay.SetCover(1f);
             }
 
-            SwapNode(destination); // ponto de troca
+            PlayTransitionSfx(profile, TransitionSfxTiming.OnSwap);
+            SwapNode(destination, audioMode, specialAudioId); // ponto de troca
 
             if (useFade)
             {
+                PlayTransitionSfx(profile, TransitionSfxTiming.OnRevealStart);
                 yield return FadeCover(1f, 0f, revealDur);
             }
             else
@@ -130,15 +146,24 @@ namespace Whispers
                 if (Overlay != null) Overlay.SetCover(0f);
             }
 
+            PlayTransitionSfx(profile, TransitionSfxTiming.OnTransitionEnd);
+
             // Mantém a entrada bloqueada pela margem pós-transição (tempo não escalado).
             yield return new WaitForSecondsRealtime(postTransitionMargin);
 
+            Audio?.SetMixState(AudioMixState.Normal);
             Blocker?.RemoveReason(InputBlockReason.Transition);
             _transitioning = false;
         }
 
+        private void PlayTransitionSfx(TransitionProfile profile, TransitionSfxTiming timing)
+        {
+            if (profile == null || profile.TransitionSfxTiming != timing || profile.TransitionSfx == null) return;
+            Audio?.PlayTransition(profile.TransitionSfx, profile.TransitionSfxVolume);
+        }
+
         /// <summary>Troca efetiva do ViewNode no ponto de troca do perfil.</summary>
-        private void SwapNode(ViewNodeController destination)
+        private void SwapNode(ViewNodeController destination, AudioTransitionMode audioMode, string specialAudioId)
         {
             if (destination == null) return;
 
@@ -148,9 +173,10 @@ namespace Whispers
             _current = destination;
             _current.Enter();
 
-            // Perfil de câmera do destino aplicado no ponto de troca.
+            // Perfil de câmera e áudio do destino aplicados no ponto de troca.
             if (Camera != null)
                 Camera.SetProfile(destination.Definition != null ? destination.Definition.cameraProfile : null);
+            Audio?.ApplyViewAudioProfile(destination.Definition, audioMode, specialAudioId);
         }
 
         private IEnumerator FadeCover(float from, float to, float duration)

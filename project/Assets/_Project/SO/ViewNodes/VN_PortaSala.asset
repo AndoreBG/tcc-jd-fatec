@@ -15,3 +15,4 @@ MonoBehaviour:
   id: vn_portasala
   debugName: VN_PortaSala
   cameraProfile: {fileID: 11400000, guid: 0b8dd315335422541a723688e3b04867, type: 2}
+  audioProfile: {fileID: 11400000, guid: 3a9553bb79b051f4853253af7d8e6cda, type: 2}
