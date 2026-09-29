@@ -18,7 +18,7 @@ MonoBehaviour:
   - type: 1
     itemId: item_maidera
     collectionId: 
-    amount: 0
+    amount: 1
     flagId: 
     factId: 
     destinationId: 
