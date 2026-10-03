@@ -84,6 +84,9 @@ namespace Whispers
         private readonly List<RuntimeVoice> _allVoices = new List<RuntimeVoice>();
         private readonly List<RuntimeVoice> _oneShotVoices = new List<RuntimeVoice>();
         private readonly Dictionary<string, RuntimeVoice> _localVoices = new Dictionary<string, RuntimeVoice>();
+        private readonly Dictionary<string, float> _localFadeDurations = new Dictionary<string, float>();
+        private readonly Dictionary<string, Coroutine> _localFadeRoutines = new Dictionary<string, Coroutine>();
+        private readonly Dictionary<string, int> _localFadeVersions = new Dictionary<string, int>();
 
         private GameplaySceneDefinition _sceneDefinition;
         private ViewAudioProfile _currentProfile;
@@ -104,10 +107,36 @@ namespace Whispers
         public AudioMixState CurrentMixState => _mixState;
         public AudioDebugCatalog DebugCatalog => debugCatalog;
 
+        /// <summary>
+        /// Indica se a cena possui uma camada-base contínua pronta para iniciar.
+        /// Exposto para diagnóstico e testes: sem essa camada não há ambiência de período.
+        /// </summary>
+        public bool HasBaseAmbienceReady
+        {
+            get
+            {
+                if (continuousLayers == null) return false;
+
+                int baseLayerCount = 0;
+                foreach (AudioContinuousLayerDefinition definition in continuousLayers)
+                {
+                    if (definition == null || !definition.isBaseAmbience) continue;
+                    baseLayerCount++;
+                    if (definition.clip == null || !definition.loop || !definition.playOnInitialize)
+                        return false;
+                }
+                return baseLayerCount == 1;
+            }
+        }
+
         private void OnDisable()
         {
             if (_profileRoutine != null) StopCoroutine(_profileRoutine);
             if (_sceneExitRoutine != null) StopCoroutine(_sceneExitRoutine);
+            foreach (Coroutine routine in _localFadeRoutines.Values)
+                if (routine != null) StopCoroutine(routine);
+            _localFadeRoutines.Clear();
+            _localFadeVersions.Clear();
             StopAllVoices();
         }
 
@@ -188,8 +217,54 @@ namespace Whispers
                     "As fontes ainda podem tocar, mas a mixagem por categoria está desativada.", this);
             }
 
+            ValidateBaseAmbience();
+
             if (debugCatalog == null)
                 Debug.LogWarning("[SceneAudioController] AudioDebugCatalog não configurado; a aba Áudio ficará sem biblioteca.", this);
+        }
+
+        /// <summary>
+        /// Garante a pré-condição de autoria do ambiente contínuo: cada cena deve
+        /// declarar uma única camada-base, em loop e iniciada no boot. O AudioClip
+        /// continua sendo conteúdo autorado no Inspector; enquanto ele estiver vazio,
+        /// o aviso identifica claramente por que a cena inicia sem ambiência.
+        /// </summary>
+        private void ValidateBaseAmbience()
+        {
+            if (continuousLayers == null || continuousLayers.Length == 0)
+            {
+                Debug.LogError("[SceneAudioController] Nenhuma camada contínua foi configurada; falta o ambiente-base da cena.", this);
+                return;
+            }
+
+            int baseLayerCount = 0;
+            AudioContinuousLayerDefinition baseLayer = null;
+            foreach (AudioContinuousLayerDefinition definition in continuousLayers)
+            {
+                if (definition == null || !definition.isBaseAmbience) continue;
+                baseLayerCount++;
+                baseLayer = definition;
+            }
+
+            if (baseLayerCount != 1)
+            {
+                Debug.LogError($"[SceneAudioController] Configure exatamente uma camada com isBaseAmbience. Encontradas: {baseLayerCount}.", this);
+                return;
+            }
+
+            if (baseLayer.clip == null)
+            {
+                Debug.LogWarning($"[SceneAudioController] A camada-base '{baseLayer.id}' está pronta, mas sem AudioClip. " +
+                    "A cena permanecerá sem ambiência até um clip ser atribuído no Inspector.", this);
+            }
+            if (!baseLayer.loop)
+            {
+                Debug.LogWarning($"[SceneAudioController] A camada-base '{baseLayer.id}' deve usar loop para permanecer contínua.", this);
+            }
+            if (!baseLayer.playOnInitialize)
+            {
+                Debug.LogWarning($"[SceneAudioController] A camada-base '{baseLayer.id}' deve iniciar no boot (playOnInitialize).", this);
+            }
         }
 
         private RuntimeVoice CreateVoice(string objectName, AudioSourceRole role, bool continuous)
@@ -287,11 +362,13 @@ namespace Whispers
             EnsureInitialized();
 
             ViewAudioProfile targetProfile = definition != null ? definition.audioProfile : null;
-            List<VoiceInterpolation> transitions = CaptureTransitions(targetProfile);
+            // Camadas locais possuem seu próprio ciclo de entrada/saída. Elas não entram
+            // nesta lista para que um Crossfade não as interrompa abruptamente.
+            List<VoiceInterpolation> transitions = CaptureTransitions(targetProfile, false);
 
             _currentViewNodeId = definition != null ? definition.id : string.Empty;
             _currentProfile = targetProfile;
-            ApplyLocalLayers(targetProfile);
+            ApplyLocalLayers(targetProfile, mode);
             ViewAudioProfileChanged?.Invoke(_currentViewNodeId);
 
             if (_profileRoutine != null) StopCoroutine(_profileRoutine);
@@ -303,8 +380,25 @@ namespace Whispers
                     break;
 
                 case AudioTransitionMode.Crossfade:
-                    _profileRoutine = StartCoroutine(CrossfadeVoices(transitions, profileTransitionDuration));
+                {
+                    // Apenas a ambiência contínua participa do dip/crossfade. Equipamentos,
+                    // ameaças, mídia e one-shots permanecem vivos e recebem a nova
+                    // perspectiva sem serem silenciados pela navegação.
+                    List<VoiceInterpolation> ambienceTransitions = new List<VoiceInterpolation>();
+                    List<VoiceInterpolation> persistentTransitions = new List<VoiceInterpolation>();
+                    foreach (VoiceInterpolation transition in transitions)
+                    {
+                        if (transition.voice != null && transition.voice.continuous &&
+                            transition.voice.role == AudioSourceRole.Ambience)
+                            ambienceTransitions.Add(transition);
+                        else
+                            persistentTransitions.Add(transition);
+                    }
+
+                    ApplyTargets(persistentTransitions, 1f);
+                    _profileRoutine = StartCoroutine(CrossfadeVoices(ambienceTransitions, profileTransitionDuration));
                     break;
+                }
 
                 case AudioTransitionMode.Special:
                     if (!string.IsNullOrWhiteSpace(specialAudioId)) SpecialAudioRequested?.Invoke(specialAudioId);
@@ -318,12 +412,14 @@ namespace Whispers
             }
         }
 
-        private List<VoiceInterpolation> CaptureTransitions(ViewAudioProfile targetProfile)
+        private List<VoiceInterpolation> CaptureTransitions(ViewAudioProfile targetProfile, bool includeLocalVoices)
         {
             List<VoiceInterpolation> transitions = new List<VoiceInterpolation>();
             foreach (RuntimeVoice voice in GetVoicesForPresentation())
             {
                 if (voice == null || voice.source == null) continue;
+                if (!includeLocalVoices && IsLocalVoice(voice)) continue;
+
                 VoiceTarget target = CalculateTarget(voice, targetProfile);
                 transitions.Add(new VoiceInterpolation
                 {
@@ -336,6 +432,17 @@ namespace Whispers
                 });
             }
             return transitions;
+        }
+
+        private bool IsLocalVoice(RuntimeVoice voice)
+        {
+            if (voice != null && !string.IsNullOrWhiteSpace(voice.emitterId) &&
+                voice.emitterId.StartsWith("local:", StringComparison.Ordinal))
+                return true;
+
+            foreach (RuntimeVoice localVoice in _localVoices.Values)
+                if (localVoice == voice) return true;
+            return false;
         }
 
         private IEnumerator InterpolateVoices(List<VoiceInterpolation> transitions, float duration)
@@ -438,7 +545,12 @@ namespace Whispers
         private void ApplyCurrentProfileImmediate()
         {
             foreach (RuntimeVoice voice in GetVoicesForPresentation())
+            {
+                // Camadas locais ativas ou em saída são controladas por suas próprias
+                // corrotinas; aplicar aqui causaria um salto de volume no meio do fade.
+                if (IsLocalVoice(voice)) continue;
                 ApplyTarget(voice, CalculateTarget(voice, _currentProfile));
+            }
         }
 
         private VoiceTarget CalculateTarget(RuntimeVoice voice, ViewAudioProfile profile)
@@ -584,7 +696,12 @@ namespace Whispers
                 if (voice != null && (voice.source.isPlaying || voice.reserved) && emitted.Add(voice)) yield return voice;
         }
 
-        private void ApplyLocalLayers(ViewAudioProfile profile)
+        /// <summary>
+        /// Atualiza as camadas exclusivas do ViewNode. Entradas e saídas são feitas
+        /// com fade individual; assim, uma camada local antiga não é cortada quando
+        /// o destino introduz outra camada durante Keep ou Crossfade.
+        /// </summary>
+        private void ApplyLocalLayers(ViewAudioProfile profile, AudioTransitionMode mode)
         {
             HashSet<string> activeIds = new HashSet<string>();
             if (profile != null && profile.localLayers != null)
@@ -593,26 +710,7 @@ namespace Whispers
                 {
                     if (layer == null || string.IsNullOrWhiteSpace(layer.layerId) || layer.clip == null) continue;
                     activeIds.Add(layer.layerId);
-
-                    RuntimeVoice voice;
-                    if (!_localVoices.TryGetValue(layer.layerId, out voice) || voice == null)
-                    {
-                        voice = AcquirePersistentVoice("local:" + layer.layerId, layer.role);
-                        if (voice == null) continue;
-                        _localVoices[layer.layerId] = voice;
-                    }
-
-                    bool clipChanged = voice.source.clip != layer.clip;
-                    ConfigureVoice(voice, layer.role, layer.clip, layer.loop, layer.volume);
-                    voice.runtimeId = layer.layerId;
-                    voice.emitterId = layer.layerId;
-                    voice.reserved = true;
-                    if (clipChanged || !voice.source.isPlaying)
-                    {
-                        if (layer.loop) voice.source.Play();
-                        else voice.source.PlayOneShot(layer.clip);
-                    }
-                    ApplyTarget(voice, CalculateTarget(voice, _currentProfile));
+                    ApplyOrUpdateLocalLayer(layer, mode);
                 }
             }
 
@@ -620,10 +718,259 @@ namespace Whispers
             foreach (KeyValuePair<string, RuntimeVoice> pair in _localVoices)
             {
                 if (activeIds.Contains(pair.Key)) continue;
-                ReleasePersistentVoice(pair.Value);
+
+                float fadeDuration;
+                if (!_localFadeDurations.TryGetValue(pair.Key, out fadeDuration))
+                    fadeDuration = profileTransitionDuration;
+                if (mode == AudioTransitionMode.Immediate) fadeDuration = 0f;
+                BeginLocalFadeOut(pair.Key, pair.Value, fadeDuration);
                 toRemove.Add(pair.Key);
             }
-            foreach (string id in toRemove) _localVoices.Remove(id);
+
+            // A voz segue tocando durante o fade; apenas a chave lógica deixa de
+            // representar uma camada ativa do novo perfil.
+            foreach (string id in toRemove)
+            {
+                _localVoices.Remove(id);
+                _localFadeDurations.Remove(id);
+            }
+        }
+
+        private void ApplyOrUpdateLocalLayer(AudioLocalLayer layer, AudioTransitionMode mode)
+        {
+            RuntimeVoice voice;
+            bool isNew = !_localVoices.TryGetValue(layer.layerId, out voice) || voice == null;
+            if (isNew)
+            {
+                voice = AcquirePersistentVoice("local:" + layer.layerId, layer.role);
+                if (voice == null) return;
+                _localVoices[layer.layerId] = voice;
+            }
+
+            StopLocalFade(layer.layerId);
+
+            bool clipChanged = voice.source.clip != layer.clip;
+            bool wasPlaying = voice.source.isPlaying;
+            if (clipChanged && wasPlaying)
+            {
+                // A mesma camada mudou de clip. Faz uma saída curta antes de reutilizar
+                // a fonte, evitando a troca seca de conteúdo no mesmo AudioSource.
+                BeginLocalClipReplacement(layer.layerId, voice, layer, LocalFadeDuration(layer, mode));
+                return;
+            }
+
+            ConfigureLocalVoice(voice, layer);
+            VoiceTarget target = CalculateTarget(voice, _currentProfile);
+            if (isNew || !wasPlaying)
+            {
+                ApplyTarget(voice, target);
+                voice.source.volume = 0f;
+                StartLocalPlayback(voice, layer);
+                BeginLocalFadeIn(layer.layerId, voice, target, LocalFadeDuration(layer, mode));
+            }
+            else
+            {
+                BeginLocalFadeToTarget(layer.layerId, voice, target, LocalFadeDuration(layer, mode));
+            }
+        }
+
+        private void ConfigureLocalVoice(RuntimeVoice voice, AudioLocalLayer layer)
+        {
+            ConfigureVoice(voice, layer.role, layer.clip, layer.loop, layer.volume);
+            voice.runtimeId = layer.layerId;
+            // Mantém a mesma chave do pool persistente para poder liberar corretamente.
+            voice.emitterId = "local:" + layer.layerId;
+            voice.reserved = true;
+            _localFadeDurations[layer.layerId] = Mathf.Max(0f, layer.fadeDuration);
+        }
+
+        private static void StartLocalPlayback(RuntimeVoice voice, AudioLocalLayer layer)
+        {
+            if (voice == null || voice.source == null || layer == null) return;
+            if (layer.loop) voice.source.Play();
+            else voice.source.PlayOneShot(layer.clip);
+        }
+
+        private float LocalFadeDuration(AudioLocalLayer layer, AudioTransitionMode mode)
+        {
+            if (mode == AudioTransitionMode.Immediate) return 0f;
+            return Mathf.Max(0f, layer != null ? layer.fadeDuration : profileTransitionDuration);
+        }
+
+        private void BeginLocalClipReplacement(string layerId, RuntimeVoice voice, AudioLocalLayer targetLayer, float duration)
+        {
+            int version = BeginLocalFadeOperation(layerId);
+            if (duration <= 0f)
+            {
+                if (voice != null && voice.source != null)
+                {
+                    voice.source.Stop();
+                    ConfigureLocalVoice(voice, targetLayer);
+                    VoiceTarget target = CalculateTarget(voice, _currentProfile);
+                    StartLocalPlayback(voice, targetLayer);
+                    ApplyTarget(voice, target);
+                }
+                CompleteLocalFadeOperation(layerId, version);
+                return;
+            }
+            _localFadeRoutines[layerId] = StartCoroutine(ReplaceLocalClipRoutine(layerId, version, voice, targetLayer, duration));
+        }
+
+        private IEnumerator ReplaceLocalClipRoutine(string layerId, int version, RuntimeVoice voice,
+            AudioLocalLayer targetLayer, float duration)
+        {
+            yield return FadeVoiceVolume(voice, voice != null && voice.source != null ? voice.source.volume : 0f, 0f, duration);
+            if (!IsCurrentLocalOperation(layerId, version) || voice == null || voice.source == null) yield break;
+
+            voice.source.Stop();
+            ConfigureLocalVoice(voice, targetLayer);
+            VoiceTarget target = CalculateTarget(voice, _currentProfile);
+            ApplyTarget(voice, target);
+            voice.source.volume = 0f;
+            StartLocalPlayback(voice, targetLayer);
+            yield return FadeVoiceToTarget(voice, target, duration);
+            CompleteLocalFadeOperation(layerId, version);
+        }
+
+        private void BeginLocalFadeIn(string layerId, RuntimeVoice voice, VoiceTarget target, float duration)
+        {
+            int version = BeginLocalFadeOperation(layerId);
+            if (duration <= 0f)
+            {
+                ApplyTarget(voice, target);
+                CompleteLocalFadeOperation(layerId, version);
+                return;
+            }
+            _localFadeRoutines[layerId] = StartCoroutine(FadeLocalVoiceToTargetRoutine(layerId, version, voice, target, duration));
+        }
+
+        private void BeginLocalFadeToTarget(string layerId, RuntimeVoice voice, VoiceTarget target, float duration)
+        {
+            int version = BeginLocalFadeOperation(layerId);
+            if (duration <= 0f)
+            {
+                ApplyTarget(voice, target);
+                CompleteLocalFadeOperation(layerId, version);
+                return;
+            }
+            _localFadeRoutines[layerId] = StartCoroutine(FadeLocalVoiceToTargetRoutine(layerId, version, voice, target, duration));
+        }
+
+        private IEnumerator FadeLocalVoiceToTargetRoutine(string layerId, int version, RuntimeVoice voice,
+            VoiceTarget target, float duration)
+        {
+            yield return FadeVoiceToTarget(voice, target, duration);
+            CompleteLocalFadeOperation(layerId, version);
+        }
+
+        private void BeginLocalFadeOut(string layerId, RuntimeVoice voice, float duration)
+        {
+            StopLocalFade(layerId);
+            int version = BeginLocalFadeOperation(layerId);
+            if (duration <= 0f)
+            {
+                if (voice != null && voice.source != null) voice.source.volume = 0f;
+                ReleasePersistentVoice(voice);
+                CompleteLocalFadeOperation(layerId, version);
+                return;
+            }
+            _localFadeRoutines[layerId] = StartCoroutine(FadeOutAndReleaseLocalVoice(layerId, version, voice, duration));
+        }
+
+        private IEnumerator FadeOutAndReleaseLocalVoice(string layerId, int version, RuntimeVoice voice, float duration)
+        {
+            float start = voice != null && voice.source != null ? voice.source.volume : 0f;
+            yield return FadeVoiceVolume(voice, start, 0f, duration);
+            if (!IsCurrentLocalOperation(layerId, version)) yield break;
+
+            ReleasePersistentVoice(voice);
+            CompleteLocalFadeOperation(layerId, version);
+        }
+
+        private IEnumerator FadeVoiceToTarget(RuntimeVoice voice, VoiceTarget target, float duration)
+        {
+            if (voice == null || voice.source == null) yield break;
+
+            float startVolume = voice.source.volume;
+            float startPan = voice.source.panStereo;
+            float startLowPass = voice.lowPass != null ? voice.lowPass.cutoffFrequency : 22000f;
+            float startReverb = voice.reverb != null ? voice.reverb.reverbLevel : -10000f;
+
+            if (duration <= 0f)
+            {
+                ApplyTarget(voice, target);
+                yield break;
+            }
+
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                voice.source.volume = Mathf.Lerp(startVolume, target.volume, t);
+                voice.source.panStereo = Mathf.Lerp(startPan, target.pan, t);
+                if (voice.lowPass != null)
+                {
+                    voice.lowPass.cutoffFrequency = Mathf.Lerp(startLowPass, target.lowPass, t);
+                    voice.lowPass.enabled = target.lowPass < 21950f;
+                }
+                if (voice.reverb != null)
+                {
+                    voice.reverb.reverbLevel = Mathf.Lerp(startReverb, target.reverb, t);
+                    voice.reverb.enabled = target.reverb > -9990f;
+                }
+                yield return null;
+            }
+            ApplyTarget(voice, target);
+        }
+
+        private IEnumerator FadeVoiceVolume(RuntimeVoice voice, float from, float to, float duration)
+        {
+            if (voice == null || voice.source == null) yield break;
+            if (duration <= 0f)
+            {
+                voice.source.volume = to;
+                yield break;
+            }
+
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                voice.source.volume = Mathf.Lerp(from, to, Mathf.Clamp01(elapsed / duration));
+                yield return null;
+            }
+            voice.source.volume = to;
+        }
+
+        private int BeginLocalFadeOperation(string layerId)
+        {
+            StopLocalFade(layerId);
+            int version;
+            _localFadeVersions.TryGetValue(layerId, out version);
+            version++;
+            _localFadeVersions[layerId] = version;
+            return version;
+        }
+
+        private void StopLocalFade(string layerId)
+        {
+            Coroutine routine;
+            if (_localFadeRoutines.TryGetValue(layerId, out routine) && routine != null)
+                StopCoroutine(routine);
+            _localFadeRoutines.Remove(layerId);
+        }
+
+        private bool IsCurrentLocalOperation(string layerId, int version)
+        {
+            int currentVersion;
+            return _localFadeVersions.TryGetValue(layerId, out currentVersion) && currentVersion == version;
+        }
+
+        private void CompleteLocalFadeOperation(string layerId, int version)
+        {
+            if (!IsCurrentLocalOperation(layerId, version)) return;
+            _localFadeRoutines.Remove(layerId);
         }
 
         private RuntimeVoice AcquirePersistentVoice(string emitterId, AudioSourceRole role)
@@ -663,7 +1010,19 @@ namespace Whispers
 
         private void ReleasePersistentVoice(RuntimeVoice voice)
         {
-            if (voice == null) return;
+            if (voice == null || voice.source == null) return;
+
+            // Remove somente a chave que ainda aponta para esta voz. Sem isso, uma
+            // camada local liberada poderia permanecer no dicionário persistente e
+            // ser reutilizada/acidentalmente interrompida por outro emissor.
+            string emitterId = voice.emitterId;
+            RuntimeVoice mappedVoice;
+            if (!string.IsNullOrWhiteSpace(emitterId) &&
+                _persistentVoices.TryGetValue(emitterId, out mappedVoice) && mappedVoice == voice)
+            {
+                _persistentVoices.Remove(emitterId);
+            }
+
             voice.source.Stop();
             voice.source.clip = null;
             voice.source.loop = false;

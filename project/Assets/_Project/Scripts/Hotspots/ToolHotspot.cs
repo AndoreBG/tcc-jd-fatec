@@ -4,11 +4,10 @@ using UnityEngine.Events;
 namespace Whispers
 {
     /// <summary>
-    /// Hotspot que recebe o uso da ferramenta selecionada no inventário.
+    /// Hotspot que recebe o uso de uma ferramenta arrastada da Backpack.
     /// A validação de compatibilidade e o consumo pertencem ao
-    /// <see cref="InteractionManager"/>; a falha é genérica (não consome,
-    /// não remove a seleção e não revela a ferramenta correta).
-    /// Modo recomendado: Click.
+    /// <see cref="InteractionManager"/>. O uso é aceito EXCLUSIVAMENTE pelo
+    /// drop: hover, dwell e clique nunca executam a ferramenta.
     /// </summary>
     public class ToolHotspot : HotspotBase
     {
@@ -19,8 +18,11 @@ namespace Whispers
         [Tooltip("Resultados do uso bem-sucedido (e som diegético).")]
         [SerializeField] private InteractionDefinition successDefinition;
 
-        [Header("Respostas autoradas (locais)")]
-        [Tooltip("Disparado quando o uso falha (ferramenta errada ou ausente).")]
+        [Header("Respostas autoradas do drop (locais)")]
+        [Tooltip("Disparado somente depois que um DROP válido comprometeu todos os resultados da ferramenta.")]
+        public UnityEvent onToolSucceeded;
+
+        [Tooltip("Disparado quando o drop usa uma ferramenta ausente ou incompatível. Não revela a solução.")]
         public UnityEvent onToolFailed;
 
         public InteractionDefinition SuccessDefinition => successDefinition;
@@ -34,6 +36,15 @@ namespace Whispers
             return null;
         }
 
+        /// <summary>
+        /// Notifica respostas locais após a ação já ter sido validada, executada,
+        /// consumida quando necessário e registrada pelo InteractionManager.
+        /// </summary>
+        public void NotifySuccess()
+        {
+            onToolSucceeded?.Invoke();
+        }
+
         /// <summary>Feedback de falha genérica. Chamado pelo InteractionManager.</summary>
         public void NotifyFailure()
         {
@@ -42,11 +53,9 @@ namespace Whispers
         }
 
         /// <summary>
-        /// Tentativa de uso disparada por um DROP do arraste da Backpack.
-        /// Revalida as condições (feedback de bloqueio local) e roteia ao
-        /// InteractionManager via RequestToolUseFromDrop, preservando as regras
-        /// de acceptedTools, condições e consumesOnUse. O bloqueio ToolDrag é
-        /// ignorado pelo manager nesse caminho (estado autorizado do fluxo).
+        /// Tentativa de uso disparada exclusivamente por um DROP do arraste da Backpack.
+        /// Revalida as condições e roteia ao InteractionManager. O bloqueio ToolDrag é
+        /// o estado autorizado deste fluxo e é ignorado somente pelo manager nesse caminho.
         /// </summary>
         public bool AttemptUseFromDrop()
         {
@@ -59,23 +68,23 @@ namespace Whispers
 
             if (!RevalidateConditions())
             {
-                NotifyUnavailable(); // conta como interação (decisão de design): o drop remove a ferramenta da mão
+                // Condição bloqueada possui feedback próprio (onUnavailable/onBlockedHint).
+                // O drop ainda termina e a Backpack devolve a ferramenta.
+                NotifyUnavailable();
                 return false;
             }
 
             return interactions.RequestToolUseFromDrop(this);
         }
 
+        /// <summary>
+        /// ToolHotspots não podem ser ativados pelo fluxo padrão de HotspotBase.
+        /// Este método existe apenas por ser exigido pela classe abstrata; a rota válida
+        /// é AttemptUseFromDrop(), chamada pelo BackpackController no momento do drop.
+        /// </summary>
         protected override bool OnActivated()
         {
-            InteractionManager interactions = Scene != null ? Scene.Interactions : null;
-            if (interactions == null)
-            {
-                Debug.LogWarning("[ToolHotspot] InteractionManager indisponível no cenário.", this);
-                return false;
-            }
-
-            return interactions.RequestToolUse(this);
+            return false;
         }
     }
 }

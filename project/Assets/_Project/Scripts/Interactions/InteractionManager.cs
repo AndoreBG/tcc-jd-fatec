@@ -59,22 +59,10 @@ namespace Whispers
             }
         }
 
-        /// <summary>Executa o uso de uma ferramenta solicitado por um ToolHotspot (hover/clique).</summary>
-        public bool RequestToolUse(ToolHotspot hotspot)
-        {
-            if (hotspot == null)
-            {
-                Debug.LogWarning("[InteractionManager] ToolHotspot ausente; solicitação descartada.");
-                return false;
-            }
-            if (Blocker != null && Blocker.IsBlocked) return false;
-            return ExecuteToolUse(hotspot);
-        }
-
         /// <summary>
-        /// Uso de ferramenta via DROP do arraste da Backpack. Diferente do caminho
-        /// comum, ignora apenas o motivo ToolDrag (estado autorizado do próprio fluxo
-        /// de ferramenta); qualquer outro motivo de bloqueio continua valendo.
+        /// Uso de ferramenta exclusivamente via DROP do arraste da Backpack. Ignora apenas
+        /// ToolDrag, que é o estado autorizado do próprio fluxo; qualquer outro bloqueio
+        /// continua valendo. Não existe rota pública de uso por hover, dwell ou clique.
         /// </summary>
         public bool RequestToolUseFromDrop(ToolHotspot hotspot)
         {
@@ -109,7 +97,13 @@ namespace Whispers
                     return false;
                 }
 
-                if (!hotspot.RevalidateConditions()) return false;
+                if (!hotspot.RevalidateConditions())
+                {
+                    // A condição pode ter mudado entre o raycast de drop e a validação final.
+                    // Mantém o feedback autorado de indisponibilidade sem revelar a ferramenta correta.
+                    hotspot.NotifyUnavailable();
+                    return false;
+                }
 
                 InteractionDefinition definition = hotspot.SuccessDefinition;
                 if (definition == null)
@@ -130,6 +124,9 @@ namespace Whispers
                     if (Scene != null && Scene.Audio != null) Scene.Audio.PlayInteraction(definition.sfx);
                     else Scene?.PlayFeedback(definition.sfx);
                 }
+
+                // Evento local do ToolHotspot somente após o uso ter sido comprometido.
+                hotspot.NotifySuccess();
                 return true;
             }
             finally

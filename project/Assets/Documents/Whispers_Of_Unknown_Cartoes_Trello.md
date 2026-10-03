@@ -128,7 +128,7 @@ Implementa o `InputBlocker` com contagem de motivos e separa o bloqueio do cená
 
 ### Critério de pronto
 
-- O bloqueio aceita motivos independentes de boot, transição, modal, pausa, cutscene e encerramento.
+- O bloqueio aceita motivos independentes de boot, transição, modal, pausa de Debug F8, cutscene e encerramento/retorno ao menu.
 - A entrada só é liberada quando todos os motivos ativos são removidos.
 - Hotspots não processam hover, dwell ou clique durante bloqueio.
 - Solicitações feitas durante bloqueio são descartadas sem fila.
@@ -138,7 +138,7 @@ Implementa o `InputBlocker` com contagem de motivos e separa o bloqueio do cená
 
 ## Checklist
 
-- [ ] O bloqueio aceita motivos independentes de boot, transição, modal, pausa, cutscene e encerramento.
+- [ ] O bloqueio aceita motivos independentes de boot, transição, modal, pausa de Debug F8, cutscene e encerramento/retorno ao menu.
 - [ ] A entrada só é liberada quando todos os motivos ativos são removidos.
 - [ ] Hotspots não processam hover, dwell ou clique durante bloqueio.
 - [ ] Solicitações feitas durante bloqueio são descartadas sem fila.
@@ -434,7 +434,7 @@ Implementa a Backpack do Dia — modal inferior com slots travados por tipo de i
 ### Critério de pronto
 
 - A Backpack abre somente por tecla de atalho e apenas durante o Dia.
-- A Backpack comporta 6 slots travados por tipo de item, configuráveis por `BackpackSlotDefinition`: quantidade máxima, tamanho do slot, fundo, habilitação de arraste e threshold de saída.
+- A Backpack comporta 4 slots provisórios travados por tipo de item, configuráveis por `BackpackSlotDefinition`: quantidade máxima, tamanho do slot, fundo, habilitação de arraste e threshold de saída. A expansão para 6 slots depende de demanda de conteúdo futura.
 - Itens ocupam seus slots somente depois de encontrados pelo jogador.
 - Abrir a Backpack bloqueia todos os hotspots do cenário durante toda a animação de entrada, de baixo para cima.
 - Ferramentas saem da Backpack ao serem pressionadas e arrastadas para fora do modal, além do threshold do slot.
@@ -452,7 +452,7 @@ Implementa a Backpack do Dia — modal inferior com slots travados por tipo de i
 ## Checklist
 
 - [ ] A Backpack abre somente por tecla de atalho e apenas durante o Dia.
-- [ ] A Backpack comporta 6 slots travados por tipo de item, configuráveis por `BackpackSlotDefinition`: quantidade máxima, tamanho do slot, fundo, habilitação de arraste e threshold de saída.
+- [ ] A Backpack comporta 4 slots provisórios travados por tipo de item, configuráveis por `BackpackSlotDefinition`: quantidade máxima, tamanho do slot, fundo, habilitação de arraste e threshold de saída. A expansão para 6 slots depende de demanda de conteúdo futura.
 - [ ] Itens ocupam seus slots somente depois de encontrados pelo jogador.
 - [ ] Abrir a Backpack bloqueia todos os hotspots do cenário durante toda a animação de entrada, de baixo para cima.
 - [ ] Ferramentas saem da Backpack ao serem pressionadas e arrastadas para fora do modal, além do threshold do slot.
@@ -594,22 +594,24 @@ Implementa o save como checkpoint do início do Dia e consolida um novo checkpoi
 - `GameSaveData` registra versão, slot, etapa, Dia, inventário, coletados, fatos e metadados.
 - Novo jogo cria um checkpoint válido antes de iniciar o primeiro Dia.
 - Carregar um slot sempre abre o início do Dia registrado.
-- Sair ou falhar durante Dia ou Noite descarta a cópia de trabalho não consolidada.
+- Segurar ESC retorna ao menu principal sem save nem consolidação, após fechar/cancelar primeiro a UI local.
+- O retorno valida `GameCycleDefinition.mainMenuScene` no Build Profile antes de descartar a cópia de trabalho; configuração vazia ou inválida preserva o ciclo.
+- O retorno apresenta monocromia, vinheta e os avisos vermelhos de perda de progresso enquanto bloqueia a entrada.
 - Concluir a Noite prepara e grava o checkpoint do próximo Dia.
 - O próximo Dia só é carregado depois de uma gravação bem-sucedida.
 - Falha de save preserva o checkpoint anterior e permite tentar novamente.
-- A UI avisa que sair retorna ao início do Dia atual.
 
 ## Checklist
 
 - [ ] `GameSaveData` registra versão, slot, etapa, Dia, inventário, coletados, fatos e metadados.
 - [ ] Novo jogo cria um checkpoint válido antes de iniciar o primeiro Dia.
 - [ ] Carregar um slot sempre abre o início do Dia registrado.
-- [ ] Sair ou falhar durante Dia ou Noite descarta a cópia de trabalho não consolidada.
+- [ ] Segurar ESC retorna ao menu principal sem save nem consolidação, após fechar/cancelar primeiro a UI local.
+- [ ] O retorno valida `GameCycleDefinition.mainMenuScene` no Build Profile antes de descartar a cópia de trabalho; configuração vazia ou inválida preserva o ciclo.
+- [ ] O retorno apresenta monocromia, vinheta e os avisos vermelhos de perda de progresso enquanto bloqueia a entrada.
 - [ ] Concluir a Noite prepara e grava o checkpoint do próximo Dia.
 - [ ] O próximo Dia só é carregado depois de uma gravação bem-sucedida.
 - [ ] Falha de save preserva o checkpoint anterior e permite tentar novamente.
-- [ ] A UI avisa que sair retorna ao início do Dia atual.
 
 ---
 
@@ -634,6 +636,8 @@ Valida o ciclo Dia → Noite → próximo Dia e confirma o retorno ao checkpoint
 - Concluir a Noite cria um checkpoint do próximo Dia com os dados consolidados.
 - Item consumido não reaparece quando seu ID coletado já está consolidado.
 - Um save interrompido ou inválido não destrói o checkpoint anterior.
+- ESC fecha/cancela UI local antes de exigir novo hold para retornar ao menu.
+- Retorno configurado não salva nem consolida; cena de menu inválida não descarta a cópia de trabalho.
 
 ## Checklist
 
@@ -645,6 +649,8 @@ Valida o ciclo Dia → Noite → próximo Dia e confirma o retorno ao checkpoint
 - [ ] Concluir a Noite cria um checkpoint do próximo Dia com os dados consolidados.
 - [ ] Item consumido não reaparece quando seu ID coletado já está consolidado.
 - [ ] Um save interrompido ou inválido não destrói o checkpoint anterior.
+- [ ] ESC fecha/cancela UI local antes de exigir novo hold para retornar ao menu.
+- [ ] Retorno configurado não salva nem consolida; cena de menu inválida não descarta a cópia de trabalho.
 
 ---
 
@@ -666,7 +672,7 @@ Define a hierarquia do mixer, a autoridade de cada tipo de som e as regras de in
 - Sons contínuos, locais, persistentes, de ameaça, media, UI e transição possuem escopos documentados.
 - Sinais críticos possuem prioridade sobre ruídos decorativos.
 - Sons de feedback, interação e transição não duplicam a mesma resposta.
-- Pausa e modais possuem regras de mixagem distintas.
+- Modais possuem mixagem própria; `Paused` é exclusivo do Debug F8 e não existe pausa de produção.
 - A orientação sonora principal depende do ViewNode, não do movimento do mouse.
 
 ## Checklist
@@ -676,7 +682,7 @@ Define a hierarquia do mixer, a autoridade de cada tipo de som e as regras de in
 - [ ] Sons contínuos, locais, persistentes, de ameaça, media, UI e transição possuem escopos documentados.
 - [ ] Sinais críticos possuem prioridade sobre ruídos decorativos.
 - [ ] Sons de feedback, interação e transição não duplicam a mesma resposta.
-- [ ] Pausa e modais possuem regras de mixagem distintas.
+- [ ] Modais possuem mixagem própria; `Paused` é exclusivo do Debug F8 e não existe pausa de produção.
 - [ ] A orientação sonora principal depende do ViewNode, não do movimento do mouse.
 
 ---
@@ -698,7 +704,7 @@ Implementa o `SceneAudioController` e os `ViewAudioProfile`s sem reiniciar o amb
 - A cena possui ambiente-base contínuo de Dia ou Noite.
 - `ViewAudioProfile` define zona, volume, pan, filtros, reverberação e camadas locais.
 - Trocar entre ViewNodes da mesma zona mantém os loops e altera apenas a perspectiva.
-- Sons locais entram e saem por comportamento controlado.
+- Sons locais entram e saem com o `AudioLocalLayer.fadeDuration`; origem e destino mantêm vozes distintas enquanto seus fades se sobrepõem.
 - O perfil acústico do destino é aplicado no ponto de troca da navegação.
 - Perfis ScriptableObject não armazenam fontes tocando ou estado de runtime.
 
@@ -708,7 +714,7 @@ Implementa o `SceneAudioController` e os `ViewAudioProfile`s sem reiniciar o amb
 - [ ] A cena possui ambiente-base contínuo de Dia ou Noite.
 - [ ] `ViewAudioProfile` define zona, volume, pan, filtros, reverberação e camadas locais.
 - [ ] Trocar entre ViewNodes da mesma zona mantém os loops e altera apenas a perspectiva.
-- [ ] Sons locais entram e saem por comportamento controlado.
+- [ ] Sons locais entram e saem com o `AudioLocalLayer.fadeDuration`; origem e destino mantêm vozes distintas enquanto seus fades se sobrepõem.
 - [ ] O perfil acústico do destino é aplicado no ponto de troca da navegação.
 - [ ] Perfis ScriptableObject não armazenam fontes tocando ou estado de runtime.
 
@@ -762,7 +768,7 @@ Integra os modos Manter, Crossfade, Imediato e Especial às fases visuais das tr
 
 - Cada `NavigationLinkDefinition` pode escolher um modo de áudio ou fallback.
 - Manter preserva loops e interpola somente perspectiva.
-- Crossfade reduz o ambiente atual e introduz o destino sem corte abrupto.
+- Crossfade reduz/recompõe a ambiência contínua sem corte abrupto; camadas locais preservam vozes de origem/destino e seus próprios `fadeDuration`.
 - Imediato troca o áudio de forma intencional no ponto configurado.
 - Especial delega comportamento autorado ao `SceneAudioController`.
 - O SFX do `TransitionProfile` toca no momento definido sem controlar o ambiente permanente.
@@ -773,7 +779,7 @@ Integra os modos Manter, Crossfade, Imediato e Especial às fases visuais das tr
 
 - [ ] Cada `NavigationLinkDefinition` pode escolher um modo de áudio ou fallback.
 - [ ] Manter preserva loops e interpola somente perspectiva.
-- [ ] Crossfade reduz o ambiente atual e introduz o destino sem corte abrupto.
+- [ ] Crossfade reduz/recompõe a ambiência contínua sem corte abrupto; camadas locais preservam vozes de origem/destino e seus próprios `fadeDuration`.
 - [ ] Imediato troca o áudio de forma intencional no ponto configurado.
 - [ ] Especial delega comportamento autorado ao `SceneAudioController`.
 - [ ] O SFX do `TransitionProfile` toca no momento definido sem controlar o ambiente permanente.
@@ -791,7 +797,7 @@ Integra os modos Manter, Crossfade, Imediato e Especial às fases visuais das tr
 
 ### Objetivo
 
-Implementa áudio persistente de equipamentos e ameaças, mixagem de modais e pausa e passagem controlada entre cenas.
+Implementa áudio persistente de equipamentos e ameaças, mixagem de modais, pausa exclusivamente de Debug F8 e passagem controlada entre cenas.
 
 ### Critério de pronto
 
@@ -800,7 +806,7 @@ Implementa áudio persistente de equipamentos e ameaças, mixagem de modais e pa
 - Ameaças emitem sinais a partir de seu estado lógico, independentemente do ViewNode ativo.
 - O ViewNode atual aplica direção, distância e abafamento autorados aos sinais.
 - Inventário, documentos e media aplicam mixagem própria sem bloquear a UI.
-- Pausa impede novos sinais críticos enquanto o jogador não pode reagir.
+- `Paused` impede novos sinais críticos somente durante o Debug F8; retorno de produção usa saída controlada, não pausa.
 - O áudio da cena faz saída controlada antes do carregamento global.
 - Um SFX que atravesse a carga usa o fluxo persistente existente sem novo singleton.
 
@@ -811,7 +817,7 @@ Implementa áudio persistente de equipamentos e ameaças, mixagem de modais e pa
 - [ ] Ameaças emitem sinais a partir de seu estado lógico, independentemente do ViewNode ativo.
 - [ ] O ViewNode atual aplica direção, distância e abafamento autorados aos sinais.
 - [ ] Inventário, documentos e media aplicam mixagem própria sem bloquear a UI.
-- [ ] Pausa impede novos sinais críticos enquanto o jogador não pode reagir.
+- [ ] `Paused` impede novos sinais críticos somente durante o Debug F8; retorno de produção usa saída controlada, não pausa.
 - [ ] O áudio da cena faz saída controlada antes do carregamento global.
 - [ ] Um SFX que atravesse a carga usa o fluxo persistente existente sem novo singleton.
 
@@ -866,24 +872,24 @@ Valida continuidade, sincronização, inteligibilidade e autoridade do áudio du
 ### Critério de pronto
 
 - Ambientes não reiniciam ao alternar ViewNodes da mesma zona.
-- Crossfades não produzem cortes ou cliques não intencionais.
+- Crossfades não produzem cortes ou cliques não intencionais e respeitam `fadeDuration` nas camadas locais.
 - Equipamentos continuam audíveis fora de seu ViewNode visual.
 - Sinais de ameaça funcionam sem GameObjects visuais ativos.
 - Transição visual e sonora usam o mesmo ponto de troca.
 - Feedback, interação e transição não duplicam o mesmo som.
-- Modais e pausa aplicam o comportamento de mixagem esperado.
+- Modais e a pausa exclusiva de Debug F8 aplicam o comportamento de mixagem esperado.
 - Sinais críticos permanecem identificáveis sob ruído e efeitos analógicos.
 - Dia termina e Noite começa sem corte acidental de áudio.
 
 ## Checklist
 
 - [ ] Ambientes não reiniciam ao alternar ViewNodes da mesma zona.
-- [ ] Crossfades não produzem cortes ou cliques não intencionais.
+- [ ] Crossfades não produzem cortes ou cliques não intencionais e respeitam `fadeDuration` nas camadas locais.
 - [ ] Equipamentos continuam audíveis fora de seu ViewNode visual.
 - [ ] Sinais de ameaça funcionam sem GameObjects visuais ativos.
 - [ ] Transição visual e sonora usam o mesmo ponto de troca.
 - [ ] Feedback, interação e transição não duplicam o mesmo som.
-- [ ] Modais e pausa aplicam o comportamento de mixagem esperado.
+- [ ] Modais e a pausa exclusiva de Debug F8 aplicam o comportamento de mixagem esperado.
 - [ ] Sinais críticos permanecem identificáveis sob ruído e efeitos analógicos.
 - [ ] Dia termina e Noite começa sem corte acidental de áudio.
 
@@ -968,8 +974,8 @@ Implementa validações de conteúdo e mede memória, renderização, entrada e 
 
 ### Critério de pronto
 
-- O boot valida managers, câmera, EventSystem, cena e ViewNode inicial.
-- IDs duplicados, destinos inválidos e perfis obrigatórios ausentes geram warnings claros.
+- O boot agrega e bloqueia antes do fluxo normal referências obrigatórias, câmera, EventSystem com `StandaloneInputModule`, ciclo/Build Profile, cena e ViewNode inicial.
+- IDs duplicados e perfis obrigatórios ausentes geram erros claros; clip-base de áudio e `mainMenuScene` não configurados geram aviso não bloqueante.
 - Sobreposição é verificada apenas entre hotspots simultâneos do mesmo ViewNode.
 - Áudio persistente anexado a filhos desativáveis é sinalizado durante validação ou revisão.
 - Todo warning identifica cena, ViewNode, hotspot ou asset responsável.
@@ -979,8 +985,8 @@ Implementa validações de conteúdo e mede memória, renderização, entrada e 
 
 ## Checklist
 
-- [ ] O boot valida managers, câmera, EventSystem, cena e ViewNode inicial.
-- [ ] IDs duplicados, destinos inválidos e perfis obrigatórios ausentes geram warnings claros.
+- [ ] O boot agrega e bloqueia antes do fluxo normal referências obrigatórias, câmera, EventSystem com `StandaloneInputModule`, ciclo/Build Profile, cena e ViewNode inicial.
+- [ ] IDs duplicados e perfis obrigatórios ausentes geram erros claros; clip-base de áudio e `mainMenuScene` não configurados geram aviso não bloqueante.
 - [ ] Sobreposição é verificada apenas entre hotspots simultâneos do mesmo ViewNode.
 - [ ] Áudio persistente anexado a filhos desativáveis é sinalizado durante validação ou revisão.
 - [ ] Todo warning identifica cena, ViewNode, hotspot ou asset responsável.
@@ -1006,10 +1012,12 @@ Valida todos os invariantes da arquitetura em um ciclo jogável com navegação,
 - Apenas o ViewNode apresentado recebe entrada e representa o estado atual corretamente.
 - Navegação, interação e ferramenta permanecem tecnicamente distintas.
 - Nenhum fluxo depende de cooldown genérico.
-- Reentrada funciona após boot, transição, modal, pausa e desbloqueio.
+- Reentrada funciona após boot, transição, modal, Debug F8 e desbloqueio; retorno ao menu não depende de uma pausa de produção.
 - Condições são atualizadas ao entrar e revalidadas antes da ação.
 - Dia influencia a Noite pela cópia de trabalho sem alterar antecipadamente o checkpoint.
 - Carregar o slot sempre retorna ao início do Dia consolidado.
+- Hold de ESC dá prioridade a modais/Backpack, bloqueia input no retorno e só descarta estado quando a cena de menu configurada pode carregar.
+- A saída exibe monocromia, vinheta e os dois avisos vermelhos sem gravar checkpoint.
 - Áudio contínuo, equipamentos e ameaças independem dos filhos visuais.
 - Tilt e parallax não quebram hotspots nem revelam bordas vazias.
 - Erros de conteúdo não deixam entrada, transição ou save em estado irrecuperável.
@@ -1021,10 +1029,12 @@ Valida todos os invariantes da arquitetura em um ciclo jogável com navegação,
 - [ ] Apenas o ViewNode apresentado recebe entrada e representa o estado atual corretamente.
 - [ ] Navegação, interação e ferramenta permanecem tecnicamente distintas.
 - [ ] Nenhum fluxo depende de cooldown genérico.
-- [ ] Reentrada funciona após boot, transição, modal, pausa e desbloqueio.
+- [ ] Reentrada funciona após boot, transição, modal, Debug F8 e desbloqueio; retorno ao menu não depende de uma pausa de produção.
 - [ ] Condições são atualizadas ao entrar e revalidadas antes da ação.
 - [ ] Dia influencia a Noite pela cópia de trabalho sem alterar antecipadamente o checkpoint.
 - [ ] Carregar o slot sempre retorna ao início do Dia consolidado.
+- [ ] Hold de ESC dá prioridade a modais/Backpack, bloqueia input no retorno e só descarta estado quando a cena de menu configurada pode carregar.
+- [ ] A saída exibe monocromia, vinheta e os dois avisos vermelhos sem gravar checkpoint.
 - [ ] Áudio contínuo, equipamentos e ameaças independem dos filhos visuais.
 - [ ] Tilt e parallax não quebram hotspots nem revelam bordas vazias.
 - [ ] Erros de conteúdo não deixam entrada, transição ou save em estado irrecuperável.

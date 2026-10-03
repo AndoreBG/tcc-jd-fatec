@@ -133,8 +133,8 @@ O VS4 deve provar que o jogo possui uma arquitetura sonora contínua e autoráve
 - equipamentos persistentes;
 - sinais de ameaça;
 - mídia, rádio e fitas;
-- pausa;
-- troca Dia → Noite;
+- pausa exclusivamente de Debug F8;
+- retorno ao menu sem save e troca Dia → Noite;
 - painel de testes F8.
 
 O VS4 não é apenas a reprodução de efeitos individuais. Ele deve provar que:
@@ -144,7 +144,7 @@ O VS4 não é apenas a reprodução de efeitos individuais. Ele deve provar que:
 3. Uma entidade pode ser testada em um ponto fixo por vez.
 4. Equipamentos e ameaças não dependem de GameObjects visuais ativos.
 5. O áudio de navegação é sincronizado com a transição visual.
-6. A mixagem de modais e pausa é previsível.
+6. A mixagem de modais e da pausa exclusivamente de Debug F8 é previsível; o retorno de produção usa saída controlada, não pausa.
 7. Sons críticos continuam inteligíveis sob a ambiência.
 8. Todo o áudio pode ser inspecionado e testado individualmente pelo DEBUG F8.
 
@@ -159,7 +159,7 @@ Implementar e documentar:
 - grupos do `AudioMixer`;
 - autoridade de cada tipo de som;
 - regras de prioridade;
-- regras de modal e pausa;
+- regras de modal e pausa exclusiva de Debug F8;
 - separação entre ambiente, interação, equipamento, ameaça, media, transição e UI;
 - prevenção de duplicidade sonora;
 - orientação principal por ViewNode.
@@ -212,8 +212,8 @@ Implementar suporte a:
 - ameaças independentes da apresentação visual;
 - perspectiva por ponto fixo;
 - mixagem de Backpack e documentos;
-- pausa;
-- saída controlada da cena;
+- pausa exclusivamente do Debug F8;
+- saída controlada da cena, inclusive retorno ao menu sem save;
 - áudio opcional atravessando a troca global.
 
 ## Cartão 24 — Sinais e media
@@ -241,7 +241,7 @@ Validar:
 - sinais sem GameObjects visuais ativos;
 - sincronização visual/sonora;
 - ausência de duplicidade;
-- mixagem de modais e pausa;
+- mixagem de modais e pausa exclusiva de Debug F8;
 - inteligibilidade;
 - troca Dia → Noite.
 
@@ -304,7 +304,7 @@ Na referência analisada, ainda não existiam:
 - ambiente contínuo;
 - crossfade entre perfis;
 - mixagem de modal;
-- mixagem de pausa;
+- mixagem de pausa exclusiva de Debug F8;
 - catálogo de debug;
 - aba de áudio no F8.
 
@@ -785,7 +785,7 @@ Transition
 
 A mixagem deve ser controlada pelo `SceneAudioController` ou por um componente interno dele. Não criar um segundo manager global somente para mixer.
 
-Não utilizar `AudioListener.pause` como regra geral para abrir modais. A pausa deve ser aplicada por mixagem e pelas regras de geração de sinais.
+Não utilizar `AudioListener.pause` como regra geral para abrir modais. `Paused` é um estado de mixagem e geração de sinais exclusivo do Debug F8, não uma pausa de produção.
 
 ---
 
@@ -816,7 +816,7 @@ Durante a entrada:
 3. `ViewNodeDefinition.audioProfile` é obtido;
 4. camadas contínuas recebem a política do link;
 5. perspectivas dos anchors ativos são resolvidas;
-6. fontes locais entram ou saem;
+6. fontes locais entram ou saem com seu `AudioLocalLayer.fadeDuration`; origem e destino com IDs diferentes usam vozes distintas durante a sobreposição;
 7. equipamentos recebem nova perspectiva;
 8. ameaças recebem nova perspectiva;
 9. `OnNodeEnter` é emitido depois da resolução;
@@ -833,8 +833,8 @@ Durante a entrada:
 
 ## 10.4 Modo Crossfade
 
-- reduz o áudio atual;
-- introduz o destino gradualmente;
+- reduz e recompõe a ambiência contínua;
+- preserva camadas locais de origem/destino como vozes independentes, cada uma com seu `fadeDuration`;
 - evita corte ou clique;
 - mantém sinais críticos conforme prioridade;
 - termina junto ou imediatamente após a revelação visual.
@@ -909,7 +909,7 @@ O sinal deve continuar funcionando mesmo se:
 
 ---
 
-# 12. Modais, pausa e Hotbar
+# 12. Modais, Debug F8, retorno e Hotbar
 
 ## 12.1 Backpack
 
@@ -927,7 +927,7 @@ Ao fechar:
 - o cenário exige reentrada conforme a regra atual;
 - nenhum áudio persistente deve reiniciar.
 
-Durante `ToolDrag`, não aplicar automaticamente a mesma mixagem de pausa. O arraste bloqueia hotspots, mas é um estado próprio.
+Durante `ToolDrag`, não aplicar automaticamente a mixagem `Paused` de Debug F8. O arraste bloqueia hotspots, mas é um estado próprio.
 
 ## 12.2 Documentos
 
@@ -944,9 +944,13 @@ O painel F8 adiciona `InputBlockReason.Pause`, mas não deve alterar `Time.timeS
 
 A UI de debug continua podendo solicitar reprodução explícita. Esse comando é uma ação autorizada de debug e não representa um novo sinal de gameplay.
 
-A pausa não deve gerar novos sinais críticos enquanto o jogador não puder reagir.
+A pausa de Debug F8 não deve gerar novos sinais críticos enquanto o jogador não puder reagir.
 
-## 12.4 Hotbar
+## 12.4 Retorno ao menu sem save
+
+Não há pausa de produção. Segurar `ESC` só começa após modal, Backpack ou `ToolDrag` terem consumido/cancelado a pressão atual. Ao confirmar, a cena usa saída controlada de áudio e bloqueia gameplay enquanto a apresentação fullscreen de monocromia, vinheta e aviso de descarte entra. O retorno só pode descartar o ciclo depois de `GameCycleDefinition.mainMenuScene` estar configurado e disponível no Build Profile; caso contrário, o áudio e a sessão atuais continuam intactos.
+
+## 12.5 Hotbar
 
 A Hotbar não interage com hotspots.
 
@@ -1078,7 +1082,7 @@ Atualizar o painel de VS3 para incluir a aba `Áudio`.
 Manter:
 
 - tecla F8;
-- bloqueio de pausa;
+- bloqueio de pausa de Debug F8;
 - IMGUI;
 - funcionamento em Development/Editor.
 
@@ -1532,7 +1536,8 @@ Validar:
 - documento restaura mix ao fechar;
 - mídia recebe foco quando aplicável;
 - UI continua audível;
-- pausa não gera novos sinais críticos;
+- pausa de Debug F8 não gera novos sinais críticos;
+- retorno ao menu usa saída controlada, sem pausar produção nem salvar;
 - transição continua usando tempo não escalado;
 - F8 não altera `Time.timeScale`.
 
@@ -1577,11 +1582,12 @@ O VS4 será considerado pronto quando todos os itens abaixo forem verdadeiros:
 - [ ] Modos `Keep`, `Crossfade`, `Immediate` e `Special` possuem fallback válido.
 - [ ] SFX da transição está separado do ambiente permanente.
 - [ ] Transição visual e sonora usam o mesmo ponto de troca.
-- [ ] Não há cliques ou cortes não intencionais.
+- [ ] Não há cliques ou cortes não intencionais; camadas locais respeitam `fadeDuration` e preservam origem/destino na transição.
 - [ ] Interações são roteadas para `Interactions`.
 - [ ] Feedbacks são roteados para `UI`.
 - [ ] Modais aplicam a mixagem correta.
-- [ ] Pausa não gera sinais críticos novos indevidamente.
+- [ ] Pausa de Debug F8 não gera sinais críticos novos indevidamente.
+- [ ] Retorno ao menu usa saída controlada sem salvar; configuração de menu inválida não descarta a sessão.
 - [ ] F8 possui aba de áudio.
 - [ ] Todos os clips registrados podem ser testados individualmente.
 - [ ] Pontos e entidades podem ser simulados pelo F8.

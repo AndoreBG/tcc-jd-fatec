@@ -14,6 +14,9 @@ namespace Whispers
         public bool loop = true;
         public bool playOnInitialize = true;
 
+        [Tooltip("Marca a camada obrigatória de ambiente-base do período. Cada cena deve ter exatamente uma.")]
+        public bool isBaseAmbience;
+
         [Range(0f, 2f)]
         public float volume = 1f;
 

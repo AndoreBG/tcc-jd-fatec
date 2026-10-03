@@ -10,6 +10,11 @@ namespace Whispers
         [Tooltip("Nome único ou caminho da cena incluída no Build Profile. Não é sceneId.")]
         public string dayScene = "playground_day";
         public string nightScene = "playground_night";
+
+        [Header("Retorno sem save")]
+        [Tooltip("Nome ou caminho da cena de menu principal incluída no Build Profile. Vazio desabilita o hold de retorno até a cena ser configurada.")]
+        public string mainMenuScene;
+
         [Min(0f)] public float fadeDuration = 0.2f;
 
         public string GetScene(GamePeriod period) => period == GamePeriod.Day ? dayScene : nightScene;

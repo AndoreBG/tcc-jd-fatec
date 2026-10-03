@@ -29,7 +29,7 @@ namespace Whispers
         [Tooltip("Fecha a Backpack e cancela um arraste em andamento (devolve a ferramenta).")]
         [SerializeField] private KeyCode closeKey = KeyCode.Escape;
 
-        [Header("Slots (6 no design atual)")]
+        [Header("Slots (4 provisórios)")]
         [Tooltip("Definições dos slots, na ordem da esquerda para a direita.")]
         [SerializeField] private BackpackSlotDefinition[] slotDefinitions = new BackpackSlotDefinition[0];
 
@@ -73,6 +73,12 @@ namespace Whispers
         private Canvas HostCanvas => GetComponentInParent<Canvas>();
 
         private bool IsDragging => _state == BpState.DragInside || _state == BpState.DragOutside;
+
+        /// <summary>
+        /// Enquanto a Backpack está aberta, animando ou arrastando uma ferramenta, ESC
+        /// pertence a esta UI. O hold de retorno ao menu só pode começar após soltar a tecla.
+        /// </summary>
+        public bool IsHandlingEscape => _state != BpState.Closed;
 
         private void Start()
         {

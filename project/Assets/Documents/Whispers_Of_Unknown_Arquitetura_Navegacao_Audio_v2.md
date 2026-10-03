@@ -58,11 +58,11 @@ Neste documento, Dia e Noite são chamados de **períodos**, evitando o uso amb�
 | 12 | Retomada | Sair, falhar ou fechar o jogo durante Dia ou Noite restaura o início do Dia daquele ciclo. |
 | 13 | Persistência | Save contém inventário consolidado, IDs de itens coletados, fatos persistentes, etapa/Dia e metadados. Estado local de cena não é salvo. |
 | 14 | Input | Input Manager legado com `StandaloneInputModule` no `EventSystem`. |
-| 15 | Domínio de tempo | Dwell e gameplay usam tempo escalado. Transições, margem de 0,05 segundo e UI usam tempo não escalado. Áudio possui regras próprias de pausa e mixagem. |
+| 15 | Domínio de tempo | Dwell e gameplay usam tempo escalado. Transições, margem de 0,05 segundo, UI e retorno ao menu usam tempo não escalado. `Paused` é exclusivo do Debug F8; áudio usa mixagem própria. |
 | 16 | Sobreposição de hotspots | Proibida entre regiões que possam ficar interativas simultaneamente dentro do mesmo ViewNode. É erro de conteúdo e gera warning. |
 | 17 | Eventos | Eventos C# entre sistemas; `UnityEvents` apenas para respostas locais e autoradas no Inspector. |
 | 18 | Áudio | `SceneAudioController` é a autoridade local de reprodução, continuidade e mixagem. ViewNode define o ambiente-alvo; link define como ocorre a mudança; `TransitionProfile` define apenas o SFX de transição. |
-| 19 | Inventário por período | **Backpack** no Dia (modal inferior, tecla de atalho, seis slots travados por tipo de item) e **Hotbar** na Noite (interface fixa, lanterna de dínamo e recipiente de óleo). Itens são utilizáveis somente depois de encontrados. |
+| 19 | Inventário por período | **Backpack** no Dia (modal inferior, tecla de atalho, quatro slots provisórios travados por tipo de item) e **Hotbar** na Noite (interface fixa, lanterna de dínamo e recipiente de óleo). Itens são utilizáveis somente depois de encontrados. |
 | 20 | Hotbar e hotspots | As ferramentas da Hotbar não interagem com hotspots: a lanterna é efeito de apresentação sobre o ViewNode; o recipiente de óleo pertence às mecânicas futuras do lampião. |
 
 ---
@@ -238,16 +238,19 @@ Não é necessário um sistema de transações separado: o arquivo em disco é o
 
 Se o save falhar, o avanço é interrompido e o jogador recebe opção de tentar novamente ou voltar ao menu. O checkpoint anterior não deve ser corrompido nem substituído por dados incompletos.
 
-### 4.9 Saída, falha e retomada
+### 4.9 Retorno ao menu, falha e retomada
 
-- Sair durante o Dia ou a Noite descarta o estado de trabalho ainda não consolidado.
+O jogo **não possui pausa de produção**. No PC, segurar `ESC` inicia o retorno ao menu principal sem salvar nem consolidar o ciclo.
+
+1. `ESC` fecha ou cancela primeiro o documento, a Backpack ou o arraste de ferramenta em curso; a mesma pressão não pode iniciar o hold de saída.
+2. Com gameplay estável, segurar `ESC` confirma a saída; o `GameplaySceneController` bloqueia a entrada de gameplay.
+3. A apresentação entra em tempo não escalado: monocromia fullscreen, vinheta e fade-in vermelho de `Retornando ao Menu Principal...`, seguido de `Ao retornar, todo o progresso do dia não será salvo`.
+4. Somente imediatamente antes de iniciar o carregamento, `GameSessionManager.TryReturnToMainMenu` descarta a cópia de trabalho. Não há `SaveSystem.Save` nem consolidação de checkpoint.
+5. A cena de destino vem de `GameCycleDefinition.mainMenuScene` e precisa estar no Build Profile. Se o campo estiver vazio ou inválido, o hold não inicia e o estado de trabalho permanece intacto.
+
 - Falhar durante a Noite retorna ao checkpoint do início daquele Dia.
 - Carregar o slot sempre abre a cena do Dia definida no checkpoint.
-- O jogador deve ser avisado de que sair perde o progresso desde o início do Dia.
-
-Texto de referência para UI:
-
-> O progresso é consolidado ao concluir a Noite. Sair agora fará você retornar ao início do Dia atual.
+- A pausa de `CycleTestUI`/`F8` é exclusivamente ferramenta de Debug: não representa menu, fluxo de produção ou `timeScale`.
 
 ---
 
@@ -267,22 +270,21 @@ Texto de referência para UI:
 | `SceneAudioController` | `MonoBehaviour` | Autoridade local de ambiente, perspectiva acústica, equipamentos, ameaças e crossfades. |
 | `InputBlocker` | Classe comum ou `MonoBehaviour` | Mantém bloqueios por motivo e informa o estado de entrada de gameplay. |
 | `ModalUIController` | `MonoBehaviour` | Abre e fecha modais e aplica bloqueio de gameplay/mixagem apropriada. |
+| `ReturnToMainMenuController` | `MonoBehaviour` runtime | Detecta o hold de ESC, respeita a prioridade das UIs locais e apresenta monocromia, vinheta e aviso de descarte antes do retorno sem save. |
 | `BackpackController` | `MonoBehaviour` | Inventário do Dia: modal inferior, slots travados, arraste e drop de ferramentas. |
 | `HotbarController` | `MonoBehaviour` | Inventário da Noite: interface fixa e seleção das ferramentas do período. |
 
 ### 5.2 Sequência de boot da cena
 
-1. `GameplaySceneController` obtém e valida managers locais.
-2. Valida a `GameplaySceneDefinition` e a existência de um único ViewNode inicial.
-3. Confirma que o período da cena corresponde ao fluxo solicitado.
-4. Mantém todos os ViewNodes fora do estado apresentado.
-5. Configura o `SceneRuntimeState` inicial.
-6. Configura o áudio-base da cena.
-7. Bloqueia entrada por motivo de boot.
-8. Prepara e apresenta o ViewNode inicial.
-9. Resolve estado visual, condições, câmera e áudio do ViewNode.
-10. Aplica a regra de reentrada para hotspots sob o cursor.
-11. Libera o bloqueio após a apresentação inicial.
+1. `GameplaySceneController` bloqueia a entrada por motivo de boot e agrega a validação antes de inicializar sistemas.
+2. Valida referências obrigatórias: `GameplaySceneDefinition`, `GameCycleDefinition`, managers locais, configurações globais, câmera habilitada e UI de inventário correspondente ao período.
+3. Valida exatamente um `EventSystem` ativo com `StandaloneInputModule`.
+4. Valida `sceneId`, `stageId`, período, cena do período no Build Profile, IDs únicos de ViewNode, `initialViewNodeId` único e perfis de câmera/áudio de cada nó.
+5. Configuração inválida gera uma única lista de erros, permanece na entrada de testes e remove o bloqueio de boot; não tenta inicializar navegação parcialmente.
+6. Avisos não bloqueantes incluem camada-base de áudio ainda sem clip (autoria manual) e `mainMenuScene` vazio/ausente do Build Profile.
+7. Após validação, prepara `SceneRuntimeState`, áudio-base e todos os ViewNodes fora do estado apresentado.
+8. Prepara e apresenta o ViewNode inicial; resolve estado visual, condições, câmera e áudio.
+9. Aplica a regra de reentrada para hotspots sob o cursor e libera o bloqueio após a apresentação inicial.
 
 ### 5.3 InputBlocker
 
@@ -293,9 +295,9 @@ Motivos previstos:
 - boot;
 - transição;
 - modal;
-- pausa;
+- pausa **somente do painel Debug F8**;
 - cutscene;
-- encerramento de período;
+- encerramento de período ou retorno ao menu;
 - arraste de ferramenta na Backpack (ToolDrag).
 
 Enquanto o gameplay estiver bloqueado:
@@ -827,7 +829,7 @@ Existe apenas enquanto aquele ponto é apresentado:
 - objeto balançando;
 - detalhe de primeiro plano.
 
-Entra e sai por fade curto quando necessário.
+Cada `AudioLocalLayer` define seu próprio `fadeDuration`. Na mudança de ViewNode, camadas de origem e destino com IDs diferentes mantêm vozes distintas: a origem faz fade-out com a duração de sua própria camada enquanto o destino inicia em zero e faz fade-in com a duração do destino. As duas coexistem durante a transição; uma camada com o mesmo ID é tratada como continuidade (ou, se trocar de clip, faz saída antes de reutilizar a fonte).
 
 #### Equipamento persistente
 
@@ -875,7 +877,7 @@ O perfil contém configuração fixa e não mantém fontes tocando ou estado de 
 | Modo | Regra |
 |---|---|
 | **Manter** | Não reinicia o ambiente. Interpola somente perspectiva, volume, pan e filtros. |
-| **Crossfade** | Reduz ambiente atual e introduz ambiente de destino durante a transição. |
+| **Crossfade** | Reduz e recompõe somente a ambiência contínua durante a transição; camadas locais obedecem aos seus próprios `fadeDuration` e vozes, sem corte da origem. |
 | **Imediato** | Troca abrupta e intencional, apropriada para câmera, monitor ou corte de fita. |
 | **Especial** | Comportamento autorado executado pelo `SceneAudioController`. |
 
@@ -951,15 +953,16 @@ Sons aleatórios devem definir:
 - Se o gameplay continuar, sinais de ameaça continuam audíveis.
 - Fechar modal restaura a mixagem anterior e exige reentrada dos hotspots do cenário.
 
-O ato de pausar e o ato de abrir modal são conceitos separados. Um modal só altera `timeScale` se o GDD declarar explicitamente que ele pausa o gameplay.
+Abrir modal e pausar são conceitos separados. Nesta arquitetura não existe pausa de produção e nenhum modal altera `timeScale`.
 
-### 13.12 Pausa
+### 13.12 Retorno ao menu sem save
 
-- Não gerar novos sinais de ameaça enquanto o jogador não puder reagir.
-- Sons de UI continuam.
-- Ambiente pode continuar reduzido ou filtrado.
-- Transições já iniciadas continuam, conforme a regra de tempo não escalado.
-- O comportamento de rádio e fita depende de serem mídia de UI ou equipamento do mundo.
+- Segurar `ESC` só é considerado quando não há modal, Backpack aberta/animação ou `ToolDrag`; esses elementos têm prioridade para fechar/cancelar primeiro.
+- A confirmação adiciona bloqueio de encerramento, fecha a apresentação local e impede novas ações de gameplay.
+- Um `Volume` global runtime, em layer visível para a câmera URP com post-processing habilitado, leva a saturação a `-100` e aplica vinheta enquanto a mensagem vermelha entra por fade.
+- O estado de trabalho é descartado apenas após `mainMenuScene` passar na validação de Build Profile e imediatamente antes de `LoadScene`.
+- Campo vazio ou cena inválida não inicia o fluxo e não descarrega nem sobrescreve estado.
+- `InputBlockReason.Pause` e `AudioMixState.Paused` permanecem exclusivamente para o painel de Debug `F8`, sem `Time.timeScale`.
 
 ### 13.13 Passagem entre cenas
 
@@ -1012,7 +1015,7 @@ Regras:
 | Transições de ViewNode | Tempo não escalado |
 | Margem pós-transição de 0,05 segundo | Tempo não escalado |
 | Animações de UI e modais | Tempo não escalado |
-| Áudio | Reprodução independente de `timeScale`, controlada por mixagem e regras de pausa |
+| Áudio | Reprodução independente de `timeScale`, controlada por mixagem; `Paused` existe apenas no Debug F8 |
 
 Não existe cooldown genérico na tabela de tempo.
 
@@ -1034,7 +1037,8 @@ Regras:
 - Fechar modal exige reentrada nos hotspots sob o cursor.
 - Abrir modal cancela dwell.
 - Modal não pausa automaticamente o gameplay.
-- Pausa, quando existente, adiciona motivo próprio ao `InputBlocker`.
+- `InputBlockReason.Pause` é reservado ao `CycleTestUI` de Debug F8; não há menu de pausa em produção.
+- `ESC` fecha o modal antes de poder iniciar o hold de retorno ao menu.
 
 ### 16.2 Backpack (Dia)
 
@@ -1047,7 +1051,7 @@ Regras:
 Regras:
 
 - A Backpack abre somente por tecla de atalho e somente durante o Dia.
-- O modal comporta seis slots travados por tipo de item: cada slot aceita exclusivamente o item definido em sua `BackpackSlotDefinition`.
+- O modal comporta quatro slots provisórios travados por tipo de item: cada slot aceita exclusivamente o item definido em sua `BackpackSlotDefinition`. A expansão para seis slots poderá ocorrer quando o conteúdo do ciclo exigir.
 - Slots são configuráveis individualmente em características técnicas e visuais, incluindo quantidade máxima, tamanho, threshold de saída e permissão de arraste.
 - Itens ocupam seus slots somente depois de encontrados pelo jogador.
 - A abertura bloqueia todos os hotspots do cenário durante toda a animação de entrada, de baixo para cima, em tempo não escalado.
@@ -1080,13 +1084,16 @@ Regras:
 
 ### 17.1 Validação no boot
 
-- referências obrigatórias ausentes;
-- `GameplaySceneDefinition` incompatível;
-- ausência ou duplicidade de ViewNode inicial;
-- IDs duplicados de ViewNode;
-- managers locais ausentes;
-- câmera ou EventSystem ausente;
-- perfil default obrigatório ausente.
+Antes de inicializar navegação e áudio, o boot agrega e reporta:
+
+- referências obrigatórias de managers, configurações globais e UI do período;
+- `GameplaySceneDefinition`/`GameCycleDefinition` incompatíveis, `stageId` ou IDs vazios e cena do período ausente do Build Profile;
+- exatamente um `EventSystem` ativo com `StandaloneInputModule`;
+- câmera de gameplay ausente, inativa ou desabilitada;
+- ausência ou duplicidade de ViewNode inicial e IDs de ViewNode duplicados;
+- `ViewCameraProfile` ou `ViewAudioProfile` ausente em qualquer nó.
+
+Clip de camada-base ainda não autorado e `mainMenuScene` vazio/ausente do Build Profile são avisos não bloqueantes: o primeiro é configuração manual de áudio e o segundo apenas desabilita o retorno seguro ao menu.
 
 ### 17.2 Validação de ViewNode e hotspots
 
@@ -1134,7 +1141,8 @@ Regras:
 | Som persistente para ao trocar ViewNode | Reprodução mantida pelo `SceneAudioController`, fora dos filhos controlados. |
 | Pista crítica é mascarada | Prioridade de `Threats`, ducking e testes de inteligibilidade. |
 | Áudio é reproduzido duas vezes | Autoridade clara entre feedback, interação, transição e ambiente. |
-| Pausa congela transição | Transições e margem final em tempo não escalado. |
+| Retorno ao menu descarta progresso com configuração inválida | Validar `mainMenuScene` e Build Profile antes do bloqueio/descarte; campo inválido preserva o ciclo. |
+| Pausa de Debug interfere em produção | `InputBlockReason.Pause` e mix `Paused` ficam restritos ao `CycleTestUI`/F8. |
 
 ---
 
@@ -1226,12 +1234,12 @@ Regras:
 13. `PersistentFactCondition` e fatos no estado de trabalho.
 14. Segunda cena espelhada com `HotbarController` e efeito da lanterna, e transferência Dia → Noite sem salvar checkpoint.
 15. `SaveSystem`, checkpoint de início do Dia e consolidação Noite → próximo Dia.
-16. **Meta 2 — ciclo completo:** iniciar Dia, coletar/preparar, carregar Noite em memória, concluir Noite, criar checkpoint seguinte e confirmar rollback ao sair antes da conclusão.
+16. **Meta 2 — ciclo completo:** iniciar Dia, coletar/preparar, carregar Noite em memória, concluir Noite, criar checkpoint seguinte e confirmar que o retorno configurado ao menu descarta o ciclo sem salvar.
 17. Dwell e `HotspotFeedbackProfile`; manter ausência de cooldown.
 18. `SceneAudioController`, mixer e ambiente contínuo.
 19. `ViewAudioProfile` e modos Manter/Crossfade/Imediato.
 20. Equipamento persistente e primeiro sinal de ameaça independente do ViewNode.
-21. `DocumentPanel`, media, mixagem modal e pausa.
+21. `DocumentPanel`, media, mixagem modal, pausa exclusiva de Debug F8 e retorno ao menu sem save.
 22. Glitch VHS e demais efeitos URP de transição.
 23. Profiling de memória, renderização e áudio do vertical slice.
 
@@ -1290,7 +1298,8 @@ Regras:
 
 - Slot sempre carrega no início do Dia registrado.
 - Dia → Noite mantém alterações em memória sem sobrescrever o checkpoint.
-- Sair durante Dia ou Noite restaura o início do Dia.
+- Retorno configurado ao menu durante Dia ou Noite não salva nem consolida a cópia de trabalho; carregamento futuro do slot restaura o início do Dia.
+- Cena de menu vazia ou inválida não descarta a cópia de trabalho.
 - Falhar durante a Noite restaura o mesmo checkpoint.
 - Concluir a Noite grava o checkpoint do próximo Dia.
 - Inventário, coletados e fatos consolidados são restaurados corretamente.
@@ -1300,13 +1309,13 @@ Regras:
 ### 21.6 Áudio
 
 - Ambiente contínuo não reinicia ao alternar pontos da mesma zona.
-- Crossfades não produzem cortes ou cliques não intencionais.
+- Crossfades não produzem cortes ou cliques não intencionais; camadas locais respeitam `fadeDuration` e preservam origem/destino durante sua sobreposição.
 - Equipamentos persistentes continuam audíveis fora de seu ViewNode.
 - Ameaças produzem sinais sem depender de GameObjects visuais ativos.
 - ViewNode altera perspectiva sem exigir acústica 3D real.
 - `TransitionProfile` não controla ambiente permanente.
 - Feedback, interação e transição não duplicam o mesmo som.
-- Modais e pausa aplicam a mixagem prevista.
+- Modais aplicam a mixagem prevista; `Paused` permanece restrito ao Debug F8.
 - Sinais críticos permanecem inteligíveis sob a estética analog horror.
 - Áudio de Dia termina de forma controlada e o de Noite entra sem corte acidental.
 

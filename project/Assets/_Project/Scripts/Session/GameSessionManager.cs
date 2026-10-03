@@ -202,6 +202,38 @@ namespace Whispers
             return true;
         }
 
+        /// <summary>
+        /// Verifica se o retorno sem save possui uma cena de menu configurada e presente
+        /// no Build Profile. Não altera o estado de trabalho.
+        /// </summary>
+        public bool CanReturnToMainMenu(out string error)
+        {
+            error = null;
+            if (IsLoading || HasPendingLoad)
+                error = "Há um carregamento pendente; aguarde sua conclusão.";
+            else if (!_initialized)
+                error = "Sessão não iniciada.";
+            else if (_cycle == null || string.IsNullOrWhiteSpace(_cycle.mainMenuScene))
+                error = "Configure GameCycleDefinition.mainMenuScene para habilitar o retorno ao menu.";
+            else if (!Application.CanStreamedLevelBeLoaded(_cycle.mainMenuScene))
+                error = "Cena de menu principal não disponível no Build Profile: " + _cycle.mainMenuScene;
+            return error == null;
+        }
+
+        /// <summary>
+        /// Abandona o ciclo atual e carrega o menu principal sem gravar checkpoint.
+        /// A validação ocorre antes do descarte: configuração inválida preserva a sessão.
+        /// </summary>
+        public bool TryReturnToMainMenu(out string error)
+        {
+            if (!CanReturnToMainMenu(out error)) return false;
+
+            string menuScene = _cycle.mainMenuScene;
+            DiscardWorkingState();
+            StartLoading(menuScene);
+            return true;
+        }
+
         /// <summary>Abandona a cópia de trabalho, mas não toca no arquivo. A UI de entrada deve bloquear a cena.</summary>
         public void DiscardWorkingState()
         {

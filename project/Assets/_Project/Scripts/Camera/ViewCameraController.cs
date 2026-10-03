@@ -29,9 +29,17 @@ namespace Whispers
         /// <summary>Perfil atualmente aplicado (do ViewNode apresentado).</summary>
         public ViewCameraProfile Profile => _profile;
 
+        /// <summary>Câmera efetivamente controlada; exposta para validação de boot.</summary>
+        public Camera TargetCamera => targetCamera != null ? targetCamera : Camera.main;
+
         private void Awake()
         {
             if (targetCamera == null) targetCamera = Camera.main;
+            if (targetCamera == null)
+            {
+                Debug.LogError("[ViewCameraController] Câmera alvo ausente.", this);
+                return;
+            }
             _basePosition = targetCamera.transform.position;
             _baseOrthoSize = targetCamera.orthographicSize;
         }

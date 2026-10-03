@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -68,7 +69,7 @@ namespace Whispers
         {
             if (_transitioning)
             {
-                Debug.LogWarning($"[NavigationManager] Transição já em andamento; solicitação descartada.", this);
+                Debug.LogWarning("[NavigationManager] Transição já em andamento; solicitação descartada.", this);
                 return false;
             }
             if (string.IsNullOrEmpty(destinationId))
@@ -110,50 +111,87 @@ namespace Whispers
             return true;
         }
 
+        /// <summary>
+        /// Executa toda a transição com limpeza garantida. Mesmo um erro de conteúdo
+        /// em UnityEvent, áudio, câmera ou ViewNode não pode manter Transition preso
+        /// no InputBlocker nem deixar o manager em estado de transição.
+        /// </summary>
         private IEnumerator TransitionRoutine(ViewNodeController destination, TransitionProfile profile,
             AudioTransitionMode audioMode, string specialAudioId)
         {
+            InputBlocker transitionBlocker = Blocker;
+            bool transitionBlockAdded = false;
             _transitioning = true;
-            Blocker?.AddReason(InputBlockReason.Transition);
-            Audio?.SetMixState(AudioMixState.Transition);
 
-            bool useFade = profile != null && profile.EffectType == TransitionEffectType.Fade;
-            float hideDur = Mathf.Max(0f, profile != null ? profile.HideDuration : 0f);
-            float revealDur = Mathf.Max(0f, profile != null ? profile.RevealDuration : 0f);
-
-            PlayTransitionSfx(profile, TransitionSfxTiming.OnTransitionStart);
-
-            if (useFade)
+            try
             {
-                PlayTransitionSfx(profile, TransitionSfxTiming.OnHideStart);
-                yield return FadeCover(0f, 1f, hideDur);
+                if (transitionBlocker != null)
+                {
+                    // A marca é feita antes da chamada para que o finally também cubra
+                    // uma exceção em algum listener de BlockChanged.
+                    transitionBlockAdded = true;
+                    transitionBlocker.AddReason(InputBlockReason.Transition);
+                }
+
+                Audio?.SetMixState(AudioMixState.Transition);
+
+                bool useFade = profile != null && profile.EffectType == TransitionEffectType.Fade;
+                float hideDur = Mathf.Max(0f, profile != null ? profile.HideDuration : 0f);
+                float revealDur = Mathf.Max(0f, profile != null ? profile.RevealDuration : 0f);
+
+                PlayTransitionSfx(profile, TransitionSfxTiming.OnTransitionStart);
+
+                if (useFade)
+                {
+                    PlayTransitionSfx(profile, TransitionSfxTiming.OnHideStart);
+                    yield return FadeCover(0f, 1f, hideDur);
+                }
+                else
+                {
+                    Overlay?.SetCover(1f);
+                }
+
+                PlayTransitionSfx(profile, TransitionSfxTiming.OnSwap);
+                bool swapped = SwapNode(destination, audioMode, specialAudioId); // ponto de troca
+
+                // SwapNode recupera o ViewNode anterior em caso de erro. Revela a cena
+                // recuperada normalmente antes de liberar o input na margem final.
+                if (!swapped)
+                {
+                    if (useFade)
+                        yield return FadeCover(1f, 0f, revealDur);
+                    else
+                        Overlay?.SetCover(0f);
+
+                    yield return new WaitForSecondsRealtime(postTransitionMargin);
+                    yield break;
+                }
+
+                if (useFade)
+                {
+                    PlayTransitionSfx(profile, TransitionSfxTiming.OnRevealStart);
+                    yield return FadeCover(1f, 0f, revealDur);
+                }
+                else
+                {
+                    Overlay?.SetCover(0f);
+                }
+
+                PlayTransitionSfx(profile, TransitionSfxTiming.OnTransitionEnd);
+
+                // Mantém a entrada bloqueada pela margem pós-transição (tempo não escalado).
+                yield return new WaitForSecondsRealtime(postTransitionMargin);
             }
-            else
+            finally
             {
-                if (Overlay != null) Overlay.SetCover(1f);
+                // Cada etapa é protegida individualmente: uma falha de apresentação de
+                // áudio/overlay nunca pode impedir a remoção do bloqueio de gameplay.
+                TrySetOverlayCover(0f);
+                TrySetNormalAudioMix();
+                if (transitionBlockAdded)
+                    TryRemoveTransitionBlock(transitionBlocker);
+                _transitioning = false;
             }
-
-            PlayTransitionSfx(profile, TransitionSfxTiming.OnSwap);
-            SwapNode(destination, audioMode, specialAudioId); // ponto de troca
-
-            if (useFade)
-            {
-                PlayTransitionSfx(profile, TransitionSfxTiming.OnRevealStart);
-                yield return FadeCover(1f, 0f, revealDur);
-            }
-            else
-            {
-                if (Overlay != null) Overlay.SetCover(0f);
-            }
-
-            PlayTransitionSfx(profile, TransitionSfxTiming.OnTransitionEnd);
-
-            // Mantém a entrada bloqueada pela margem pós-transição (tempo não escalado).
-            yield return new WaitForSecondsRealtime(postTransitionMargin);
-
-            Audio?.SetMixState(AudioMixState.Normal);
-            Blocker?.RemoveReason(InputBlockReason.Transition);
-            _transitioning = false;
         }
 
         private void PlayTransitionSfx(TransitionProfile profile, TransitionSfxTiming timing)
@@ -162,38 +200,114 @@ namespace Whispers
             Audio?.PlayTransition(profile.TransitionSfx, profile.TransitionSfxVolume);
         }
 
-        /// <summary>Troca efetiva do ViewNode no ponto de troca do perfil.</summary>
-        private void SwapNode(ViewNodeController destination, AudioTransitionMode audioMode, string specialAudioId)
+        /// <summary>
+        /// Troca efetiva do ViewNode no ponto de troca do perfil. Em falha, tenta
+        /// restaurar o nó anterior e retorna falso para a coroutine revelar o estado seguro.
+        /// </summary>
+        private bool SwapNode(ViewNodeController destination, AudioTransitionMode audioMode, string specialAudioId)
         {
-            if (destination == null) return;
+            if (destination == null) return false;
 
-            if (_current != null)
-                _current.Exit();
+            ViewNodeController previous = _current;
+            try
+            {
+                if (previous != null)
+                    previous.Exit();
 
-            _current = destination;
-            _current.Enter();
+                _current = destination;
+                _current.Enter();
 
-            // Perfil de câmera e áudio do destino aplicados no ponto de troca.
-            if (Camera != null)
-                Camera.SetProfile(destination.Definition != null ? destination.Definition.cameraProfile : null);
-            Audio?.ApplyViewAudioProfile(destination.Definition, audioMode, specialAudioId);
+                // Perfil de câmera e áudio do destino aplicados no ponto de troca.
+                if (Camera != null)
+                    Camera.SetProfile(destination.Definition != null ? destination.Definition.cameraProfile : null);
+                Audio?.ApplyViewAudioProfile(destination.Definition, audioMode, specialAudioId);
+                return true;
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError("[NavigationManager] Falha ao trocar ViewNode; tentando restaurar o nó anterior.", this);
+                Debug.LogException(exception, this);
+                RestorePreviousNodeAfterSwapFailure(previous, destination);
+                return false;
+            }
+        }
+
+        private void RestorePreviousNodeAfterSwapFailure(ViewNodeController previous, ViewNodeController destination)
+        {
+            if (destination != null && destination != previous && destination.IsPresented)
+            {
+                try { destination.Exit(); }
+                catch (Exception exception)
+                {
+                    Debug.LogError("[NavigationManager] Falha ao encerrar o ViewNode de destino durante a recuperação.", this);
+                    Debug.LogException(exception, this);
+                }
+            }
+
+            _current = previous;
+            if (previous == null) return;
+
+            try
+            {
+                if (!previous.IsPresented)
+                    previous.Enter();
+
+                if (Camera != null)
+                    Camera.SetProfile(previous.Definition != null ? previous.Definition.cameraProfile : null);
+                Audio?.ApplyViewAudioProfile(previous.Definition, AudioTransitionMode.Immediate);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError("[NavigationManager] Falha ao restaurar o ViewNode anterior.", this);
+                Debug.LogException(exception, this);
+            }
+        }
+
+        private void TrySetOverlayCover(float alpha)
+        {
+            try { Overlay?.SetCover(alpha); }
+            catch (Exception exception)
+            {
+                Debug.LogError("[NavigationManager] Falha ao restaurar a cortina de transição.", this);
+                Debug.LogException(exception, this);
+            }
+        }
+
+        private void TrySetNormalAudioMix()
+        {
+            try { Audio?.SetMixState(AudioMixState.Normal); }
+            catch (Exception exception)
+            {
+                Debug.LogError("[NavigationManager] Falha ao restaurar a mixagem após transição.", this);
+                Debug.LogException(exception, this);
+            }
+        }
+
+        private void TryRemoveTransitionBlock(InputBlocker transitionBlocker)
+        {
+            try { transitionBlocker?.RemoveReason(InputBlockReason.Transition); }
+            catch (Exception exception)
+            {
+                Debug.LogError("[NavigationManager] Falha ao remover o bloqueio de transição.", this);
+                Debug.LogException(exception, this);
+            }
         }
 
         private IEnumerator FadeCover(float from, float to, float duration)
         {
             if (duration <= 0f)
             {
-                if (Overlay != null) Overlay.SetCover(to);
+                Overlay?.SetCover(to);
                 yield break;
             }
             float t = 0f;
             while (t < duration)
             {
                 t += Time.unscaledDeltaTime;
-                if (Overlay != null) Overlay.SetCover(Mathf.Lerp(from, to, Mathf.Clamp01(t / duration)));
+                Overlay?.SetCover(Mathf.Lerp(from, to, Mathf.Clamp01(t / duration)));
                 yield return null;
             }
-            if (Overlay != null) Overlay.SetCover(to);
+            Overlay?.SetCover(to);
         }
     }
 }
