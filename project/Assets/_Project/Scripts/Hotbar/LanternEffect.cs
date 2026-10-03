@@ -4,11 +4,11 @@ using UnityEngine.UI;
 namespace Whispers
 {
     /// <summary>
-    /// Efeito visual da lanterna de dínamo: halo radial que segue o ponteiro do
-    /// mouse sobre o VN apresentado (overlay suave, SEM escurecer a cena — decisão
-    /// de design). Halogênio = quente/amplo; UV = violeta/concentrado.
-    /// Puramente visual: não interage com hotspots, condições ou InteractionManager.
-    /// Sprite opcional via Inspector; ausente, gera um gradiente radial procedural.
+    /// Efeito visual da lanterna de dínamo Halógena: halo radial que segue o
+    /// ponteiro do mouse sobre o VN apresentado (overlay suave, SEM escurecer a
+    /// cena). Puramente visual: não interage com hotspots, condições ou
+    /// InteractionManager. Sprite opcional via Inspector; ausente, gera um
+    /// gradiente radial procedural em runtime.
     /// </summary>
     public class LanternEffect : MonoBehaviour
     {
@@ -19,16 +19,15 @@ namespace Whispers
         [Tooltip("Canvas de UI onde o halo é criado (padrão: canvas pai).")]
         [SerializeField] private Canvas targetCanvas;
 
-        [Header("Modo halogênio")]
+        [Header("Halógeno")]
         [SerializeField] private float halogenRadius = 240f;
         [SerializeField] private Color halogenColor = new Color(1f, 0.93f, 0.75f, 0.55f);
 
-        [Header("Modo UV")]
-        [SerializeField] private float uvRadius = 150f;
-        [SerializeField] private Color uvColor = new Color(0.72f, 0.45f, 1f, 0.5f);
-
         private Image _halo;
-        private bool _uv;
+
+        public bool IsHalogenActive => _halo != null && _halo.gameObject.activeInHierarchy;
+        public Canvas TargetCanvas => targetCanvas;
+        public float RadiusInCanvasSpace => Mathf.Max(0f, halogenRadius);
 
         private void Awake()
         {
@@ -49,14 +48,14 @@ namespace Whispers
             _halo = go.AddComponent<Image>();
             _halo.sprite = lightSprite != null ? lightSprite : CreateRadialSprite();
             _halo.raycastTarget = false; // nunca intercepta o cursor
+            ApplyHalogen();
             _halo.gameObject.SetActive(false);
         }
 
-        /// <summary>Exibe o halo no modo informado (true = UV).</summary>
-        public void Show(bool uv)
+        /// <summary>Exibe o halo Halógeno.</summary>
+        public void Show()
         {
-            _uv = uv;
-            ApplyMode();
+            ApplyHalogen();
             if (_halo != null) _halo.gameObject.SetActive(true);
         }
 
@@ -66,20 +65,12 @@ namespace Whispers
             if (_halo != null) _halo.gameObject.SetActive(false);
         }
 
-        /// <summary>Altera o modo em exibição (true = UV).</summary>
-        public void SetMode(bool uv)
-        {
-            _uv = uv;
-            if (_halo != null && _halo.gameObject.activeSelf) ApplyMode();
-        }
-
-        private void ApplyMode()
+        private void ApplyHalogen()
         {
             if (_halo == null) return;
             RectTransform rt = (RectTransform)_halo.transform;
-            float radius = _uv ? uvRadius : halogenRadius;
-            rt.sizeDelta = new Vector2(radius * 2f, radius * 2f);
-            _halo.color = _uv ? uvColor : halogenColor;
+            rt.sizeDelta = new Vector2(halogenRadius * 2f, halogenRadius * 2f);
+            _halo.color = halogenColor;
         }
 
         private void Update()
@@ -91,7 +82,7 @@ namespace Whispers
             _halo.transform.position = world;
         }
 
-        /// <summary>Gradiente radial branco (colorido pelo tint da cor do modo).</summary>
+        /// <summary>Gradiente radial branco (colorido pelo tint Halógeno).</summary>
         private static Sprite CreateRadialSprite()
         {
             const int size = 256;

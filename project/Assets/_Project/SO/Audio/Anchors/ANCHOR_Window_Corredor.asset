@@ -15,4 +15,5 @@ MonoBehaviour:
   id: window_corredor
   displayName: Janela do Corredor
   category: 0
+  encounterViewNodeId: vn_corredorfront
   mapPosition: {x: 0, y: 0}

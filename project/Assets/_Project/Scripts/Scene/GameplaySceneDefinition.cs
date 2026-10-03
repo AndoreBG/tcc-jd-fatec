@@ -25,5 +25,9 @@ namespace Whispers
 
         [Tooltip("Perfil de transição padrão usado quando um link não especifica o seu.")]
         public TransitionProfile defaultTransition;
+
+        [Header("Entidades noturnas")]
+        [Tooltip("Perfil obrigatório somente quando period é Night. Em cenas de Dia ele é ignorado e gera apenas diagnóstico de autoria.")]
+        public NightEntityProfile nightEntityProfile;
     }
 }

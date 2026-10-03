@@ -79,6 +79,14 @@ namespace Whispers
         public void OpenDocument(DocumentData data)
         {
             if (data == null) return;
+            GameSessionManager session = GameSessionManager.Instance;
+            if (session != null && session.period == GamePeriod.Night)
+            {
+                // Documentos não são uma UI autorizada da Noite. A guarda aqui cobre
+                // atalhos, UnityEvents e qualquer referência residual de hotspot.
+                Debug.Log("[ModalUIController] Documentos indisponíveis durante a Noite.", this);
+                return;
+            }
             if (_documentOpen) { documentPanel.Show(data); return; }
             if (Blocker != null && Blocker.IsBlocked) return;
 

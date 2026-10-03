@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 namespace Whispers
 {
@@ -8,25 +7,21 @@ namespace Whispers
     /// Hotbar — inventário da Noite. Interface fixa no canto inferior esquerdo:
     /// sem modal, sem bloqueio de input e SEM interação com hotspots (não passa
     /// pelo InteractionManager nem pela selectedTool). Duas ferramentas
-    /// encontráveis: lanterna de dínamo (efeito de luz no cursor; modos
-    /// halogênio/UV) e recipiente de óleo (selecionável; sem efeito neste slice).
-    /// Seleção por tecla (1/2); pressionar a mesma tecla deseleciona;
-    /// F alterna o modo da lanterna. Desativa-se sozinha fora do período Noite.
+    /// encontráveis: lanterna de dínamo Halógena (efeito de luz no cursor) e
+    /// recipiente de óleo (selecionável; sem efeito neste slice).
+    /// Seleção por tecla (1/2); pressionar a mesma tecla deseleciona. A Hotbar
+    /// desativa-se sozinha fora do período Noite.
     /// </summary>
     public class HotbarController : MonoBehaviour
     {
         public enum Tool { None, Lantern, Oil }
-        public enum LanternMode { Halogen, Uv }
 
         [Header("Teclas (Input Manager legado)")]
-        [Tooltip("Tecla que seleciona/deseleciona a lanterna de dínamo.")]
+        [Tooltip("Tecla que seleciona/deseleciona a lanterna de dínamo Halógena.")]
         [SerializeField] private KeyCode lanternKey = KeyCode.Alpha1;
 
         [Tooltip("Tecla que seleciona/deseleciona o recipiente de óleo.")]
         [SerializeField] private KeyCode oilKey = KeyCode.Alpha2;
-
-        [Tooltip("Alterna o modo da lanterna (halogênio ⇄ UV).")]
-        [SerializeField] private KeyCode lanternModeKey = KeyCode.F;
 
         [Header("Itens (encontráveis)")]
         [Tooltip("ItemDefinition da lanterna de dínamo.")]
@@ -46,18 +41,16 @@ namespace Whispers
         [SerializeField] private GameObject lanternMissingMark;
         [Tooltip("Marca de item não encontrado (óleo).")]
         [SerializeField] private GameObject oilMissingMark;
-        [Tooltip("Rótulo do modo atual da lanterna (Halógeno/UV).")]
-        [SerializeField] private TextMeshProUGUI modeLabel;
 
         [Header("Efeito")]
         [Tooltip("Efeito de luz no cursor (LanternEffect).")]
         [SerializeField] private LanternEffect lanternEffect;
 
         private Tool _selected = Tool.None;
-        private LanternMode _mode = LanternMode.Halogen;
         private bool _periodChecked;
 
         private GameSessionManager Session => GameSessionManager.Instance;
+        public bool IsHalogenSelected => _selected == Tool.Lantern && lanternEffect != null && lanternEffect.IsHalogenActive;
 
         private void Update()
         {
@@ -82,8 +75,6 @@ namespace Whispers
 
             if (Input.GetKeyDown(lanternKey)) ToggleTool(Tool.Lantern);
             if (Input.GetKeyDown(oilKey)) ToggleTool(Tool.Oil);
-            if (Input.GetKeyDown(lanternModeKey) && _selected == Tool.Lantern)
-                SetMode(_mode == LanternMode.Halogen ? LanternMode.Uv : LanternMode.Halogen);
 
             RefreshVisuals();
         }
@@ -91,7 +82,6 @@ namespace Whispers
         public void PrepareForPeriodChange()
         {
             _selected = Tool.None;
-            _mode = LanternMode.Halogen;
             lanternEffect?.Hide();
             RefreshVisuals();
         }
@@ -108,17 +98,10 @@ namespace Whispers
             ApplySelection();
         }
 
-        private void SetMode(LanternMode mode)
-        {
-            _mode = mode;
-            if (lanternEffect != null && _selected == Tool.Lantern)
-                lanternEffect.SetMode(mode == LanternMode.Uv);
-        }
-
         private void ApplySelection()
         {
             if (lanternEffect == null) return;
-            if (_selected == Tool.Lantern) lanternEffect.Show(_mode == LanternMode.Uv);
+            if (_selected == Tool.Lantern) lanternEffect.Show();
             else lanternEffect.Hide();
         }
 
@@ -135,10 +118,6 @@ namespace Whispers
             if (oilSelectedMark != null) oilSelectedMark.SetActive(_selected == Tool.Oil);
             if (lanternMissingMark != null) lanternMissingMark.SetActive(!hasLantern);
             if (oilMissingMark != null) oilMissingMark.SetActive(!hasOil);
-            if (modeLabel != null)
-                modeLabel.text = _selected == Tool.Lantern
-                    ? (_mode == LanternMode.Halogen ? "Halógeno" : "UV")
-                    : string.Empty;
         }
     }
 }

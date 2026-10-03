@@ -21,6 +21,9 @@ namespace Whispers
         [SerializeField] private ModalUIController modalUI;
         [SerializeField] private SceneAudioController sceneAudioController;
 
+        [Header("VS5 — entidades noturnas (somente cena Night)")]
+        [SerializeField] private EntityDirector entityDirector;
+
         [Header("VS3 — mesmo ciclo nas duas cenas")]
         [SerializeField] private GameCycleDefinition cycleDefinition;
         [SerializeField] private BackpackController backpack;
@@ -39,6 +42,7 @@ namespace Whispers
         public InteractionManager Interactions => interactionManager;
         public ModalUIController ModalUI => modalUI;
         public SceneAudioController Audio => sceneAudioController;
+        public EntityDirector Entities => entityDirector;
         public GlobalHotspotSettings GlobalSettings => globalSettings;
         public string FlowError { get; private set; }
         public bool IsFlowBusy { get; private set; }
@@ -94,6 +98,8 @@ namespace Whispers
                     navigationManager.Initialize(sceneDefinition.initialViewNodeId);
                     navigationManager.PresentInitial();
                     if (navigationManager.Current == null) error = "Boot: ViewNode inicial não encontrado após a inicialização.";
+                    if (error == null && sceneDefinition.period == GamePeriod.Night &&
+                        !entityDirector.Initialize(this, sceneDefinition, out error)) { }
                 }
             }
             catch (Exception exception) { error = "Falha no boot: " + exception.Message; Debug.LogException(exception, this); }
@@ -111,6 +117,10 @@ namespace Whispers
                 yield return Fade(1f, 0f);
                 yield return new WaitForSecondsRealtime(0.05f);
                 IsReady = true;
+                // O relógio só começa com boot/fade concluídos. Assim F8 congela uma
+                // Noite já estável e nenhuma entidade avança atrás da tela de boot.
+                if (sceneDefinition != null && sceneDefinition.period == GamePeriod.Night)
+                    entityDirector?.BeginNight();
             }
             if (_bootAdded) inputBlocker?.RemoveReason(InputBlockReason.Boot);
             _bootAdded = false;
@@ -142,6 +152,7 @@ namespace Whispers
             ValidateSceneAndCycle(errors, warnings);
             ValidateCamera(errors);
             ValidateViewNodes(errors);
+            ValidateNightEntities(errors, warnings);
 
             if (sceneDefinition != null && sceneDefinition.period == GamePeriod.Day && backpack == null)
                 errors.Add("BackpackController é obrigatório na cena de Dia.");
@@ -281,6 +292,55 @@ namespace Whispers
                 else if (initialMatches != 1)
                     errors.Add("initialViewNodeId '" + sceneDefinition.initialViewNodeId + "' é ambíguo (" + initialMatches + " nós).");
             }
+        }
+
+        /// <summary>Validação específica do VS5. Dia ignora o perfil; Noite não inicia sem ele.</summary>
+        private void ValidateNightEntities(List<string> errors, List<string> warnings)
+        {
+            if (sceneDefinition == null) return;
+
+            if (sceneDefinition.period == GamePeriod.Day)
+            {
+                if (sceneDefinition.nightEntityProfile != null)
+                    warnings.Add("GameplaySceneDefinition de Dia possui nightEntityProfile; a referência será ignorada.");
+                return;
+            }
+
+            if (sceneDefinition.nightEntityProfile == null)
+            {
+                errors.Add("NightEntityProfile é obrigatório em GameplaySceneDefinition de Noite.");
+                return;
+            }
+            if (entityDirector == null)
+            {
+                errors.Add("EntityDirector é obrigatório na cena de Noite.");
+            }
+            else
+            {
+                if (entityDirector.ClockSettings == null)
+                    errors.Add("EntityDirector não possui NightClockSettings.");
+                if (!entityDirector.HasNightClockHUD)
+                    errors.Add("EntityDirector não possui NightClockHUD.");
+                else if (!entityDirector.HasClockLabel)
+                    errors.Add("NightClockHUD não possui TextMeshProUGUI de horário.");
+            }
+
+            HashSet<string> viewNodeIds = CollectViewNodeIds();
+            sceneDefinition.nightEntityProfile.CollectValidation(viewNodeIds, errors, warnings);
+        }
+
+        private HashSet<string> CollectViewNodeIds()
+        {
+            HashSet<string> ids = new HashSet<string>(StringComparer.Ordinal);
+            if (navigationManager == null) return ids;
+            ViewNodeController[] nodes = navigationManager.GetComponentsInChildren<ViewNodeController>(true);
+            if (nodes == null) return ids;
+            foreach (ViewNodeController node in nodes)
+            {
+                if (node == null || node.Definition == null || string.IsNullOrWhiteSpace(node.Definition.id)) continue;
+                ids.Add(node.Definition.id);
+            }
+            return ids;
         }
 
         public bool CanEndPeriod => IsReady && !IsAtTestEntry && !IsFlowBusy &&
@@ -427,6 +487,9 @@ namespace Whispers
 
         private void PrepareLocalShutdown()
         {
+            // Estado de entidades é exclusivamente local à Noite: saída normal,
+            // retorno sem save, reset e destruição nunca o persistem.
+            entityDirector?.ClearRuntime();
             backpack?.PrepareForPeriodChange();
             modalUI?.CloseForPeriodChange();
             hotbar?.PrepareForPeriodChange();

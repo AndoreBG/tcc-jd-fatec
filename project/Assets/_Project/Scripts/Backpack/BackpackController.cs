@@ -208,6 +208,9 @@ namespace Whispers
         /// <summary>Iniciado pelo BackpackSlotUI ao pressionar um slot com item presente.</summary>
         public void BeginDragFromSlot(BackpackSlotDefinition slotDefinition)
         {
+            // Guarda redundante: eventos UI residuais nunca podem iniciar ferramenta
+            // durante a Noite, mesmo se o painel tivesse sido aberto antes da troca.
+            if (Session == null || Session.period != GamePeriod.Day) return;
             if (_state != BpState.Open || slotDefinition == null || !slotDefinition.dragEnabled) return;
             if (Blocker != null && Blocker.IsBlockedExcept(InputBlockReason.Modal)) return;
 

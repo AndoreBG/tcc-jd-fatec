@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ItemDefinition
   id: item_lanterna
   displayName: "Lanterna de D\xEDnamo"
-  description: "N\xE3o precisa de bateria e possui modo UV."
+  description: "N\xE3o precisa de bateria e utiliza luz Hal\xF3gena."
   icon: {fileID: -2320329584465383960, guid: 7e3ba469c71a8c541abd70acf3d01614, type: 3}
   isTool: 0
   consumesOnUse: 0

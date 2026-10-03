@@ -17,6 +17,9 @@ namespace Whispers
 
         public AudioAnchorCategory category = AudioAnchorCategory.Other;
 
+        [Tooltip("ID do ViewNode em que ocorre o confronto desta entidade. É um vínculo lógico, sem Transform ou movimento contínuo.")]
+        public string encounterViewNodeId;
+
         [Tooltip("Posição de referência apenas para autoria/debug. Não é usada como acústica 3D no VS4.")]
         public Vector2 mapPosition;
     }

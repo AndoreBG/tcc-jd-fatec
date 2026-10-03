@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7834cb915f6856998102f574184e3a87, type: 3}
-  m_Name: ANCHOR_Window_Quarto
+  m_Name: ANCHOR_Door_Cozinha
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.AudioAnchorDefinition
-  id: window_quarto
-  displayName: Janela do Quarto
-  category: 0
-  encounterViewNodeId: vn_quarto
-  mapPosition: {x: 2, y: 1}
+  id: door_cozinha
+  displayName: Porta da Cozinha
+  category: 1
+  encounterViewNodeId: vn_portacozinha
+  mapPosition: {x: 2, y: 0}
