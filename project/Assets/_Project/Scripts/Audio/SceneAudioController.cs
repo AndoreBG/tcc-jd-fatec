@@ -85,8 +85,10 @@ namespace Whispers
         private readonly List<RuntimeVoice> _oneShotVoices = new List<RuntimeVoice>();
         private readonly Dictionary<string, RuntimeVoice> _localVoices = new Dictionary<string, RuntimeVoice>();
         private readonly Dictionary<string, float> _localFadeDurations = new Dictionary<string, float>();
+        private readonly HashSet<string> _missingEntityAudioWarnings = new HashSet<string>(StringComparer.Ordinal);
         private readonly Dictionary<string, Coroutine> _localFadeRoutines = new Dictionary<string, Coroutine>();
         private readonly Dictionary<string, int> _localFadeVersions = new Dictionary<string, int>();
+        private readonly Dictionary<string, Coroutine> _entityAudioRoutines = new Dictionary<string, Coroutine>();
 
         private GameplaySceneDefinition _sceneDefinition;
         private ViewAudioProfile _currentProfile;
@@ -137,6 +139,9 @@ namespace Whispers
                 if (routine != null) StopCoroutine(routine);
             _localFadeRoutines.Clear();
             _localFadeVersions.Clear();
+            foreach (Coroutine routine in _entityAudioRoutines.Values)
+                if (routine != null) StopCoroutine(routine);
+            _entityAudioRoutines.Clear();
             StopAllVoices();
         }
 
@@ -1169,6 +1174,168 @@ namespace Whispers
             }
             ApplyTarget(voice, CalculateTarget(voice, _currentProfile));
             return true;
+        }
+
+        /// <summary>
+        /// Aplica a apresentação de áudio autorada de uma entidade sem consultar o
+        /// AudioDebugCatalog. A troca sempre dissolve o loop anterior, toca o SFX
+        /// de entrada e então introduz o novo loop no grupo Threats.
+        /// </summary>
+        public bool ApplyEntityStateAudio(string entityId, string anchorId, EntityState state,
+            EntityStateAudioPresentation presentation)
+        {
+            if (string.IsNullOrWhiteSpace(entityId)) return false;
+            EnsureInitialized();
+
+            bool presentableState = state != EntityState.Inactive && state != EntityState.Resolved;
+            bool canUseAnchorLoop = presentableState && !string.IsNullOrWhiteSpace(anchorId);
+            bool hasEntrySfx = presentation != null && presentation.enterSfxClip != null;
+            bool hasConfiguredLoop = presentation != null && presentation.presenceLoopClip != null;
+            bool hasLoop = hasConfiguredLoop && canUseAnchorLoop;
+            if (!presentableState || (!hasEntrySfx && !hasLoop))
+            {
+                if (presentableState)
+                {
+                    string key = entityId + "|" + state;
+                    if (_missingEntityAudioWarnings.Add(key))
+                    {
+                        string detail = presentation == null
+                            ? "não possui apresentação de áudio"
+                            : (!hasEntrySfx && hasConfiguredLoop && !canUseAnchorLoop
+                                ? "possui apenas loop, mas o estado não tem anchor para reproduzi-lo"
+                                : "possui apresentação de áudio sem SFX nem loop");
+                        Debug.LogWarning("[SceneAudioController] Entidade '" + entityId + "' no estado " + state +
+                                         " " + detail + " autorado; a lógica continua sem áudio.", this);
+                    }
+                }
+                BeginEntityAudioTransition(entityId, null, null, EntityState.Inactive, false);
+                return true;
+            }
+
+            // Light ainda não possui anchor, porém seu SFX de entrada é autorado e
+            // deve tocar. Loops permanecem restritos a estados com perspectiva.
+            BeginEntityAudioTransition(entityId, anchorId, presentation, state, hasLoop);
+            return true;
+        }
+
+        /// <summary>Remove somente o loop persistente de apresentação da entidade indicada.</summary>
+        public void ClearEntityAudio(string entityId)
+        {
+            if (string.IsNullOrWhiteSpace(entityId)) return;
+            StopEntityOneShots(entityId);
+            BeginEntityAudioTransition(entityId, null, null, EntityState.Inactive, false);
+        }
+
+        /// <summary>Liberação instantânea para teardown de Noite/derrota, sem fade residual.</summary>
+        public void ClearEntityAudioImmediate(string entityId)
+        {
+            if (string.IsNullOrWhiteSpace(entityId)) return;
+            string emitterId = "entity:" + entityId;
+            Coroutine routine;
+            if (_entityAudioRoutines.TryGetValue(emitterId, out routine) && routine != null)
+                StopCoroutine(routine);
+            _entityAudioRoutines.Remove(emitterId);
+            StopEntityOneShots(entityId);
+
+            RuntimeVoice loop;
+            if (_persistentVoices.TryGetValue(emitterId, out loop))
+                ReleasePersistentVoice(loop);
+        }
+
+        public bool HasEntityAudioPresentation(string entityId)
+        {
+            if (string.IsNullOrWhiteSpace(entityId)) return false;
+            string emitterId = "entity:" + entityId;
+            RuntimeVoice voice;
+            if (_persistentVoices.TryGetValue(emitterId, out voice) && voice != null &&
+                voice.source != null && voice.source.isPlaying)
+                return true;
+            foreach (RuntimeVoice oneShot in _oneShotVoices)
+                if (oneShot != null && string.Equals(oneShot.emitterId, entityId, StringComparison.Ordinal) &&
+                    oneShot.source != null && oneShot.source.isPlaying)
+                    return true;
+            Coroutine routine;
+            return _entityAudioRoutines.TryGetValue(emitterId, out routine) && routine != null;
+        }
+
+        private void StopEntityOneShots(string entityId)
+        {
+            foreach (RuntimeVoice oneShot in _oneShotVoices)
+            {
+                if (oneShot == null || !string.Equals(oneShot.emitterId, entityId, StringComparison.Ordinal)) continue;
+                if (oneShot.source != null) oneShot.source.Stop();
+                oneShot.anchorId = null;
+                oneShot.emitterId = null;
+                oneShot.debugId = null;
+                oneShot.reserved = false;
+            }
+        }
+
+        private void BeginEntityAudioTransition(string entityId, string anchorId,
+            EntityStateAudioPresentation presentation, EntityState state, bool allowLoop)
+        {
+            string emitterId = "entity:" + entityId;
+            // Durante teardown de cena não há corrotina válida; liberação imediata evita
+            // deixar uma voz reservada e não tenta iniciar coroutine em objeto inativo.
+            if (!isActiveAndEnabled)
+            {
+                SetPersistentEmitter(emitterId, null, AudioSourceRole.Threats, null, false);
+                return;
+            }
+            Coroutine routine;
+            if (_entityAudioRoutines.TryGetValue(emitterId, out routine) && routine != null)
+                StopCoroutine(routine);
+            _entityAudioRoutines[emitterId] = StartCoroutine(TransitionEntityAudio(
+                emitterId, entityId, anchorId, presentation, state, allowLoop));
+        }
+
+        private IEnumerator TransitionEntityAudio(string emitterId, string entityId, string anchorId,
+            EntityStateAudioPresentation presentation, EntityState state, bool allowLoop)
+        {
+            RuntimeVoice previous;
+            if (_persistentVoices.TryGetValue(emitterId, out previous))
+            {
+                float fadeOut = presentation != null ? Mathf.Max(0f, presentation.fadeOutSeconds) : 0.12f;
+                float volume = previous.source != null ? previous.source.volume : 0f;
+                yield return FadeVoiceVolume(previous, volume, 0f, fadeOut);
+                ReleasePersistentVoice(previous);
+            }
+
+            if (presentation == null)
+            {
+                _entityAudioRoutines.Remove(emitterId);
+                yield break;
+            }
+
+            if (presentation.enterSfxClip != null)
+            {
+                PlayClipInternal(presentation.enterSfxClip, AudioSourceRole.Threats,
+                    Mathf.Max(0f, presentation.enterSfxVolume), 0f, anchorId,
+                    "entity-enter:" + entityId + ":" + state, false, entityId);
+            }
+
+            if (!allowLoop || presentation.presenceLoopClip == null)
+            {
+                _entityAudioRoutines.Remove(emitterId);
+                yield break;
+            }
+
+            RuntimeVoice voice = AcquirePersistentVoice(emitterId, AudioSourceRole.Threats);
+            if (voice == null)
+            {
+                _entityAudioRoutines.Remove(emitterId);
+                yield break;
+            }
+
+            ConfigureVoice(voice, AudioSourceRole.Threats, presentation.presenceLoopClip, true,
+                Mathf.Max(0f, presentation.presenceLoopVolume));
+            voice.anchorId = anchorId;
+            voice.debugId = "entity-loop:" + entityId + ":" + state;
+            voice.source.volume = 0f;
+            voice.source.Play();
+            VoiceTarget target = CalculateTarget(voice, _currentProfile);
+            yield return FadeVoiceToTarget(voice, target, Mathf.Max(0f, presentation.fadeInSeconds));
+            _entityAudioRoutines.Remove(emitterId);
         }
 
         public bool SetThreatState(string entityId, string anchorId, ThreatAudioState state)

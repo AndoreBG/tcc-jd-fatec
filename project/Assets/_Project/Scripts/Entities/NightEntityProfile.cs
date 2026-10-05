@@ -40,6 +40,7 @@ namespace Whispers
             }
 
             HashSet<string> ids = new HashSet<string>(StringComparer.Ordinal);
+            Dictionary<string, string> globalAnchorOwners = new Dictionary<string, string>(StringComparer.Ordinal);
             int predatorCount = 0;
             int voyeurCount = 0;
             foreach (EntityNightEntry entry in entries)
@@ -79,6 +80,7 @@ namespace Whispers
                 else errors.Add("O primeiro NightEntityProfile aceita somente PredatorDefinition e VoyeurDefinition.");
 
                 entry.CollectValidation(sceneViewNodeIds, errors, warnings);
+                CollectGlobalAnchorIdValidation(entry, definition, globalAnchorOwners, errors);
             }
 
             // O VS5 tem exatamente as duas entidades aprovadas; expansões futuras
@@ -87,6 +89,32 @@ namespace Whispers
                 errors.Add("NightEntityProfile exige exatamente uma PredatorDefinition no primeiro slice (encontradas: " + predatorCount + ").");
             if (voyeurCount != 1)
                 errors.Add("NightEntityProfile exige exatamente uma VoyeurDefinition no primeiro slice (encontradas: " + voyeurCount + ").");
+        }
+
+        /// <summary>
+        /// A reserva do EntityDirector é global e indexada pelo id do anchor. Logo,
+        /// assets diferentes com o mesmo id também conflitam e precisam ser recusados
+        /// no boot, inclusive quando pertencem a categorias distintas.
+        /// </summary>
+        private static void CollectGlobalAnchorIdValidation(EntityNightEntry entry, EntityDefinition definition,
+            Dictionary<string, string> globalAnchorOwners, List<string> errors)
+        {
+            if (entry == null || definition == null || entry.allowedAnchors == null) return;
+            foreach (AudioAnchorDefinition anchor in entry.allowedAnchors)
+            {
+                if (anchor == null || string.IsNullOrWhiteSpace(anchor.id)) continue;
+                string previousOwner;
+                if (globalAnchorOwners.TryGetValue(anchor.id, out previousOwner))
+                {
+                    if (!string.Equals(previousOwner, definition.entityId, StringComparison.Ordinal))
+                    {
+                        errors.Add("Anchor com id global duplicado: '" + anchor.id + "' é usado por '" +
+                                   previousOwner + "' e '" + definition.entityId + "'.");
+                    }
+                    continue;
+                }
+                globalAnchorOwners.Add(anchor.id, definition.entityId);
+            }
         }
     }
 

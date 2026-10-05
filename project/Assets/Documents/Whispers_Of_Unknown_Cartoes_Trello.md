@@ -444,7 +444,7 @@ Implementa a Backpack do Dia — modal inferior com slots travados por tipo de i
 - Soltar dentro do modal cancela o arraste e mantém a Backpack aberta; soltar fora de alvo devolve a ferramenta sem penalidade.
 - A Hotbar é fixa no canto inferior esquerdo, sem modal e sem bloqueio de entrada.
 - Lanterna de dínamo e recipiente de óleo são selecionados pela tecla de atalho da respectiva ferramenta; pressionar a mesma tecla deseleciona.
-- A lanterna alterna entre os modos halogênio e UV e projeta no ponteiro um efeito de luz que modifica a leitura do ViewNode.
+- A lanterna usa exclusivamente Halógeno e projeta no ponteiro um halo de luz; sua cobertura sobre a região técnica do Voyeur é usada somente pela defesa dessa entidade.
 - As ferramentas da Hotbar não interagem com nenhum tipo de hotspot.
 - `DocumentPanel` apresenta documentos e mídia sem depender do ViewNode permanecer ativo.
 - Abrir modal não altera automaticamente o `timeScale`.
@@ -462,7 +462,7 @@ Implementa a Backpack do Dia — modal inferior com slots travados por tipo de i
 - [ ] Soltar dentro do modal cancela o arraste e mantém a Backpack aberta; soltar fora de alvo devolve a ferramenta sem penalidade.
 - [ ] A Hotbar é fixa no canto inferior esquerdo, sem modal e sem bloqueio de entrada.
 - [ ] Lanterna de dínamo e recipiente de óleo são selecionados pela tecla de atalho da respectiva ferramenta; pressionar a mesma tecla deseleciona.
-- [ ] A lanterna alterna entre os modos halogênio e UV e projeta no ponteiro um efeito de luz que modifica a leitura do ViewNode.
+- [ ] A lanterna usa exclusivamente Halógeno, projeta o halo no ponteiro e expõe cobertura técnica apenas para a defesa do Voyeur.
 - [ ] As ferramentas da Hotbar não interagem com nenhum tipo de hotspot.
 - [ ] `DocumentPanel` apresenta documentos e mídia sem depender do ViewNode permanecer ativo.
 - [ ] Abrir modal não altera automaticamente o `timeScale`.

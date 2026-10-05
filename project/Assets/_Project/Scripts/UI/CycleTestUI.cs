@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Whispers
@@ -11,8 +12,20 @@ namespace Whispers
         private enum DebugTab
         {
             Cycle,
+            Entities,
             Audio
         }
+
+        private static readonly string[] DebugTabLabels = { "Ciclo / Estado", "Entidades", "Áudio" };
+        private static readonly EntityState[] ForceableEntityStates =
+        {
+            EntityState.Inactive, EntityState.Light, EntityState.Near,
+            EntityState.Critical, EntityState.Resolving, EntityState.Resolved
+        };
+        private static readonly ThreatAudioState[] DebugThreatStates =
+        {
+            ThreatAudioState.Light, ThreatAudioState.Near, ThreatAudioState.Critical
+        };
 
         [SerializeField] private GameplaySceneController scene;
         [SerializeField] private KeyCode toggleKey = KeyCode.F8;
@@ -29,6 +42,11 @@ namespace Whispers
         private Vector2 _scroll;
         private DebugTab _tab;
         private ThreatAudioState _selectedThreatState = ThreatAudioState.Light;
+        private string _debugNightEntityId = "predator";
+        private string _debugNightAnchorId;
+        private string _debugSeedText;
+        private string _debugCoverageText = "1";
+        private string _entityMessage;
 
         private GameSessionManager Session => GameSessionManager.Instance;
         private bool ForcedOpen => scene != null && (scene.IsAtTestEntry || !string.IsNullOrEmpty(scene.FlowError));
@@ -36,6 +54,13 @@ namespace Whispers
         private void Update()
         {
             if (scene == null || Session == null) return;
+            // Jumpscare tem precedência sobre o painel de desenvolvimento: F8 não
+            // pode reabrir UI nem remover o bloqueio GameOver durante a derrota.
+            if (scene.Blocker != null && scene.Blocker.HasReason(InputBlockReason.GameOver))
+            {
+                if (_open) SetOpen(false);
+                return;
+            }
             if (ForcedOpen && !_open) SetOpen(true);
             if (Input.GetKeyDown(toggleKey) && !scene.IsFlowBusy && !ForcedOpen)
                 SetOpen(!_open);
@@ -59,6 +84,11 @@ namespace Whispers
 
         private void ReleasePause()
         {
+            // Os overrides existem exclusivamente para inspeção com F8 aberto. Nunca devem
+            // sobreviver à volta do gameplay, mesmo se o painel for desabilitado pela cena.
+            if (scene != null) scene.Entities?.ClearDebugOverrides();
+            _debugCoverageText = "1";
+
             if (_pauseAdded && scene != null)
             {
                 scene.Blocker?.RemoveReason(InputBlockReason.Pause);
@@ -94,11 +124,13 @@ namespace Whispers
             if (!string.IsNullOrEmpty(Session.Notice)) GUILayout.Label(Session.Notice);
             GUILayout.Space(8f);
 
-            _tab = (DebugTab)GUILayout.Toolbar((int)_tab, new[] { "Ciclo / Estado", "Áudio" });
+            _tab = (DebugTab)GUILayout.Toolbar((int)_tab, DebugTabLabels);
             _scroll = GUILayout.BeginScrollView(_scroll);
 
             if (_tab == DebugTab.Audio)
                 DrawAudioTab();
+            else if (_tab == DebugTab.Entities)
+                DrawEntitiesTab();
             else
                 DrawCycleTab();
 
@@ -161,6 +193,238 @@ namespace Whispers
                 if (GUILayout.Button("Sair do jogo")) _confirmation = "quit";
                 DrawWorkingState();
             }
+        }
+
+        private void DrawEntitiesTab()
+        {
+            EntityDirector director = scene.Entities;
+            if (director == null || !director.IsInitialized)
+            {
+                GUILayout.Label("EntityDirector não está ativo nesta cena (disponível apenas na Noite pronta).");
+                return;
+            }
+
+            GUILayout.BeginVertical(GUI.skin.box);
+            GUILayout.Label("ENTIDADES NOTURNAS — runtime descartável / F8");
+            GUILayout.Label("Perfil: " + (director.Profile != null ? director.Profile.profileId : "SEM PERFIL") +
+                " | Seed: " + director.Seed + " | relógio: " + director.ElapsedSeconds.ToString("0.0") +
+                " s | hora IA: " + director.AiHourIndex + " | próximo tick: " +
+                director.SecondsToNextTick.ToString("0.0") + " s | " +
+                (director.IsTerminalActive ? "TERMINAL ATIVO" : "sem Terminal"));
+            GUILayout.Label("F8 mantém o runtime, relógio e timers congelados. Os overrides abaixo são limpos ao fechar o painel.");
+            GUILayout.BeginHorizontal();
+            _debugSeedText = GUILayout.TextField(string.IsNullOrEmpty(_debugSeedText) ? director.Seed.ToString() : _debugSeedText,
+                GUILayout.Width(120f));
+            if (GUILayout.Button("Aplicar seed"))
+            {
+                int seed;
+                _entityMessage = int.TryParse(_debugSeedText, out seed)
+                    ? "Seed aplicada: " + seed
+                    : "Seed inválida.";
+                if (int.TryParse(_debugSeedText, out seed)) director.SetSeedForDebug(seed);
+            }
+            if (GUILayout.Button("Forçar tick global"))
+            {
+                director.ForceEvaluateTickForDebug();
+                _entityMessage = "Tick global avaliado com a seed atual.";
+            }
+            if (GUILayout.Button("Limpar overrides"))
+            {
+                director.ClearDebugOverrides();
+                _debugCoverageText = "1";
+                _entityMessage = "Overrides de encontro e cobertura removidos.";
+            }
+            GUILayout.EndHorizontal();
+            if (!string.IsNullOrWhiteSpace(_entityMessage)) GUILayout.Label(_entityMessage);
+            GUILayout.EndVertical();
+
+            GUILayout.BeginVertical(GUI.skin.box);
+            GUILayout.Label("ESTADO, TIMERS E SAÍDAS");
+            foreach (EntityRuntimeSnapshot snapshot in director.GetDebugSnapshot())
+            {
+                bool hasVisualBinding = !string.IsNullOrWhiteSpace(snapshot.anchorId) &&
+                    director.HasPresentationBindingForDebug(snapshot.entityId, snapshot.anchorId, snapshot.state);
+                bool hasAudio = scene.Audio != null && scene.Audio.HasEntityAudioPresentation(snapshot.entityId);
+                string encounter = !snapshot.debugEncounterOverride.HasValue
+                    ? "auto"
+                    : (snapshot.debugEncounterOverride.Value ? "forçado ON" : "forçado OFF");
+                string coverage = !snapshot.debugVoyeurCoverageOverride.HasValue
+                    ? "auto"
+                    : snapshot.debugVoyeurCoverageOverride.Value.ToString("0.00");
+
+                GUILayout.Label(snapshot.entityId + " | " + snapshot.state + " | anchor " +
+                    (snapshot.anchorId ?? "-") + " | AI " + snapshot.aiLevel +
+                    " | d20 oportunidade/direção " + snapshot.lastOpportunityRoll + "/" + snapshot.lastDirectionRoll);
+                GUILayout.Label("  estado " + snapshot.stateElapsed.ToString("0.0") + " s | crítico " +
+                    snapshot.criticalRemaining.ToString("0.0") + " s | início resolução " +
+                    snapshot.resolveStartRemaining.ToString("0.0") + " s | progresso " +
+                    snapshot.resolveProgress.ToString("0.0") + " s | cooldown " +
+                    snapshot.resolvedCooldownRemaining.ToString("0.0") + " s | terminal " +
+                    snapshot.terminalRemaining.ToString("0.0") + " s");
+                GUILayout.Label("  binding técnico: " + (hasVisualBinding ? "OK" : "ausente/não aplicável") +
+                    " | áudio da entidade: " + (hasAudio ? "ativo" : "inativo") +
+                    " | encontro: " + encounter + " | cobertura Halógeno: " + coverage);
+
+                IReadOnlyList<int> aiCurve = director.GetAiLevelsForDebug(snapshot.entityId);
+                if (aiCurve != null && aiCurve.Count > 0)
+                    GUILayout.Label("  curva AI (12→5): " + string.Join(", ", aiCurve));
+            }
+            foreach (var reservation in director.GetAnchorReservations())
+                GUILayout.Label("Reserva: " + reservation.Key + " → " + reservation.Value);
+            GUILayout.EndVertical();
+
+            GUILayout.BeginVertical(GUI.skin.box);
+            IReadOnlyList<string> authoringWarnings = director.GetAuthoringWarningsForDebug();
+            GUILayout.Label("AUTORIA PENDENTE — NÃO BLOQUEANTE");
+            if (authoringWarnings == null || authoringWarnings.Count == 0)
+            {
+                GUILayout.Label("Apresentação visual, áudio e jumpscares completos para o perfil atual.");
+            }
+            else
+            {
+                GUILayout.Label("Campos vazios permanecem para autoria manual; nenhum placeholder será criado.");
+                foreach (string warning in authoringWarnings)
+                    GUILayout.Label("• " + warning);
+            }
+            GUILayout.EndVertical();
+
+            GUILayout.BeginVertical(GUI.skin.box);
+            GUILayout.Label("FORÇAR ENTIDADE (não grava save)");
+            GUILayout.BeginHorizontal();
+            foreach (string entityId in director.GetEntityIdsForDebug())
+                if (GUILayout.Button(entityId))
+                {
+                    _debugNightEntityId = entityId;
+                    _debugNightAnchorId = null;
+                }
+            GUILayout.EndHorizontal();
+            GUILayout.Label("Entidade selecionada: " + _debugNightEntityId);
+
+            IReadOnlyList<AudioAnchorDefinition> anchors = director.GetAllowedAnchorsForDebug(_debugNightEntityId);
+            GUILayout.BeginHorizontal();
+            foreach (AudioAnchorDefinition anchor in anchors)
+            {
+                if (anchor != null && GUILayout.Button(anchor.id)) _debugNightAnchorId = anchor.id;
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Label("Anchor selecionado: " + (_debugNightAnchorId ?? "primeiro livre"));
+
+            GUILayout.BeginHorizontal();
+            foreach (EntityState state in ForceableEntityStates)
+            {
+                if (GUILayout.Button(state.ToString()))
+                {
+                    string error;
+                    _entityMessage = director.DebugForceState(_debugNightEntityId, state, _debugNightAnchorId, out error)
+                        ? "Estado aplicado: " + state
+                        : "Falha: " + error;
+                }
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Forçar anchor"))
+            {
+                string error;
+                _entityMessage = string.IsNullOrWhiteSpace(_debugNightAnchorId)
+                    ? "Selecione um anchor antes de forçá-lo."
+                    : (director.DebugForceAnchor(_debugNightEntityId, _debugNightAnchorId, out error)
+                        ? "Anchor forçado: " + _debugNightAnchorId
+                        : "Falha: " + error);
+            }
+            if (GUILayout.Button("Liberar anchor"))
+            {
+                string error;
+                _entityMessage = director.DebugReleaseAnchor(_debugNightEntityId, out error)
+                    ? "Anchor liberado; entidade voltou para Light."
+                    : "Falha: " + error;
+            }
+            if (GUILayout.Button("Concluir resolução"))
+            {
+                string error;
+                _entityMessage = director.DebugResolveCurrentEntity(_debugNightEntityId, out error)
+                    ? "Resolução concluída."
+                    : "Falha: " + error;
+            }
+            if (GUILayout.Button("Falhar resolução"))
+            {
+                string error;
+                _entityMessage = director.DebugFailCurrentResolution(_debugNightEntityId, out error)
+                    ? "Falha enfileirada; o árbitro central iniciará o Terminal."
+                    : "Falha: " + error;
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.Label("Overrides de interação (aplicados somente no runtime noturno):");
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Encontro auto"))
+            {
+                string error;
+                _entityMessage = director.DebugSetEncounterOverride(_debugNightEntityId, null, out error)
+                    ? "Encontro voltou ao ViewNode real."
+                    : "Falha: " + error;
+            }
+            if (GUILayout.Button("Encontro ON"))
+            {
+                string error;
+                _entityMessage = director.DebugSetEncounterOverride(_debugNightEntityId, true, out error)
+                    ? "Encontro forçado como ativo."
+                    : "Falha: " + error;
+            }
+            if (GUILayout.Button("Encontro OFF"))
+            {
+                string error;
+                _entityMessage = director.DebugSetEncounterOverride(_debugNightEntityId, false, out error)
+                    ? "Encontro forçado como inativo."
+                    : "Falha: " + error;
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Cobertura Voyeur (0–1):", GUILayout.Width(160f));
+            _debugCoverageText = GUILayout.TextField(_debugCoverageText, GUILayout.Width(80f));
+            if (GUILayout.Button("Aplicar cobertura"))
+            {
+                float coverage;
+                if (!float.TryParse(_debugCoverageText, out coverage))
+                {
+                    _entityMessage = "Cobertura inválida; informe um número entre 0 e 1.";
+                }
+                else
+                {
+                    string error;
+                    coverage = Mathf.Clamp01(coverage);
+                    _entityMessage = director.DebugSetVoyeurCoverage(_debugNightEntityId, coverage, out error)
+                        ? "Cobertura Halógeno forçada: " + coverage.ToString("0.00")
+                        : "Falha: " + error;
+                }
+            }
+            if (GUILayout.Button("Cobertura auto"))
+            {
+                string error;
+                _entityMessage = director.DebugSetVoyeurCoverage(_debugNightEntityId, null, out error)
+                    ? "Cobertura voltou ao cálculo real da lanterna."
+                    : "Falha: " + error;
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Terminal normal"))
+            {
+                string error;
+                _entityMessage = director.DebugForceTerminal(_debugNightEntityId, false, out error)
+                    ? "Terminal iniciado: ainda pode navegar/usar Hotbar até a contagem."
+                    : "Falha: " + error;
+            }
+            if (GUILayout.Button("Jumpscare real imediato"))
+            {
+                string error;
+                _entityMessage = director.DebugForceTerminal(_debugNightEntityId, true, out error)
+                    ? "Jumpscare solicitado."
+                    : "Falha: " + error;
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Label("O Jumpscare real usa apenas a autoria configurada. Sem apresentação autorada, o runtime registra diagnóstico seguro; nenhum placeholder é criado.");
+            GUILayout.EndVertical();
         }
 
         private void DrawAudioTab()
@@ -277,12 +541,7 @@ namespace Whispers
             }
 
             GUILayout.BeginHorizontal();
-            foreach (ThreatAudioState state in new[]
-            {
-                ThreatAudioState.Light,
-                ThreatAudioState.Near,
-                ThreatAudioState.Critical
-            })
+            foreach (ThreatAudioState state in DebugThreatStates)
             {
                 if (GUILayout.Button(state.ToString()))
                 {

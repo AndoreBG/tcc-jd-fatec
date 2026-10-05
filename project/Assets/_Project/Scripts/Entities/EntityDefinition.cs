@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Whispers
@@ -32,6 +33,67 @@ namespace Whispers
             foreach (EntityStateAudioPresentation presentation in stateAudio)
                 if (presentation != null && presentation.state == state) return presentation;
             return null;
+        }
+
+        /// <summary>
+        /// Diagnóstico não bloqueante de autoria audiovisual. A ausência deliberada
+        /// de mídia não cria fallback e nunca impede o boot; o aviso torna a pendência
+        /// visível para o passe de conteúdo do VS8.
+        /// </summary>
+        public void CollectPresentationWarnings(List<string> warnings)
+        {
+            if (warnings == null || string.IsNullOrWhiteSpace(entityId)) return;
+
+            EntityState[] statesWithPresentation =
+            {
+                EntityState.Light,
+                EntityState.Near,
+                EntityState.Critical,
+                EntityState.Resolving,
+                EntityState.Terminal
+            };
+            foreach (EntityState state in statesWithPresentation)
+            {
+                EntityStateAudioPresentation presentation = FindStateAudio(state);
+                if (presentation == null)
+                {
+                    warnings.Add("Entidade '" + entityId + "' não possui apresentação de áudio autorada para " + state + ".");
+                    continue;
+                }
+                if (presentation.enterSfxClip == null && presentation.presenceLoopClip == null)
+                    warnings.Add("Entidade '" + entityId + "' possui apresentação de áudio vazia para " + state + ".");
+                else if (state == EntityState.Light && presentation.enterSfxClip == null &&
+                         presentation.presenceLoopClip != null)
+                    warnings.Add("Entidade '" + entityId + "' possui apenas loop em Light; sem anchor, use enter SFX para este estado.");
+            }
+
+            if (stateAudio != null)
+            {
+                HashSet<EntityState> configuredStates = new HashSet<EntityState>();
+                foreach (EntityStateAudioPresentation presentation in stateAudio)
+                {
+                    if (presentation == null)
+                    {
+                        warnings.Add("Entidade '" + entityId + "' contém uma apresentação de áudio nula.");
+                        continue;
+                    }
+                    if (!configuredStates.Add(presentation.state))
+                        warnings.Add("Entidade '" + entityId + "' possui apresentação de áudio duplicada para " + presentation.state + ".");
+                    if (presentation.state == EntityState.Inactive || presentation.state == EntityState.Resolved)
+                        warnings.Add("Entidade '" + entityId + "' possui áudio em " + presentation.state +
+                                     ", estado que deve permanecer silencioso por padrão.");
+                }
+            }
+
+            if (jumpscare == null)
+            {
+                warnings.Add("Entidade '" + entityId + "' não possui configuração de jumpscare autorada.");
+                return;
+            }
+            if (jumpscare.fullscreenSprite == null)
+                warnings.Add("Entidade '" + entityId + "' não possui sprite de jumpscare autorado.");
+            if (jumpscare.jumpscareSfx == null)
+                warnings.Add("Entidade '" + entityId + "' não possui SFX de jumpscare autorado.");
         }
     }
 

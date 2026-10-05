@@ -246,7 +246,7 @@ namespace Whispers
             text.fontSize = size;
             text.color = color;
             text.alignment = TextAlignmentOptions.Center;
-            text.enableWordWrapping = true;
+            text.textWrappingMode = TextWrappingModes.Normal;
             text.raycastTarget = false;
             return text;
         }

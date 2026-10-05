@@ -1073,8 +1073,8 @@ Regras:
 - A Hotbar é fixa no canto inferior esquerdo da tela, visível durante toda a Noite, sem modal e sem bloqueio de entrada.
 - A Hotbar comporta duas ferramentas: a lanterna de dínamo e o recipiente de óleo.
 - A seleção ocorre pela tecla de atalho da respectiva ferramenta; pressionar a mesma tecla deseleciona.
-- A lanterna de dínamo oferece luz halógena e ultravioleta, alternáveis por atalho, e projeta no ponteiro um efeito que modifica a leitura do ViewNode, causando a sensação de iluminação.
-- O efeito da lanterna é de apresentação: não altera condições, estado ou interações.
+- A lanterna de dínamo oferece exclusivamente luz Halógena, selecionada por atalho, e projeta no ponteiro um halo que acompanha a cena.
+- O halo não altera hotspots, condições ou interações comuns. Sua cobertura geométrica sobre a região técnica autorada é consumida exclusivamente pelo `EntityDirector` para a defesa do Voyeur.
 - As ferramentas da Hotbar não interagem com nenhum tipo de hotspot.
 - As ferramentas da Hotbar são utilizáveis somente depois de encontradas pelo jogador.
 

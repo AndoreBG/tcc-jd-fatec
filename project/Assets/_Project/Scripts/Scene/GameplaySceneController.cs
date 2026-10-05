@@ -43,6 +43,7 @@ namespace Whispers
         public ModalUIController ModalUI => modalUI;
         public SceneAudioController Audio => sceneAudioController;
         public EntityDirector Entities => entityDirector;
+        public HotbarController Hotbar => hotbar;
         public GlobalHotspotSettings GlobalSettings => globalSettings;
         public string FlowError { get; private set; }
         public bool IsFlowBusy { get; private set; }
@@ -50,7 +51,7 @@ namespace Whispers
         public bool IsReady { get; private set; }
         public bool CanRetryFlow => _failedFlow != Flow.None;
 
-        private enum Flow { None, NewGame, Continue, EndPeriod, Restart, RetryLoad, ReturnToMainMenu }
+        private enum Flow { None, NewGame, Continue, EndPeriod, NightFailure, Restart, RetryLoad, ReturnToMainMenu }
         private Flow _failedFlow;
         private bool _periodEndAdded;
         private bool _bootAdded;
@@ -323,10 +324,19 @@ namespace Whispers
                     errors.Add("EntityDirector não possui NightClockHUD.");
                 else if (!entityDirector.HasClockLabel)
                     errors.Add("NightClockHUD não possui TextMeshProUGUI de horário.");
+                if (!entityDirector.HasPresentationCoordinator)
+                    errors.Add("EntityDirector não possui EntityPresentationCoordinator.");
+                if (!entityDirector.HasPredatorController)
+                    errors.Add("EntityDirector não possui PredatorController.");
+                if (!entityDirector.HasVoyeurController)
+                    errors.Add("EntityDirector não possui VoyeurController.");
+                if (!entityDirector.HasGameOverController)
+                    errors.Add("EntityDirector não possui NightGameOverController.");
             }
 
             HashSet<string> viewNodeIds = CollectViewNodeIds();
             sceneDefinition.nightEntityProfile.CollectValidation(viewNodeIds, errors, warnings);
+            entityDirector?.CollectPresentationValidation(navigationManager, sceneDefinition.nightEntityProfile, errors, warnings);
         }
 
         private HashSet<string> CollectViewNodeIds()
@@ -377,7 +387,154 @@ namespace Whispers
         /// <summary>Pode vir de uma interação comum ou do resultado de um drop.</summary>
         public bool RequestPeriodEnd()
         {
-            return CanEndPeriod && QueueFlow(Flow.EndPeriod);
+            string ignoredReason;
+            bool ignoredRetryable;
+            return TryRequestPeriodEnd(out ignoredReason, out ignoredRetryable);
+        }
+
+        /// <summary>
+        /// Solicita o fim do período e informa se uma recusa pode se resolver sem
+        /// intervenção. Usado pelo encerramento autoritativo de 6 AM para não fazer
+        /// retry infinito diante de erro de fluxo/configuração.
+        /// </summary>
+        public bool TryRequestPeriodEnd(out string rejectionReason, out bool retryable)
+        {
+            rejectionReason = null;
+            retryable = false;
+            if (!IsReady) { rejectionReason = "Cena de gameplay ainda não está pronta."; return false; }
+            if (IsAtTestEntry) { rejectionReason = "A cena está na entrada de testes."; return false; }
+            if (IsFlowBusy)
+            {
+                rejectionReason = "Outro fluxo de ciclo ainda está em andamento.";
+                retryable = true;
+                return false;
+            }
+            if (!string.IsNullOrEmpty(FlowError))
+            {
+                rejectionReason = "Há um erro de fluxo pendente: " + FlowError;
+                return false;
+            }
+            if (Session == null)
+            {
+                rejectionReason = "GameSessionManager indisponível.";
+                return false;
+            }
+            if (Session.IsLoading)
+            {
+                rejectionReason = "A sessão ainda está carregando.";
+                retryable = true;
+                return false;
+            }
+            if (navigationManager != null && navigationManager.IsTransitioning)
+            {
+                rejectionReason = "A navegação ainda está em transição.";
+                retryable = true;
+                return false;
+            }
+            if (inputBlocker != null && inputBlocker.IsBlockedExcept(InputBlockReason.ToolDrag))
+            {
+                rejectionReason = "Há um bloqueio de input incompatível com o fim de período.";
+                retryable = inputBlocker.HasReason(InputBlockReason.Transition) ||
+                            inputBlocker.HasReason(InputBlockReason.Boot);
+                return false;
+            }
+            if (!QueueFlow(Flow.EndPeriod))
+            {
+                rejectionReason = "Não foi possível enfileirar o fim de período.";
+                retryable = IsFlowBusy || (navigationManager != null && navigationManager.IsTransitioning) ||
+                            (Session != null && Session.IsLoading);
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>Solicitado exclusivamente pelo NightGameOverController; nunca consolida save.</summary>
+        public bool RequestNightFailure()
+        {
+            string ignoredReason;
+            bool ignoredRetryable;
+            return TryRequestNightFailure(out ignoredReason, out ignoredRetryable);
+        }
+
+        /// <summary>
+        /// Solicita o retorno ao checkpoint do Dia e classifica recusas transitórias.
+        /// O Game Over permanece bloqueado enquanto uma transição/nova carga puder
+        /// liberar o fluxo, e escala somente recusas definitivas.
+        /// </summary>
+        public bool TryRequestNightFailure(out string rejectionReason, out bool retryable)
+        {
+            rejectionReason = null;
+            retryable = false;
+            if (!IsReady) { rejectionReason = "Cena de gameplay ainda não está pronta."; return false; }
+            if (IsAtTestEntry) { rejectionReason = "A cena está na entrada de testes."; return false; }
+            if (IsFlowBusy)
+            {
+                rejectionReason = "Outro fluxo de ciclo ainda está em andamento.";
+                retryable = true;
+                return false;
+            }
+            if (!string.IsNullOrEmpty(FlowError))
+            {
+                rejectionReason = "Há um erro de fluxo pendente: " + FlowError;
+                return false;
+            }
+            if (Session == null)
+            {
+                rejectionReason = "GameSessionManager indisponível.";
+                return false;
+            }
+            if (Session.period != GamePeriod.Night)
+            {
+                rejectionReason = "A sessão não está mais no período Noite.";
+                return false;
+            }
+            if (Session.IsLoading)
+            {
+                rejectionReason = "A sessão ainda está carregando.";
+                retryable = true;
+                return false;
+            }
+            if (navigationManager != null && navigationManager.IsTransitioning)
+            {
+                rejectionReason = "A navegação ainda está em transição.";
+                retryable = true;
+                return false;
+            }
+            if (!QueueFlow(Flow.NightFailure))
+            {
+                rejectionReason = "Não foi possível enfileirar a falha noturna.";
+                retryable = IsFlowBusy || (navigationManager != null && navigationManager.IsTransitioning) ||
+                            (Session != null && Session.IsLoading);
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Expõe uma falha definitiva em vez de devolver uma cena parcialmente viva.
+        /// Mantém PeriodEnd bloqueado e oferece Retry/retorno pela UI de diagnóstico.
+        /// </summary>
+        public void ReportNightFailureRequestError(string reason)
+        {
+            ReportRejectedFlow(Flow.NightFailure, "A derrota noturna não pôde retornar ao checkpoint", reason);
+        }
+
+        /// <summary>Equivalente seguro para o encerramento automático de 6 AM.</summary>
+        public void ReportPeriodEndRequestError(string reason)
+        {
+            ReportRejectedFlow(Flow.EndPeriod, "6 AM foi alcançado, mas a Noite não pôde ser encerrada", reason);
+        }
+
+        private void ReportRejectedFlow(Flow flow, string context, string reason)
+        {
+            // Um fluxo que já foi aceito possui PeriodEnd e teardown próprios; não o
+            // substituímos por um erro concorrente.
+            if (IsFlowBusy) return;
+            FlowError = context + ". " +
+                        (string.IsNullOrWhiteSpace(reason) ? "Verifique a configuração do ciclo." : reason);
+            _failedFlow = flow;
+            AddPeriodEndBlock();
+            Debug.LogError("[GameplaySceneController] " + FlowError, this);
         }
 
         // Chamadas explícitas da UI autorizada de testes, não de hotspots.
@@ -440,6 +597,7 @@ namespace Whispers
                         case Flow.NewGame: accepted = Session.TryNewGame(out error); break;
                         case Flow.Continue: accepted = Session.TryContinue(out error); break;
                         case Flow.EndPeriod: accepted = Session.TryEndPeriod(out error); break;
+                        case Flow.NightFailure: accepted = Session.TryFailNight(out error); break;
                         case Flow.Restart: accepted = Session.TryRestartCheckpoint(out error); break;
                         case Flow.RetryLoad: accepted = Session.TryRetrySceneLoad(out error); break;
                         case Flow.ReturnToMainMenu: accepted = Session.TryReturnToMainMenu(out error); break;

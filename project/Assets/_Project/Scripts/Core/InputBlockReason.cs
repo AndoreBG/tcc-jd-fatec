@@ -12,6 +12,8 @@ namespace Whispers
         Pause,
         Cutscene,
         PeriodEnd,
+        /// <summary>Jumpscare/derrota em apresentação; bloqueia toda UI de gameplay.</summary>
+        GameOver,
 
         /// <summary>
         /// Ferramenta arrastada para fora da Backpack ("na mão"). Hotspots de cenário

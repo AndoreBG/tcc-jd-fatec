@@ -52,6 +52,13 @@ namespace Whispers
         private GameSessionManager Session => GameSessionManager.Instance;
         public bool IsHalogenSelected => _selected == Tool.Lantern && lanternEffect != null && lanternEffect.IsHalogenActive;
 
+        /// <summary>Única ponte de gameplay para a cobertura da lanterna Halógena.</summary>
+        public bool TryGetHalogenCoverage(RectTransform target, out float coverage)
+        {
+            coverage = 0f;
+            return IsHalogenSelected && lanternEffect != null && lanternEffect.TryGetCoverage(target, out coverage);
+        }
+
         private void Update()
         {
             if (!_periodChecked)
@@ -69,6 +76,10 @@ namespace Whispers
             GameplaySceneController scene = GameplaySceneController.Instance;
             if (scene != null && scene.Blocker != null && scene.Blocker.IsBlocked)
             {
+                // Defesa redundante: NightGameOverController já esconde o halo no
+                // primeiro frame, mas a Hotbar nunca deve mantê-lo visível enquanto
+                // o bloqueio de jumpscare estiver ativo.
+                if (scene.Blocker.HasReason(InputBlockReason.GameOver)) lanternEffect?.Hide();
                 RefreshVisuals();
                 return;
             }
@@ -77,6 +88,16 @@ namespace Whispers
             if (Input.GetKeyDown(oilKey)) ToggleTool(Tool.Oil);
 
             RefreshVisuals();
+        }
+
+        /// <summary>
+        /// Jumpscare bloqueia toda a apresentação de gameplay imediatamente. Mantém a
+        /// seleção lógica intacta até o teardown do período, mas impede que o halo
+        /// atravesse o overlay de derrota.
+        /// </summary>
+        public void HideLanternForGameOver()
+        {
+            lanternEffect?.Hide();
         }
 
         public void PrepareForPeriodChange()

@@ -28,6 +28,9 @@ namespace Whispers
         public ViewNodeController Current => _current;
         public bool IsTransitioning => _transitioning;
 
+        /// <summary>Emitido no ponto de troca efetiva, depois de o novo ViewNode ser apresentado.</summary>
+        public event Action<ViewNodeController, ViewNodeController> ViewNodeChanged;
+
         /// <summary>Lista somente para diagnóstico e ferramentas de desenvolvimento.</summary>
         public ViewNodeController[] GetViewNodes() => _viewNodes.ToArray();
 
@@ -221,6 +224,7 @@ namespace Whispers
                 if (Camera != null)
                     Camera.SetProfile(destination.Definition != null ? destination.Definition.cameraProfile : null);
                 Audio?.ApplyViewAudioProfile(destination.Definition, audioMode, specialAudioId);
+                ViewNodeChanged?.Invoke(previous, _current);
                 return true;
             }
             catch (Exception exception)

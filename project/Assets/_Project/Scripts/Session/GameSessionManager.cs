@@ -203,6 +203,43 @@ namespace Whispers
         }
 
         /// <summary>
+        /// Falha da Noite: descarta exclusivamente o estado de trabalho noturno e
+        /// volta ao checkpoint do início do Dia sem salvar ou consolidar o ciclo.
+        /// </summary>
+        public bool TryFailNight(out string error)
+        {
+            error = null;
+            if (!_initialized) { error = "Sessão não iniciada."; return false; }
+            if (period != GamePeriod.Night) { error = "TryFailNight exige sessão no período Noite."; return false; }
+            if (!CanLoad(GamePeriod.Day, out error)) return false;
+
+            GameSaveData checkpoint;
+            if (IsDevelopmentSession)
+            {
+                if (_developmentCheckpoint == null)
+                {
+                    error = "Checkpoint de desenvolvimento ausente.";
+                    return false;
+                }
+                checkpoint = _developmentCheckpoint.Copy();
+            }
+            else
+            {
+                bool recoveredBackup;
+                if (!_save.TryLoad(activeSlot, out checkpoint, out recoveredBackup, out error)) return false;
+                if (!MatchesCycle(checkpoint, out error)) return false;
+                if (recoveredBackup)
+                    Notice = "Checkpoint principal indisponível; a falha noturna restaurou o último backup válido.";
+            }
+
+            // Apply restaura período Dia e cópias independentes das coleções. Não há
+            // WriteCheckpoint nesta operação, inclusive para sessão de desenvolvimento.
+            Apply(checkpoint);
+            StartLoading(_cycle.dayScene);
+            return true;
+        }
+
+        /// <summary>
         /// Verifica se o retorno sem save possui uma cena de menu configurada e presente
         /// no Build Profile. Não altera o estado de trabalho.
         /// </summary>
