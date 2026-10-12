@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0174367e10308bff44fcaa3f30f62dc, type: 3}
+  m_Name: ENT_Voyeur
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.VoyeurDefinition
+  entityId: voyeur
+  displayName: Voyeur
+  allowedAnchorCategory: 0
+  stateAudio: []
+  jumpscare:
+    fullscreenSprite: {fileID: 0}
+    jumpscareSfx: {fileID: 0}
+    durationSeconds: 2.5
+  minimumLanternCoverage: 0.5

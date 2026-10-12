@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e655ac67b00ee534bb4ff583dbe7be8a, type: 3}
+  m_Name: SETTINGS_Hotspots
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.GlobalHotspotSettings
+  defaultDwell: 0.6
+  postTransitionMargin: 0.05
+  defaultFeedback: {fileID: 11400000, guid: 41e9e5f4e36268945b58a341c9f413d6, type: 2}
+  defaultTransition: {fileID: 11400000, guid: 1d8ecbbcdd378c047a08d52a5a189cae, type: 2}

@@ -1,0 +1,250 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace Whispers
+{
+    /// <summary>
+    /// Autoridade local de interações: valida solicitações de InteractionHotspot e
+    /// ToolHotspot, executa resultados pelos sistemas responsáveis e registra o que
+    /// já foi concluído (para InteractionDoneCondition). Uma segunda solicitação
+    /// durante a execução é descartada — controle de concorrência, não cooldown.
+    /// </summary>
+    public class InteractionManager : MonoBehaviour
+    {
+        private readonly HashSet<string> _doneIds = new HashSet<string>();
+        private bool _executing;
+
+        private GameplaySceneController Scene => GameplaySceneController.Instance;
+        private InputBlocker Blocker => Scene != null ? Scene.Blocker : null;
+
+        /// <summary>Verdadeiro se a interação com este ID já foi concluída nesta cena.</summary>
+        public bool HasDone(string interactionId) => !string.IsNullOrEmpty(interactionId) && _doneIds.Contains(interactionId);
+
+        /// <summary>Executa uma interação comum solicitada por um InteractionHotspot.</summary>
+        public bool RequestExecution(InteractionHotspot hotspot)
+        {
+            if (hotspot == null || hotspot.Definition == null)
+            {
+                Debug.LogWarning("[InteractionManager] InteractionHotspot sem InteractionDefinition; solicitação descartada.");
+                return false;
+            }
+            if (Blocker != null && Blocker.IsBlocked) return false;
+            if (_executing)
+            {
+                Debug.LogWarning("[InteractionManager] Ação em andamento; solicitação descartada (sem cooldown, sem fila).");
+                return false;
+            }
+
+            _executing = true;
+            try
+            {
+                // Validacão final no ponto de execução (seção 10.2 da arquitetura).
+                if (!hotspot.RevalidateConditions()) return false;
+                if (!ValidateResults(hotspot.Definition.results)) return false;
+
+                // A partir daqui a ação está comprometida.
+                InteractionDefinition definition = hotspot.Definition;
+                ExecuteResults(definition.results);
+                MarkDone(definition);
+                if (definition.sfx != null)
+                {
+                    if (Scene != null && Scene.Audio != null) Scene.Audio.PlayInteraction(definition.sfx);
+                    else Scene?.PlayFeedback(definition.sfx);
+                }
+                return true;
+            }
+            finally
+            {
+                _executing = false;
+            }
+        }
+
+        /// <summary>
+        /// Uso de ferramenta exclusivamente via DROP do arraste da Backpack. Ignora apenas
+        /// ToolDrag, que é o estado autorizado do próprio fluxo; qualquer outro bloqueio
+        /// continua valendo. Não existe rota pública de uso por hover, dwell ou clique.
+        /// </summary>
+        public bool RequestToolUseFromDrop(ToolHotspot hotspot)
+        {
+            if (hotspot == null)
+            {
+                Debug.LogWarning("[InteractionManager] ToolHotspot ausente; solicitação descartada.");
+                return false;
+            }
+            if (Blocker != null && Blocker.IsBlockedExcept(InputBlockReason.ToolDrag)) return false;
+            return ExecuteToolUse(hotspot);
+        }
+
+        private bool ExecuteToolUse(ToolHotspot hotspot)
+        {
+            if (_executing)
+            {
+                Debug.LogWarning("[InteractionManager] Ação em andamento; solicitação descartada (sem cooldown, sem fila).");
+                return false;
+            }
+
+            _executing = true;
+            try
+            {
+                GameSessionManager session = GameSessionManager.Instance;
+
+                // Sem ferramenta selecionada ou incompatível: falha genérica.
+                // Não consome, não remove a seleção e não revela a ferramenta correta.
+                ItemDefinition tool = hotspot.FindAcceptedTool(session != null ? session.selectedTool : null);
+                if (tool == null || session == null || !session.HasItem(tool.id))
+                {
+                    hotspot.NotifyFailure();
+                    return false;
+                }
+
+                if (!hotspot.RevalidateConditions())
+                {
+                    // A condição pode ter mudado entre o raycast de drop e a validação final.
+                    // Mantém o feedback autorado de indisponibilidade sem revelar a ferramenta correta.
+                    hotspot.NotifyUnavailable();
+                    return false;
+                }
+
+                InteractionDefinition definition = hotspot.SuccessDefinition;
+                if (definition == null)
+                {
+                    Debug.LogWarning($"[InteractionManager] ToolHotspot '{hotspot.name}' sem InteractionDefinition de sucesso.", hotspot);
+                    return false;
+                }
+
+                if (!ValidateResults(definition.results)) return false;
+
+                // Ação comprometida: executa resultados.
+                ExecuteResults(definition.results);
+                if (tool.consumesOnUse && session != null)
+                    session.RemoveItem(tool.id, 1);
+                MarkDone(definition);
+                if (definition.sfx != null)
+                {
+                    if (Scene != null && Scene.Audio != null) Scene.Audio.PlayInteraction(definition.sfx);
+                    else Scene?.PlayFeedback(definition.sfx);
+                }
+
+                // Evento local do ToolHotspot somente após o uso ter sido comprometido.
+                hotspot.NotifySuccess();
+                return true;
+            }
+            finally
+            {
+                _executing = false;
+            }
+        }
+
+        /// <summary>Executa cada resultado pela autoridade responsável.</summary>
+        private void ExecuteResults(InteractionResult[] results)
+        {
+            if (results == null || results.Length == 0) return;
+
+            GameSessionManager session = GameSessionManager.Instance;
+            SceneRuntimeState runtime = Scene != null ? Scene.RuntimeState : null;
+
+            foreach (InteractionResult result in results)
+            {
+                if (result == null) continue;
+                switch (result.type)
+                {
+                    case InteractionResultType.AddItem:
+                        if (session != null) session.AddItem(result.itemId, result.amount);
+                        break;
+
+                    case InteractionResultType.RemoveItem:
+                        if (session != null) session.RemoveItem(result.itemId, result.amount);
+                        break;
+
+                    case InteractionResultType.MarkCollected:
+                        if (session != null) session.MarkCollected(result.collectionId);
+                        break;
+
+                    case InteractionResultType.SetRuntimeFlag:
+                        if (runtime != null) runtime.SetFlag(result.flagId, true);
+                        break;
+
+                    case InteractionResultType.ClearRuntimeFlag:
+                        if (runtime != null) runtime.SetFlag(result.flagId, false);
+                        break;
+
+                    case InteractionResultType.SetPersistentFact:
+                        if (session != null) session.SetFact(result.factId);
+                        break;
+
+                    case InteractionResultType.RequestNavigate:
+                        if (Scene != null && Scene.Navigation != null)
+                            Scene.Navigation.RequestNavigate(null, result.destinationId);
+                        break;
+
+                    case InteractionResultType.OpenDocument:
+                        if (Scene != null && Scene.ModalUI != null)
+                            Scene.ModalUI.OpenDocument(result.document);
+                        break;
+
+                    case InteractionResultType.RequestPeriodEnd:
+                        Scene?.RequestPeriodEnd();
+                        break;
+                }
+            }
+        }
+
+        // Valida antes de executar para não entregar um item de uma ocorrência já coletada.
+        private bool ValidateResults(InteractionResult[] results)
+        {
+            if (results == null) return true;
+            var collectionIds = new HashSet<string>();
+            for (int i = 0; i < results.Length; i++)
+            {
+                InteractionResult result = results[i];
+                if (result == null) continue;
+                if (result.type == InteractionResultType.MarkCollected)
+                {
+                    if (string.IsNullOrWhiteSpace(result.collectionId) || !collectionIds.Add(result.collectionId))
+                    {
+                        Debug.LogWarning("[InteractionManager] MarkCollected precisa de collectionId único e não vazio.");
+                        return false;
+                    }
+                    if (GameSessionManager.Instance == null || GameSessionManager.Instance.WasCollected(result.collectionId))
+                        return false;
+                }
+                if ((result.type == InteractionResultType.AddItem || result.type == InteractionResultType.RemoveItem) &&
+                    (string.IsNullOrWhiteSpace(result.itemId) || result.amount <= 0))
+                {
+                    Debug.LogWarning("[InteractionManager] Resultado de inventário inválido.");
+                    return false;
+                }
+                if (result.type == InteractionResultType.RequestPeriodEnd)
+                {
+                    if (i != results.Length - 1 || Scene == null || !Scene.CanEndPeriod)
+                    {
+                        Debug.LogWarning("[InteractionManager] Encerramento indisponível ou não é o último resultado.");
+                        return false;
+                    }
+                    foreach (InteractionResult other in results)
+                    {
+                        if (other != null && (other.type == InteractionResultType.RequestNavigate ||
+                            other.type == InteractionResultType.OpenDocument))
+                        {
+                            Debug.LogWarning("[InteractionManager] Não misture navegação/documento com encerramento na mesma interação.");
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+
+        /// <summary>Registra a interação concluída e notifica a cena para reavaliar condições.</summary>
+        private void MarkDone(InteractionDefinition definition)
+        {
+            if (string.IsNullOrEmpty(definition.id))
+            {
+                Debug.LogWarning($"[InteractionManager] InteractionDefinition '{definition.name}' sem ID estável; não registrada para InteractionDoneCondition.", definition);
+                return;
+            }
+            if (_doneIds.Add(definition.id) && Scene != null && Scene.RuntimeState != null)
+                Scene.RuntimeState.SetFlag("interaction:" + definition.id, true); // broadcast de mudança
+        }
+    }
+}

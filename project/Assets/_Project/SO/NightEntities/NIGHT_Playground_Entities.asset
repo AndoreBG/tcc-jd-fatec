@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29481ae0a86d37fe675eb24b3f761f38, type: 3}
+  m_Name: NIGHT_Playground_Entities
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.NightEntityProfile
+  profileId: night_playground_entities
+  entries:
+  - entityDefinition: {fileID: 11400000, guid: b84bd0b69db5b1f7e67d00a7811c59ce, type: 2}
+    allowedAnchors:
+    - {fileID: 11400000, guid: 23f1397608231551c076ab075559a1d7, type: 2}
+    - {fileID: 11400000, guid: 18c98a1870536ac72f037eb057cd84b6, type: 2}
+    aiLevelByHour:
+    - 0
+    - 3
+    - 5
+    - 7
+    - 9
+    - 11
+    nearToCriticalSeconds: 8
+    criticalToTerminalSeconds: 10
+    resolvedCooldownSeconds: 30
+    terminalCountdownSeconds: 5
+    predatorResolveStartWindowSeconds: 2.5
+    predatorResolveHoldSeconds: 4
+    voyeurLightContactRequiredSeconds: 5
+  - entityDefinition: {fileID: 11400000, guid: 8c8f3c7979b83788f9153d34420a531e, type: 2}
+    allowedAnchors:
+    - {fileID: 11400000, guid: 51836ea708df5237b41bee5057837225, type: 2}
+    - {fileID: 11400000, guid: f32a7a03aa7657f29c786ba0e274a37e, type: 2}
+    aiLevelByHour:
+    - 0
+    - 2
+    - 4
+    - 6
+    - 8
+    - 10
+    nearToCriticalSeconds: 10
+    criticalToTerminalSeconds: 12
+    resolvedCooldownSeconds: 25
+    terminalCountdownSeconds: 4
+    predatorResolveStartWindowSeconds: 2.5
+    predatorResolveHoldSeconds: 4
+    voyeurLightContactRequiredSeconds: 5

@@ -1,0 +1,165 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a197a7b5114596985ad48aa3ca9a5a6, type: 3}
+  m_Name: AUDIO_DebugCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.AudioDebugCatalog
+  entries:
+  - id: ambience_day
+    displayName: Ambiente Dia
+    role: 0
+    clip: {fileID: 8300000, guid: 6f30b306a88744049b893d05cdff6c1b, type: 3}
+    loop: 0
+    defaultVolume: 0.8
+    defaultPan: 0
+    anchorId: 
+    emitterId: 
+    description: Clip real a atribuir posteriormente pelo Inspector.
+  - id: ambience_night
+    displayName: Ambiente Noite
+    role: 0
+    clip: {fileID: 8300000, guid: 3d5eb7d17102e4b45bfba93c1343d189, type: 3}
+    loop: 0
+    defaultVolume: 0.8
+    defaultPan: 0
+    anchorId: 
+    emitterId: 
+    description: Clip real a atribuir posteriormente pelo Inspector.
+  - id: threat_light
+    displayName: "Amea\xE7a leve"
+    role: 1
+    clip: {fileID: 8300000, guid: 75fd3aac6f2f81c46b485fd1f252b26a, type: 3}
+    loop: 0
+    defaultVolume: 1
+    defaultPan: 0
+    anchorId: 
+    emitterId: entity_debug_threat
+    description: Clip real a atribuir posteriormente pelo Inspector.
+  - id: threat_near
+    displayName: "Amea\xE7a pr\xF3xima"
+    role: 1
+    clip: {fileID: 8300000, guid: d3b0a1cd82d78254eb4cd09e3320adc7, type: 3}
+    loop: 0
+    defaultVolume: 1
+    defaultPan: 0
+    anchorId: 
+    emitterId: entity_debug_threat
+    description: Clip real a atribuir posteriormente pelo Inspector.
+  - id: threat_critical
+    displayName: "Amea\xE7a cr\xEDtica"
+    role: 1
+    clip: {fileID: 8300000, guid: 83a20e52255efca4e97ecf8ea5c6b80e, type: 3}
+    loop: 0
+    defaultVolume: 1
+    defaultPan: 0
+    anchorId: 
+    emitterId: entity_debug_threat
+    description: Clip real a atribuir posteriormente pelo Inspector.
+  - id: interaction_generic
+    displayName: "Intera\xE7\xE3o gen\xE9rica"
+    role: 2
+    clip: {fileID: 8300000, guid: 6ca48ab3f6d43a34ba239224989b943d, type: 3}
+    loop: 0
+    defaultVolume: 1
+    defaultPan: 0
+    anchorId: 
+    emitterId: 
+    description: Clip real a atribuir posteriormente pelo Inspector.
+  - id: equipment_radio
+    displayName: "R\xE1dio"
+    role: 4
+    clip: {fileID: 0}
+    loop: 0
+    defaultVolume: 1
+    defaultPan: 0
+    anchorId: 
+    emitterId: radio_sala
+    description: Clip real a atribuir posteriormente pelo Inspector.
+  - id: equipment_on
+    displayName: Equipamento ligado
+    role: 3
+    clip: {fileID: 8300000, guid: b8d03a5dc5f206a4a849f59258fe9f69, type: 3}
+    loop: 0
+    defaultVolume: 1
+    defaultPan: 0
+    anchorId: 
+    emitterId: radio_sala
+    description: Clip real a atribuir posteriormente pelo Inspector.
+  - id: equipment_fail
+    displayName: Falha de equipamento
+    role: 3
+    clip: {fileID: 0}
+    loop: 0
+    defaultVolume: 1
+    defaultPan: 0
+    anchorId: 
+    emitterId: radio_sala
+    description: Clip real a atribuir posteriormente pelo Inspector.
+  - id: tape_play
+    displayName: Fita iniciada
+    role: 5
+    clip: {fileID: 0}
+    loop: 0
+    defaultVolume: 1
+    defaultPan: 0
+    anchorId: 
+    emitterId: tape_debug
+    description: Clip real a atribuir posteriormente pelo Inspector.
+  - id: tape_stop
+    displayName: Fita interrompida
+    role: 5
+    clip: {fileID: 0}
+    loop: 0
+    defaultVolume: 1
+    defaultPan: 0
+    anchorId: 
+    emitterId: tape_debug
+    description: Clip real a atribuir posteriormente pelo Inspector.
+  - id: transition_cut
+    displayName: "Transi\xE7\xE3o corte"
+    role: 6
+    clip: {fileID: 0}
+    loop: 0
+    defaultVolume: 1
+    defaultPan: 0
+    anchorId: 
+    emitterId: 
+    description: Clip real a atribuir posteriormente pelo Inspector.
+  - id: transition_glitch
+    displayName: "Transi\xE7\xE3o glitch"
+    role: 6
+    clip: {fileID: 0}
+    loop: 0
+    defaultVolume: 1
+    defaultPan: 0
+    anchorId: 
+    emitterId: 
+    description: Clip real a atribuir posteriormente pelo Inspector.
+  - id: ui_hover
+    displayName: UI hover
+    role: 7
+    clip: {fileID: 0}
+    loop: 0
+    defaultVolume: 0.5
+    defaultPan: 0
+    anchorId: 
+    emitterId: 
+    description: Clip real a atribuir posteriormente pelo Inspector.
+  - id: ui_activate
+    displayName: UI activate
+    role: 7
+    clip: {fileID: 0}
+    loop: 0
+    defaultVolume: 0.7
+    defaultPan: 0
+    anchorId: 
+    emitterId: 
+    description: Clip real a atribuir posteriormente pelo Inspector.
