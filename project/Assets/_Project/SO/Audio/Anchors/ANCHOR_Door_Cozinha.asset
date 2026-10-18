@@ -16,4 +16,4 @@ MonoBehaviour:
   displayName: Porta da Cozinha
   category: 1
   encounterViewNodeId: vn_portacozinha
-  mapPosition: {x: 2, y: 0}
+  mapPosition: {x: 2, y: 2}

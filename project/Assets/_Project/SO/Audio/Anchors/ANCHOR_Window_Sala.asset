@@ -16,4 +16,4 @@ MonoBehaviour:
   displayName: Janela da Sala
   category: 0
   encounterViewNodeId: vn_sala
-  mapPosition: {x: -4, y: 0}
+  mapPosition: {x: 2, y: 3}
