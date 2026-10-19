@@ -1752,7 +1752,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.GameplaySceneController
   sceneDefinition: {fileID: 11400000, guid: d5e9ab46250cfa04bb1fb9b1ca20d33e, type: 2}
   inputBlocker: {fileID: 744285987}
-  navigationManager: {fileID: 0}
+  navigationManager: {fileID: 416225270}
   viewCameraController: {fileID: 1910583651}
   transitionController: {fileID: 1709031448}
   interactionManager: {fileID: 416328798}

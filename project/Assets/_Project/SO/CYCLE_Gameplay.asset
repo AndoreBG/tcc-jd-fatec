@@ -15,5 +15,5 @@ MonoBehaviour:
   stageId: gameplay
   dayScene: day
   nightScene: night
-  mainMenuScene: 
+  mainMenuScene: main_menu
   fadeDuration: 0.2
