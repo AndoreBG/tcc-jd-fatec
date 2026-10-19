@@ -24,7 +24,7 @@ namespace Whispers
         [SerializeField] private bool useViewNodeProfileIntensity = true;
 
         [Tooltip("Intensidade exclusiva desta Layer quando 'Use View Node Profile Intensity' estiver desativado.")]
-        [Min(0f)][SerializeField] private float localIntensity = 0.3f;
+        [Min(0f)] [SerializeField] private float localIntensity = 0.3f;
 
         [Tooltip("Deslocamento máximo individual por eixo, em unidades locais. Zero em um eixo significa sem limite naquele eixo.")]
         [SerializeField] private Vector2 maxOffset = Vector2.zero;

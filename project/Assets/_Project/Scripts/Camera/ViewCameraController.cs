@@ -26,12 +26,6 @@ namespace Whispers
         /// <summary>Deslocamento normalizado (-1..1, com zona morta e suavização), para parallax.</summary>
         public Vector2 MouseNorm => _mouseNorm;
 
-        /// <summary>
-        /// Pan suavizado efetivamente aplicado à posição da câmera. Camadas de UI em
-        /// Canvas World Space podem usá-lo para neutralizar o pan sem tocar no shake.
-        /// </summary>
-        public Vector2 PanOffset => _smoothOffset;
-
         /// <summary>Perfil atualmente aplicado (do ViewNode apresentado).</summary>
         public ViewCameraProfile Profile => _profile;
 

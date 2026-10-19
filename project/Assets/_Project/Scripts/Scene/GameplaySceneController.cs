@@ -42,6 +42,7 @@ namespace Whispers
         public InteractionManager Interactions => interactionManager;
         public ModalUIController ModalUI => modalUI;
         public SceneAudioController Audio => sceneAudioController;
+        public GameplayCursorController Cursor => _cursorController;
         public EntityDirector Entities => entityDirector;
         public HotbarController Hotbar => hotbar;
         public GlobalHotspotSettings GlobalSettings => globalSettings;
@@ -56,6 +57,7 @@ namespace Whispers
         private bool _periodEndAdded;
         private bool _bootAdded;
         private ReturnToMainMenuController _returnToMenuController;
+        private GameplayCursorController _cursorController;
         private GameSessionManager Session => GameSessionManager.Instance;
         private float FadeDuration => cycleDefinition != null ? Mathf.Max(0f, cycleDefinition.fadeDuration) : 0f;
 
@@ -74,6 +76,7 @@ namespace Whispers
         {
             if (Session == null) new GameObject("Manager_Session").AddComponent<GameSessionManager>();
             RuntimeState = new SceneRuntimeState();
+            EnsureGameplayCursorController();
 
             _returnToMenuController = GetComponent<ReturnToMainMenuController>();
             if (_returnToMenuController == null)
@@ -127,6 +130,15 @@ namespace Whispers
             _bootAdded = false;
         }
 
+        private void EnsureGameplayCursorController()
+        {
+            if (_cursorController == null)
+                _cursorController = GetComponent<GameplayCursorController>();
+            if (_cursorController == null)
+                _cursorController = gameObject.AddComponent<GameplayCursorController>();
+            _cursorController.Initialize(globalSettings);
+        }
+
         /// <summary>
         /// Valida toda a autoria obrigatória de uma cena de gameplay antes de preparar
         /// sessão, áudio, navegação ou interações. Erros são agregados para não obrigar
@@ -148,6 +160,15 @@ namespace Whispers
             if (modalUI == null) errors.Add("ModalUIController não atribuído.");
             if (sceneAudioController == null) errors.Add("SceneAudioController não atribuído.");
             if (globalSettings == null) errors.Add("GlobalHotspotSettings não atribuído.");
+            else
+            {
+                // Cursores permanecem de autoria manual; sem placeholder o runtime
+                // usa o cursor do SO, mas a pendência não pode passar silenciosa.
+                if (globalSettings.defaultCursor == null)
+                    warnings.Add("Cursor: configure GlobalHotspotSettings.defaultCursor para o fallback visual do jogo.");
+                if (globalSettings.defaultBlockedCursor == null)
+                    warnings.Add("Cursor: configure GlobalHotspotSettings.defaultBlockedCursor para hotspots bloqueados.");
+            }
 
             ValidateEventSystem(errors);
             ValidateSceneAndCycle(errors, warnings);

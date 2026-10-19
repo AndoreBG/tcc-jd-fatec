@@ -236,6 +236,8 @@ MonoBehaviour:
   visualGroup: {fileID: 86621274}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 11400000, guid: 41e9e5f4e36268945b58a341c9f413d6, type: 2}
+  cursorSkin: {fileID: 2800000, guid: 34bb8bc6f25177b4d9c8e972b7ccb609, type: 3}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -1023,6 +1025,8 @@ MonoBehaviour:
   visualGroup: {fileID: 314688730}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 11400000, guid: 41e9e5f4e36268945b58a341c9f413d6, type: 2}
+  cursorSkin: {fileID: 2800000, guid: 6afcfc1d44820494caf5bc6db6a96893, type: 3}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -1568,6 +1572,8 @@ MonoBehaviour:
   visualGroup: {fileID: 409635234}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 11400000, guid: 41e9e5f4e36268945b58a341c9f413d6, type: 2}
+  cursorSkin: {fileID: 2800000, guid: 34bb8bc6f25177b4d9c8e972b7ccb609, type: 3}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -2043,6 +2049,8 @@ MonoBehaviour:
   visualGroup: {fileID: 552458887}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 11400000, guid: 41e9e5f4e36268945b58a341c9f413d6, type: 2}
+  cursorSkin: {fileID: 2800000, guid: 29fd57ee511c8cf41b9d9fd9c1e7794f, type: 3}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -2768,6 +2776,8 @@ MonoBehaviour:
   visualGroup: {fileID: 0}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -3016,6 +3026,8 @@ MonoBehaviour:
   visualGroup: {fileID: 784636593}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 11400000, guid: 41e9e5f4e36268945b58a341c9f413d6, type: 2}
+  cursorSkin: {fileID: 2800000, guid: 34bb8bc6f25177b4d9c8e972b7ccb609, type: 3}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -3155,6 +3167,8 @@ MonoBehaviour:
   visualGroup: {fileID: 804661066}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 11400000, guid: 41e9e5f4e36268945b58a341c9f413d6, type: 2}
+  cursorSkin: {fileID: 2800000, guid: cebf9e2d8d179684a918bc9aab539f96, type: 3}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -3365,6 +3379,8 @@ MonoBehaviour:
   visualGroup: {fileID: 815055422}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 11400000, guid: 41e9e5f4e36268945b58a341c9f413d6, type: 2}
+  cursorSkin: {fileID: 2800000, guid: 34bb8bc6f25177b4d9c8e972b7ccb609, type: 3}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -3831,6 +3847,8 @@ MonoBehaviour:
   visualGroup: {fileID: 926146376}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 11400000, guid: 41e9e5f4e36268945b58a341c9f413d6, type: 2}
+  cursorSkin: {fileID: 2800000, guid: 34bb8bc6f25177b4d9c8e972b7ccb609, type: 3}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -4095,6 +4113,8 @@ MonoBehaviour:
   visualGroup: {fileID: 984433216}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 11400000, guid: 41e9e5f4e36268945b58a341c9f413d6, type: 2}
+  cursorSkin: {fileID: 2800000, guid: fe1fa3104223ed643b06d911f0f8fa00, type: 3}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -4490,6 +4510,8 @@ MonoBehaviour:
   visualGroup: {fileID: 1204044502}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 11400000, guid: 41e9e5f4e36268945b58a341c9f413d6, type: 2}
+  cursorSkin: {fileID: 2800000, guid: 29fd57ee511c8cf41b9d9fd9c1e7794f, type: 3}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -4809,6 +4831,8 @@ MonoBehaviour:
   visualGroup: {fileID: 1299935630}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 11400000, guid: 41e9e5f4e36268945b58a341c9f413d6, type: 2}
+  cursorSkin: {fileID: 2800000, guid: 34bb8bc6f25177b4d9c8e972b7ccb609, type: 3}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -5419,6 +5443,8 @@ MonoBehaviour:
   visualGroup: {fileID: 1443801087}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 11400000, guid: 41e9e5f4e36268945b58a341c9f413d6, type: 2}
+  cursorSkin: {fileID: 2800000, guid: 34bb8bc6f25177b4d9c8e972b7ccb609, type: 3}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -5558,6 +5584,8 @@ MonoBehaviour:
   visualGroup: {fileID: 1454934331}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 11400000, guid: 41e9e5f4e36268945b58a341c9f413d6, type: 2}
+  cursorSkin: {fileID: 2800000, guid: cebf9e2d8d179684a918bc9aab539f96, type: 3}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -6279,6 +6307,8 @@ MonoBehaviour:
   visualGroup: {fileID: 1749395486}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 11400000, guid: 41e9e5f4e36268945b58a341c9f413d6, type: 2}
+  cursorSkin: {fileID: 2800000, guid: 34bb8bc6f25177b4d9c8e972b7ccb609, type: 3}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -6406,6 +6436,8 @@ MonoBehaviour:
   visualGroup: {fileID: 1762211712}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 11400000, guid: 41e9e5f4e36268945b58a341c9f413d6, type: 2}
+  cursorSkin: {fileID: 2800000, guid: 34bb8bc6f25177b4d9c8e972b7ccb609, type: 3}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -6860,7 +6892,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1914810879
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7136,6 +7168,8 @@ MonoBehaviour:
   visualGroup: {fileID: 1978754142}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 11400000, guid: 41e9e5f4e36268945b58a341c9f413d6, type: 2}
+  cursorSkin: {fileID: 2800000, guid: de194f51176331848886d20999e82ad6, type: 3}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []

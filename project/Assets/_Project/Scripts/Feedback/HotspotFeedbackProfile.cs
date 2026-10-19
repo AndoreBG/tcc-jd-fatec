@@ -3,8 +3,9 @@ using UnityEngine;
 namespace Whispers
 {
     /// <summary>
-    /// Perfil reutilizável de feedback abstrato de hotspot: cursores por estado e
-    /// sons de interface (hover, ativação, bloqueio, falha). Não contém som
+    /// Perfil reutilizável de feedback abstrato de hotspot: cursor de hover e
+    /// sons de interface (hover, ativação, bloqueio, falha). O cursor bloqueado
+    /// é global no GlobalHotspotSettings. Não contém som
     /// diegético do resultado (autoridade da InteractionDefinition) nem SFX de
     /// transição (autoridade do TransitionProfile). Todos os campos são opcionais.
     /// </summary>
@@ -28,10 +29,10 @@ namespace Whispers
         [Tooltip("Cursor sobre hotspot disponível.")]
         public Texture2D hoverCursor;
 
-        [Tooltip("Cursor sobre hotspot bloqueado (condição não atendida).")]
+        [Tooltip("Campo legado preservado para assets existentes. O runtime usa defaultBlockedCursor de GlobalHotspotSettings para hotspots bloqueados.")]
         public Texture2D blockedCursor;
 
-        [Tooltip("Ponto de acesso do cursor dentro da textura.")]
+        [Tooltip("Ponto de acesso do cursor hover dentro da textura.")]
         public Vector2 cursorHotspot = new Vector2(16f, 16f);
     }
 }
