@@ -26,13 +26,22 @@ namespace Whispers
         [SerializeField] private Color halogenColor = new Color(1f, 0.93f, 0.75f, 0.55f);
 
         private Image _halo;
+        private float _currentIntensity = 1f;
         private readonly Vector3[] _coverageCorners = new Vector3[4];
         private readonly HashSet<int> _coverageWarnings = new HashSet<int>();
 
-        public bool IsHalogenActive => _halo != null && _halo.gameObject.activeInHierarchy;
+        public bool IsHalogenActive => _halo != null && _halo.gameObject.activeInHierarchy && _currentIntensity > 0.01f;
+        public float CurrentIntensity => _currentIntensity;
         public Canvas TargetCanvas => targetCanvas;
-        public float RadiusInCanvasSpace => Mathf.Max(0f, halogenRadius);
+        public float RadiusInCanvasSpace => Mathf.Max(0f, halogenRadius * Mathf.Lerp(0.35f, 1f, _currentIntensity));
         public Vector2 ScreenCenter => Input.mousePosition;
+
+        /// <summary>Atualiza a intensidade do feixe de luz proporcional à carga da bateria do dínamo.</summary>
+        public void SetIntensity(float intensity)
+        {
+            _currentIntensity = Mathf.Clamp01(intensity);
+            ApplyHalogen();
+        }
 
         /// <summary>
         /// Calcula área(círculo ∩ encounterRegion) / área(encounterRegion) no espaço
@@ -42,7 +51,7 @@ namespace Whispers
         public bool TryGetCoverage(RectTransform target, out float coverage)
         {
             coverage = 0f;
-            if (!IsHalogenActive || target == null || targetCanvas == null || halogenRadius <= 0f) return false;
+            if (!IsHalogenActive || _currentIntensity <= 0.05f || target == null || targetCanvas == null || halogenRadius <= 0f) return false;
 
             float rotation = Mathf.Abs(Mathf.DeltaAngle(target.eulerAngles.z, 0f));
             if (rotation > 0.01f)
@@ -107,7 +116,8 @@ namespace Whispers
 
             const int slices = 64;
             float step = width / slices;
-            float radiusSquared = halogenRadius * halogenRadius;
+            float effectiveRadius = halogenRadius * Mathf.Lerp(0.35f, 1f, _currentIntensity);
+            float radiusSquared = effectiveRadius * effectiveRadius;
             float intersection = 0f;
             for (int index = 0; index < slices; index++)
             {
@@ -121,7 +131,7 @@ namespace Whispers
                 if (upper > lower) intersection += (upper - lower) * step;
             }
 
-            coverage = Mathf.Clamp01(intersection / (width * height));
+            coverage = Mathf.Clamp01((intersection / (width * height)) * _currentIntensity);
             return true;
         }
 
@@ -179,9 +189,24 @@ namespace Whispers
         private void ApplyHalogen()
         {
             if (_halo == null) return;
+
+            if (_currentIntensity <= 0.001f)
+            {
+                if (_halo.gameObject.activeSelf)
+                    _halo.gameObject.SetActive(false);
+                return;
+            }
+
+            if (!_halo.gameObject.activeSelf)
+                _halo.gameObject.SetActive(true);
+
+            float effectiveRadius = halogenRadius * Mathf.Lerp(0.35f, 1f, _currentIntensity);
             RectTransform rt = (RectTransform)_halo.transform;
-            rt.sizeDelta = new Vector2(halogenRadius * 2f, halogenRadius * 2f);
-            _halo.color = halogenColor;
+            rt.sizeDelta = new Vector2(effectiveRadius * 2f, effectiveRadius * 2f);
+
+            Color c = halogenColor;
+            c.a = halogenColor.a * _currentIntensity;
+            _halo.color = c;
         }
 
         private void Update()

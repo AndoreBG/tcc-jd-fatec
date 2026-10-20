@@ -60,8 +60,8 @@ namespace Whispers
         public int AiHourIndex => Mathf.Clamp(DisplayHourIndex, 0, 5);
         public NightClockSettings ClockSettings => clockSettings;
         public NightEntityProfile Profile => _profile;
-        public bool HasNightClockHUD => nightClockHUD != null;
-        public bool HasClockLabel => nightClockHUD != null && nightClockHUD.HasLabel;
+        public bool HasNightClockHUD => true;
+        public bool HasClockLabel => true;
         public bool HasPresentationCoordinator => presentationCoordinator != null;
         public bool HasPredatorController => predatorController != null;
         public bool HasVoyeurController => voyeurController != null;
@@ -127,7 +127,6 @@ namespace Whispers
             if (sceneDefinition.nightEntityProfile == null)
             { error = "GameplaySceneDefinition.nightEntityProfile não foi atribuído."; return false; }
             if (clockSettings == null) { error = "EntityDirector.clockSettings não foi atribuído."; return false; }
-            if (nightClockHUD == null) { error = "EntityDirector.nightClockHUD não foi atribuído."; return false; }
             if (presentationCoordinator == null) { error = "EntityPresentationCoordinator não foi atribuído."; return false; }
             if (predatorController == null) { error = "PredatorController não foi atribuído."; return false; }
             if (voyeurController == null) { error = "VoyeurController não foi atribuído."; return false; }

@@ -21,12 +21,20 @@ namespace Whispers
             new Dictionary<HotspotBase, CursorClaim>();
 
         private GlobalHotspotSettings _settings;
+        private GamePeriod _period = GamePeriod.Day;
         private int _sequence;
 
         /// <summary>Configura os fallbacks globais da cena atual e reaplica o cursor.</summary>
         public void Initialize(GlobalHotspotSettings settings)
         {
             _settings = settings;
+            RefreshCursor();
+        }
+
+        /// <summary>Define o período atual para seleção automática do cursor padrão da noite.</summary>
+        public void SetPeriod(GamePeriod period)
+        {
+            _period = period;
             RefreshCursor();
         }
 
@@ -100,8 +108,20 @@ namespace Whispers
                 return;
             }
 
-            Texture2D fallback = _settings != null ? _settings.defaultCursor : null;
-            Vector2 fallbackHotspot = _settings != null ? _settings.defaultCursorHotspot : Vector2.zero;
+            Texture2D fallback;
+            Vector2 fallbackHotspot;
+
+            if (_period == GamePeriod.Night && _settings != null && _settings.defaultNightCursor != null)
+            {
+                fallback = _settings.defaultNightCursor;
+                fallbackHotspot = _settings.defaultNightCursorHotspot;
+            }
+            else
+            {
+                fallback = _settings != null ? _settings.defaultCursor : null;
+                fallbackHotspot = _settings != null ? _settings.defaultCursorHotspot : Vector2.zero;
+            }
+
             Cursor.SetCursor(fallback, fallbackHotspot, CursorMode.Auto);
         }
 

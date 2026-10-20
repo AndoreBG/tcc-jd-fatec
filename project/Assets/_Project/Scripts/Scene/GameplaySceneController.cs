@@ -137,6 +137,8 @@ namespace Whispers
             if (_cursorController == null)
                 _cursorController = gameObject.AddComponent<GameplayCursorController>();
             _cursorController.Initialize(globalSettings);
+            if (sceneDefinition != null)
+                _cursorController.SetPeriod(sceneDefinition.period);
         }
 
         /// <summary>
@@ -341,10 +343,6 @@ namespace Whispers
             {
                 if (entityDirector.ClockSettings == null)
                     errors.Add("EntityDirector não possui NightClockSettings.");
-                if (!entityDirector.HasNightClockHUD)
-                    errors.Add("EntityDirector não possui NightClockHUD.");
-                else if (!entityDirector.HasClockLabel)
-                    errors.Add("NightClockHUD não possui TextMeshProUGUI de horário.");
                 if (!entityDirector.HasPresentationCoordinator)
                     errors.Add("EntityDirector não possui EntityPresentationCoordinator.");
                 if (!entityDirector.HasPredatorController)

@@ -1,55 +1,60 @@
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.Serialization;
 
 namespace Whispers
 {
     /// <summary>
-    /// Hotbar — inventário da Noite. Interface fixa no canto inferior esquerdo:
-    /// sem modal, sem bloqueio de input e SEM interação com hotspots (não passa
-    /// pelo InteractionManager nem pela selectedTool). Duas ferramentas
-    /// encontráveis: lanterna de dínamo Halógena (efeito de luz no cursor) e
-    /// recipiente de óleo (selecionável; sem efeito neste slice).
-    /// Seleção por tecla (1/2); pressionar a mesma tecla deseleciona. A Hotbar
-    /// desativa-se sozinha fora do período Noite.
+    /// Gerenciador de equipamentos da Noite. O sistema anterior de HUD visual
+    /// (slots, marcas e relógio) foi eliminado. O jogador inicia diretamente
+    /// segurando a lanterna na mão ao começar o período Noite. A lanterna de
+    /// dínamo Halógena possui bateria com esgotamento completo em exatamente
+    /// 3 segundos e recarga manual exclusivamente por toque/tap na tecla Espaço
+    /// (sem suporte a hold, incentivando o manivelamento contínuo por cliques).
     /// </summary>
     public class HotbarController : MonoBehaviour
     {
-        public enum Tool { None, Lantern, Oil }
+        public enum Tool { None, Lantern, Oil, SecondItem }
 
-        [Header("Teclas (Input Manager legado)")]
-        [Tooltip("Tecla que seleciona/deseleciona a lanterna de dínamo Halógena.")]
-        [SerializeField] private KeyCode lanternKey = KeyCode.Alpha1;
-
-        [Tooltip("Tecla que seleciona/deseleciona o recipiente de óleo.")]
-        [SerializeField] private KeyCode oilKey = KeyCode.Alpha2;
-
-        [Header("Itens (encontráveis)")]
+        [Header("Itens")]
         [Tooltip("ItemDefinition da lanterna de dínamo.")]
         [SerializeField] private ItemDefinition lanternItem;
 
-        [Tooltip("ItemDefinition do recipiente de óleo.")]
-        [SerializeField] private ItemDefinition oilItem;
+        [Tooltip("ItemDefinition do segundo item (preparado para especificação futura).")]
+        [FormerlySerializedAs("oilItem")]
+        [SerializeField] private ItemDefinition secondItem;
 
-        [Header("UI")]
-        [SerializeField] private Image lanternIcon;
-        [SerializeField] private Image oilIcon;
-        [Tooltip("Marca de seleção da lanterna.")]
-        [SerializeField] private GameObject lanternSelectedMark;
-        [Tooltip("Marca de seleção do óleo.")]
-        [SerializeField] private GameObject oilSelectedMark;
-        [Tooltip("Marca de item não encontrado (lanterna).")]
-        [SerializeField] private GameObject lanternMissingMark;
-        [Tooltip("Marca de item não encontrado (óleo).")]
-        [SerializeField] private GameObject oilMissingMark;
+        [Header("Lanterna de Dínamo")]
+        [Tooltip("Duração total em segundos para a lanterna descarregar completamente de 100% para 0%.")]
+        [SerializeField] private float dischargeDuration = 3f;
+
+        [Tooltip("Tecla para manivelar e recarregar a bateria do dínamo (somente toque/tap).")]
+        [SerializeField] private KeyCode rechargeKey = KeyCode.Space;
+
+        [Tooltip("Ganho imediato de carga por toque na tecla de recarga (somente toque/tap, sem suporte a hold).")]
+        [FormerlySerializedAs("rechargeTapBoost")]
+        [SerializeField] private float chargePerTap = 0.25f;
+
+        [Tooltip("Clip de áudio opcional para a manivela do dínamo.")]
+        [SerializeField] private AudioClip dynamoAudioClip;
+
+        [Tooltip("AudioSource para tocar os efeitos do dínamo.")]
+        [SerializeField] private AudioSource dynamoAudioSource;
 
         [Header("Efeito")]
         [Tooltip("Efeito de luz no cursor (LanternEffect).")]
         [SerializeField] private LanternEffect lanternEffect;
 
-        private Tool _selected = Tool.None;
+        private Tool _selected = Tool.Lantern;
+        private float _batteryCharge = 1f;
         private bool _periodChecked;
 
         private GameSessionManager Session => GameSessionManager.Instance;
+
+        public Tool SelectedTool => _selected;
+        public float BatteryCharge => _batteryCharge;
+        public float DischargeDuration => dischargeDuration;
+        public float ChargePerTap => chargePerTap;
+
         public bool IsHalogenSelected => _selected == Tool.Lantern && lanternEffect != null && lanternEffect.IsHalogenActive;
 
         /// <summary>Única ponte de gameplay para a cobertura da lanterna Halógena.</summary>
@@ -57,6 +62,18 @@ namespace Whispers
         {
             coverage = 0f;
             return IsHalogenSelected && lanternEffect != null && lanternEffect.TryGetCoverage(target, out coverage);
+        }
+
+        private void Awake()
+        {
+            // O jogador começa a noite diretamente segurando a lanterna na mão e com carga cheia
+            _selected = Tool.Lantern;
+            _batteryCharge = 1f;
+        }
+
+        private void Start()
+        {
+            ApplyEquipmentState();
         }
 
         private void Update()
@@ -67,33 +84,79 @@ namespace Whispers
                 _periodChecked = true;
                 if (Session.period != GamePeriod.Night)
                 {
-                    Debug.Log("[Hotbar] Período atual não é Noite; Hotbar desativada nesta cena.", this);
+                    Debug.Log("[HotbarController] Período atual não é Noite; equipamentos noturnos desativados.", this);
                     gameObject.SetActive(false);
                     return;
                 }
+
+                EquipLantern();
             }
 
             GameplaySceneController scene = GameplaySceneController.Instance;
             if (scene != null && scene.Blocker != null && scene.Blocker.IsBlocked)
             {
-                // Defesa redundante: NightGameOverController já esconde o halo no
-                // primeiro frame, mas a Hotbar nunca deve mantê-lo visível enquanto
-                // o bloqueio de jumpscare estiver ativo.
-                if (scene.Blocker.HasReason(InputBlockReason.GameOver)) lanternEffect?.Hide();
-                RefreshVisuals();
+                // Jumpscare bloqueia toda a apresentação de gameplay imediatamente.
+                if (scene.Blocker.HasReason(InputBlockReason.GameOver))
+                    lanternEffect?.Hide();
                 return;
             }
 
-            if (Input.GetKeyDown(lanternKey)) ToggleTool(Tool.Lantern);
-            if (Input.GetKeyDown(oilKey)) ToggleTool(Tool.Oil);
+            UpdateDynamoFlashlight();
+        }
 
-            RefreshVisuals();
+        /// <summary>Equipa a lanterna e assegura que o efeito de iluminação está ativo.</summary>
+        public void EquipLantern()
+        {
+            _selected = Tool.Lantern;
+            if (lanternItem != null && Session != null && !Session.HasItem(lanternItem.id))
+            {
+                Session.AddItem(lanternItem.id);
+            }
+
+            if (lanternEffect != null)
+            {
+                lanternEffect.Show();
+                lanternEffect.SetIntensity(_batteryCharge);
+            }
+        }
+
+        private void UpdateDynamoFlashlight()
+        {
+            if (_selected != Tool.Lantern) return;
+
+            // Recarga exclusivamente por toque (tap) — segurar (hold) não recarrega
+            if (Input.GetKeyDown(rechargeKey))
+            {
+                _batteryCharge = Mathf.Clamp01(_batteryCharge + chargePerTap);
+                PlayDynamoSfx();
+            }
+
+            // Descarregamento contínuo: descarrega totalmente em exatamente dischargeDuration (3 segundos)
+            float drainSpeed = 1f / Mathf.Max(0.1f, dischargeDuration);
+            _batteryCharge = Mathf.Clamp01(_batteryCharge - drainSpeed * Time.deltaTime);
+
+            // Quanto menor a carga, mais fraco o feixe/halo fica proporcionalmente
+            if (lanternEffect != null)
+            {
+                lanternEffect.SetIntensity(_batteryCharge);
+            }
+        }
+
+        private void PlayDynamoSfx()
+        {
+            if (dynamoAudioClip == null) return;
+            if (dynamoAudioSource != null)
+            {
+                dynamoAudioSource.PlayOneShot(dynamoAudioClip);
+            }
+            else
+            {
+                AudioSource.PlayClipAtPoint(dynamoAudioClip, Camera.main != null ? Camera.main.transform.position : Vector3.zero);
+            }
         }
 
         /// <summary>
-        /// Jumpscare bloqueia toda a apresentação de gameplay imediatamente. Mantém a
-        /// seleção lógica intacta até o teardown do período, mas impede que o halo
-        /// atravesse o overlay de derrota.
+        /// Jumpscare bloqueia toda a apresentação de gameplay imediatamente.
         /// </summary>
         public void HideLanternForGameOver()
         {
@@ -104,41 +167,21 @@ namespace Whispers
         {
             _selected = Tool.None;
             lanternEffect?.Hide();
-            RefreshVisuals();
         }
 
-        private void ToggleTool(Tool tool)
-        {
-            if (Session == null) return;
-
-            // Regra: só utilizável se o jogador ENCONTROU o item.
-            if (tool == Tool.Lantern && (lanternItem == null || !Session.HasItem(lanternItem.id))) return;
-            if (tool == Tool.Oil && (oilItem == null || !Session.HasItem(oilItem.id))) return;
-
-            _selected = _selected == tool ? Tool.None : tool; // mesma tecla deseleciona
-            ApplySelection();
-        }
-
-        private void ApplySelection()
+        private void ApplyEquipmentState()
         {
             if (lanternEffect == null) return;
-            if (_selected == Tool.Lantern) lanternEffect.Show();
-            else lanternEffect.Hide();
-        }
 
-        private void RefreshVisuals()
-        {
-            if (Session == null) return;
-
-            bool hasLantern = lanternItem != null && Session.HasItem(lanternItem.id);
-            bool hasOil = oilItem != null && Session.HasItem(oilItem.id);
-
-            if (lanternIcon != null) lanternIcon.color = hasLantern ? Color.white : new Color(1f, 1f, 1f, 0.25f);
-            if (oilIcon != null) oilIcon.color = hasOil ? Color.white : new Color(1f, 1f, 1f, 0.25f);
-            if (lanternSelectedMark != null) lanternSelectedMark.SetActive(_selected == Tool.Lantern);
-            if (oilSelectedMark != null) oilSelectedMark.SetActive(_selected == Tool.Oil);
-            if (lanternMissingMark != null) lanternMissingMark.SetActive(!hasLantern);
-            if (oilMissingMark != null) oilMissingMark.SetActive(!hasOil);
+            if (_selected == Tool.Lantern)
+            {
+                lanternEffect.Show();
+                lanternEffect.SetIntensity(_batteryCharge);
+            }
+            else
+            {
+                lanternEffect.Hide();
+            }
         }
     }
 }

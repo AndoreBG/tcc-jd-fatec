@@ -25,6 +25,12 @@ namespace Whispers
         [Tooltip("Ponto de acesso do cursor padrão dentro da textura.")]
         public Vector2 defaultCursorHotspot = new Vector2(16f, 16f);
 
+        [Tooltip("Cursor padrão do jogo durante o período Noite. Vazio = fallback para o cursor padrão regular.")]
+        public Texture2D defaultNightCursor;
+
+        [Tooltip("Ponto de acesso do cursor padrão da noite dentro da textura.")]
+        public Vector2 defaultNightCursorHotspot = new Vector2(16f, 16f);
+
         [Tooltip("Cursor único exibido sobre qualquer hotspot bloqueado. Não há override de bloqueado por hotspot.")]
         public Texture2D defaultBlockedCursor;
 
