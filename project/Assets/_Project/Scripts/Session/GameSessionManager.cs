@@ -369,17 +369,45 @@ namespace Whispers
             _pendingScene = scene;
             LoadError = null;
             IsLoading = true;
-            if (LevelManager.Instance != null && !LevelManager.Instance.IsLoading)
+            if (LevelManager.Instance != null) StartCoroutine(LoadWithLevelManagerRoutine(scene));
+            else StartCoroutine(LoadSceneRoutine());
+        }
+
+        /// <summary>
+        /// O LevelManager é a cortina oficial entre cenas. O estado de carregamento só é
+        /// limpo na conclusão (cena nova ativa) ou na falha; em falha, _pendingScene
+        /// permanece para TryRetrySceneLoad e a cena atual continua viva.
+        /// </summary>
+        private IEnumerator LoadWithLevelManagerRoutine(string scene)
+        {
+            // Sai da pilha da interação e aguarda a revelação anterior terminar, em vez de
+            // disparar um carregamento paralelo sem transição.
+            yield return null;
+            LevelManager loader = LevelManager.Instance;
+            while (loader != null && loader.IsLoading) { yield return null; loader = LevelManager.Instance; }
+
+            if (loader == null)
             {
-                LevelManager.Instance.LoadScene(scene, "CrossFade", () =>
+                yield return LoadSceneRoutine();
+                yield break;
+            }
+
+            bool started = loader.LoadScene(scene, "CrossFade", null,
+                onCompleted: () =>
                 {
                     _pendingScene = null;
                     IsLoading = false;
+                },
+                onFailed: message =>
+                {
+                    LoadError = string.IsNullOrEmpty(message) ? "O carregamento não pôde ser iniciado." : message;
+                    IsLoading = false;
                 });
-            }
-            else
+
+            if (!started)
             {
-                StartCoroutine(LoadSceneRoutine());
+                LoadError = "O LevelManager recusou o carregamento: já existe outra carga em andamento.";
+                IsLoading = false;
             }
         }
 

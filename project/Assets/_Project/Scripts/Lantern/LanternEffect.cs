@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace Whispers
 {
     /// <summary>
-    /// Efeito visual da lanterna de dínamo Halógena: halo radial que segue o
+    /// Efeito visual da lanterna de dínamo Halógena (controlado pelo LanternController): halo radial que segue o
     /// ponteiro do mouse sobre o VN apresentado (overlay suave, SEM escurecer a
     /// cena). Não interage com hotspots nem com o InteractionManager. A cobertura
     /// geométrica é exposta exclusivamente para a defesa do Voyeur, cuja transição
@@ -27,10 +27,12 @@ namespace Whispers
 
         private Image _halo;
         private float _currentIntensity = 1f;
+        private bool _visible; // Show/Hide é a autoridade; a intensidade só modula o halo visível.
         private readonly Vector3[] _coverageCorners = new Vector3[4];
         private readonly HashSet<int> _coverageWarnings = new HashSet<int>();
 
-        public bool IsHalogenActive => _halo != null && _halo.gameObject.activeInHierarchy && _currentIntensity > 0.01f;
+        public bool IsVisible => _visible;
+        public bool IsHalogenActive => _visible && _halo != null && _halo.gameObject.activeInHierarchy && _currentIntensity > 0.01f;
         public float CurrentIntensity => _currentIntensity;
         public Canvas TargetCanvas => targetCanvas;
         public float RadiusInCanvasSpace => Mathf.Max(0f, halogenRadius * Mathf.Lerp(0.35f, 1f, _currentIntensity));
@@ -166,31 +168,35 @@ namespace Whispers
 
             GameObject go = new GameObject("LanternHalo");
             go.transform.SetParent(targetCanvas.transform, false);
+            // Primeiro filho = desenhado ABAIXO do restante da UI (TransitionCutout, modais).
+            // Assim os fades de transição/boot cobrem o halo em vez de deixá-lo por cima do preto.
+            go.transform.SetAsFirstSibling();
             _halo = go.AddComponent<Image>();
             _halo.sprite = lightSprite != null ? lightSprite : CreateRadialSprite();
             _halo.raycastTarget = false; // nunca intercepta o cursor
-            ApplyHalogen();
             _halo.gameObject.SetActive(false);
+            ApplyHalogen();
         }
 
         /// <summary>Exibe o halo Halógeno.</summary>
         public void Show()
         {
+            _visible = true;
             ApplyHalogen();
-            if (_halo != null) _halo.gameObject.SetActive(true);
         }
 
         /// <summary>Esconde o halo.</summary>
         public void Hide()
         {
-            if (_halo != null) _halo.gameObject.SetActive(false);
+            _visible = false;
+            if (_halo != null && _halo.gameObject.activeSelf) _halo.gameObject.SetActive(false);
         }
 
         private void ApplyHalogen()
         {
             if (_halo == null) return;
 
-            if (_currentIntensity <= 0.001f)
+            if (!_visible || _currentIntensity <= 0.001f)
             {
                 if (_halo.gameObject.activeSelf)
                     _halo.gameObject.SetActive(false);

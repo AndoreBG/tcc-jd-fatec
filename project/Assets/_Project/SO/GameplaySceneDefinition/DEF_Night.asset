@@ -17,4 +17,9 @@ MonoBehaviour:
   period: 1
   initialViewNodeId: vn_corredorfront
   defaultTransition: {fileID: 11400000, guid: 1d8ecbbcdd378c047a08d52a5a189cae, type: 2}
-  nightEntityProfile: {fileID: 11400000, guid: 9b8b6a3e3f0db66c8bfe25f90be645c8, type: 2}
+  nightEntityProfile: {fileID: 11400000, guid: 50bcb9d4db1499e4a9f4c4ff8a958858, type: 2}
+  nightEntityProfilesByDay:
+  - {fileID: 11400000, guid: 50bcb9d4db1499e4a9f4c4ff8a958858, type: 2}
+  - {fileID: 11400000, guid: c14f4efa60d33fb4990e87a7259861f5, type: 2}
+  - {fileID: 11400000, guid: 42f8e559275a5434bb77be01d0aa724d, type: 2}
+  - {fileID: 11400000, guid: 04d64118e861be94f81cbc750578ebd5, type: 2}

@@ -1241,7 +1241,7 @@ MonoBehaviour:
   entityDirector: {fileID: 0}
   cycleDefinition: {fileID: 11400000, guid: 6fd8a18f8d469cc4cb106447ca6dcd56, type: 2}
   backpack: {fileID: 1914810880}
-  hotbar: {fileID: 0}
+  lantern: {fileID: 0}
   globalSettings: {fileID: 11400000, guid: 981a7ab0623904d47a8b7c957e0e4bd1, type: 2}
   feedbackAudioSource: {fileID: 0}
 --- !u!4 &391696333

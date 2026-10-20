@@ -18,9 +18,9 @@ namespace Whispers.EditorTests
     /// </summary>
     public static class VS8NightEntityTests
     {
-        private const string ProfilePath = "Assets/_Project/SO/NightEntities/NIGHT_Playground_Entities.asset";
+        private const string ProfilePath = "Assets/_Project/SO/NightEntities/playground/NIGHT_Playground_Entities.asset";
         private const string ClockPath = "Assets/_Project/SO/NightEntities/SETTINGS_NightClock.asset";
-        private const string NightScenePath = "Assets/_Project/Scenes/Development/playground_night.unity";
+        private const string NightScenePath = "Assets/_Project/Scenes/playground/playground_night.unity";
 
         [MenuItem("Whispers/VS8/Executar validação estática das entidades noturnas")]
         public static void Run()
@@ -52,7 +52,7 @@ namespace Whispers.EditorTests
 
                 ValidateEntries(profile, ref passed);
                 ValidateTechnicalBindings(openedScene, profile, ref passed);
-                ValidateNoUvInRuntimeHotbar(ref passed);
+                ValidateNoUvInRuntimeLantern(ref passed);
                 ReportManualMediaWarnings(profile, ref passed);
 
                 Debug.Log("[VS8] " + passed + " validações estáticas passaram. " +
@@ -133,12 +133,12 @@ namespace Whispers.EditorTests
             }
         }
 
-        private static void ValidateNoUvInRuntimeHotbar(ref int passed)
+        private static void ValidateNoUvInRuntimeLantern(ref int passed)
         {
             string[] files =
             {
-                Path.Combine(Application.dataPath, "_Project/Scripts/Hotbar/HotbarController.cs"),
-                Path.Combine(Application.dataPath, "_Project/Scripts/Hotbar/LanternEffect.cs")
+                Path.Combine(Application.dataPath, "_Project/Scripts/Lantern/LanternController.cs"),
+                Path.Combine(Application.dataPath, "_Project/Scripts/Lantern/LanternEffect.cs")
             };
             foreach (string path in files)
             {
@@ -146,7 +146,7 @@ namespace Whispers.EditorTests
                 Check(source.IndexOf("UV", StringComparison.OrdinalIgnoreCase) < 0 &&
                       source.IndexOf("ultravioleta", StringComparison.OrdinalIgnoreCase) < 0 &&
                       source.IndexOf("KeyCode.F", StringComparison.Ordinal) < 0,
-                    "Hotbar sem modo UV/F: " + Path.GetFileName(path), ref passed);
+                    "Lanterna sem modo UV/F: " + Path.GetFileName(path), ref passed);
             }
         }
 

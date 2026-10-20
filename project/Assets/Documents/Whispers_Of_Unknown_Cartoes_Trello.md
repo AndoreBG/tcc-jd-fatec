@@ -70,7 +70,7 @@ Configura as cenas espelhadas de Dia e Noite com os managers locais, referência
 - O `GameplaySceneController` referencia explicitamente os managers locais.
 - O `GameplaySceneDefinition` identifica etapa, período e ViewNode inicial.
 - O EventSystem usa `StandaloneInputModule` e Input Manager legado.
-- A câmera de apresentação e os Canvases de gameplay e UI estão separados corretamente, com a UI de inventário do período correspondente (Backpack no Dia; Hotbar na Noite).
+- A câmera de apresentação e os Canvases de gameplay e UI estão separados corretamente, com a UI do período correspondente (Backpack no Dia; lanterna sempre na mão na Noite, sem HUD de inventário).
 - O boot detecta referências obrigatórias ausentes sem deixar a cena bloqueada.
 
 ## Checklist
@@ -79,7 +79,7 @@ Configura as cenas espelhadas de Dia e Noite com os managers locais, referência
 - [ ] O `GameplaySceneController` referencia explicitamente os managers locais.
 - [ ] O `GameplaySceneDefinition` identifica etapa, período e ViewNode inicial.
 - [ ] O EventSystem usa `StandaloneInputModule` e Input Manager legado.
-- [ ] A câmera de apresentação e os Canvases de gameplay e UI estão separados corretamente, com a UI de inventário do período correspondente (Backpack no Dia; Hotbar na Noite).
+- [ ] A câmera de apresentação e os Canvases de gameplay e UI estão separados corretamente, com a UI do período correspondente (Backpack no Dia; lanterna sempre na mão na Noite, sem HUD de inventário).
 - [ ] O boot detecta referências obrigatórias ausentes sem deixar a cena bloqueada.
 
 ---
@@ -420,7 +420,7 @@ Implementa `InteractionHotspot`, definições de interação e resultados execut
 
 ---
 
-# Cartão 13 — Implementa os inventários por período (Backpack e Hotbar)
+# Cartão 13 — Implementa a Backpack do Dia e a lanterna da Noite
 
 **Coluna inicial:** 📋 Programação  
 **Etiqueta:** Prioridade Alta
@@ -429,7 +429,7 @@ Implementa `InteractionHotspot`, definições de interação e resultados execut
 
 ### Objetivo
 
-Implementa a Backpack do Dia — modal inferior com slots travados por tipo de item e uso de ferramentas por arraste e drop — e a Hotbar da Noite — interface fixa com a lanterna de dínamo e o recipiente de óleo — sem permitir que a UI interaja acidentalmente com hotspots do cenário.
+Implementa a Backpack do Dia — modal inferior com slots travados por tipo de item e uso de ferramentas por arraste e drop — e a lanterna de dínamo da Noite — sempre na mão, sem HUD de inventário — sem permitir que a UI interaja acidentalmente com hotspots do cenário.
 
 ### Critério de pronto
 
@@ -442,10 +442,11 @@ Implementa a Backpack do Dia — modal inferior com slots travados por tipo de i
 - Com a ferramenta na mão, somente o drop sobre um `ToolHotspot` executa uso; hover e clique de hotspots permanecem bloqueados.
 - Toda tentativa de uso devolve a ferramenta à Backpack; o consumo ocorre somente em sucesso, quando a definição determinar.
 - Soltar dentro do modal cancela o arraste e mantém a Backpack aberta; soltar fora de alvo devolve a ferramenta sem penalidade.
-- A Hotbar é fixa no canto inferior esquerdo, sem modal e sem bloqueio de entrada.
-- Lanterna de dínamo e recipiente de óleo são selecionados pela tecla de atalho da respectiva ferramenta; pressionar a mesma tecla deseleciona.
+- A lanterna de dínamo fica sempre na mão durante a Noite, sem Hotbar, sem seleção e sem passar pelo inventário (`LanternController`).
+- A bateria esgota em `dischargeDuration` segundos e recarrega somente por toque na tecla de recarga.
+- O recipiente de óleo não é ferramenta da lanterna: é usado apenas no sótão, durante a Noite, por interação própria.
 - A lanterna usa exclusivamente Halógeno e projeta no ponteiro um halo de luz; sua cobertura sobre a região técnica do Voyeur é usada somente pela defesa dessa entidade.
-- As ferramentas da Hotbar não interagem com nenhum tipo de hotspot.
+- A lanterna não interage com nenhum tipo de hotspot.
 - `DocumentPanel` apresenta documentos e mídia sem depender do ViewNode permanecer ativo.
 - Abrir modal não altera automaticamente o `timeScale`.
 
@@ -460,10 +461,11 @@ Implementa a Backpack do Dia — modal inferior com slots travados por tipo de i
 - [ ] Com a ferramenta na mão, somente o drop sobre um `ToolHotspot` executa uso; hover e clique de hotspots permanecem bloqueados.
 - [ ] Toda tentativa de uso devolve a ferramenta à Backpack; o consumo ocorre somente em sucesso, quando a definição determinar.
 - [ ] Soltar dentro do modal cancela o arraste e mantém a Backpack aberta; soltar fora de alvo devolve a ferramenta sem penalidade.
-- [ ] A Hotbar é fixa no canto inferior esquerdo, sem modal e sem bloqueio de entrada.
-- [ ] Lanterna de dínamo e recipiente de óleo são selecionados pela tecla de atalho da respectiva ferramenta; pressionar a mesma tecla deseleciona.
+- [ ] A lanterna de dínamo fica sempre na mão durante a Noite, sem Hotbar, sem seleção e sem passar pelo inventário (`LanternController`).
+- [ ] A bateria esgota em `dischargeDuration` segundos e recarrega somente por toque na tecla de recarga.
+- [ ] O recipiente de óleo não é ferramenta da lanterna: é usado apenas no sótão, durante a Noite, por interação própria.
 - [ ] A lanterna usa exclusivamente Halógeno, projeta o halo no ponteiro e expõe cobertura técnica apenas para a defesa do Voyeur.
-- [ ] As ferramentas da Hotbar não interagem com nenhum tipo de hotspot.
+- [ ] A lanterna não interage com nenhum tipo de hotspot.
 - [ ] `DocumentPanel` apresenta documentos e mídia sem depender do ViewNode permanecer ativo.
 - [ ] Abrir modal não altera automaticamente o `timeScale`.
 
@@ -524,9 +526,9 @@ Valida condições, estado compartilhado, inventário, modais, ferramentas, dwel
 - Um objeto compartilhado apresenta o mesmo estado em diferentes pontos de visão.
 - Interações não executam duas vezes por clique ou hover residual.
 - Drop de ferramenta válido executa a interação; ferramenta inválida e drop fora de alvo devolvem a ferramenta à Backpack sem penalidade.
-- A Backpack bloqueia o cenário da abertura ao fim do drop; a Hotbar não bloqueia entrada nem interage com hotspots.
+- A Backpack bloqueia o cenário da abertura ao fim do drop; a lanterna não bloqueia entrada nem interage com hotspots.
 - A Backpack não abre durante a Noite.
-- Itens não encontrados não aparecem na Backpack e não ficam utilizáveis na Hotbar.
+- Itens não encontrados não aparecem na Backpack nem ficam utilizáveis em interações.
 - Dwell cancela corretamente em saída, bloqueio e perda de condição.
 - Não existe comportamento dependente de cooldown genérico.
 
@@ -537,9 +539,9 @@ Valida condições, estado compartilhado, inventário, modais, ferramentas, dwel
 - [ ] Um objeto compartilhado apresenta o mesmo estado em diferentes pontos de visão.
 - [ ] Interações não executam duas vezes por clique ou hover residual.
 - [ ] Drop de ferramenta válido executa a interação; ferramenta inválida e drop fora de alvo devolvem a ferramenta à Backpack sem penalidade.
-- [ ] A Backpack bloqueia o cenário da abertura ao fim do drop; a Hotbar não bloqueia entrada nem interage com hotspots.
+- [ ] A Backpack bloqueia o cenário da abertura ao fim do drop; a lanterna não bloqueia entrada nem interage com hotspots.
 - [ ] A Backpack não abre durante a Noite.
-- [ ] Itens não encontrados não aparecem na Backpack e não ficam utilizáveis na Hotbar.
+- [ ] Itens não encontrados não aparecem na Backpack nem ficam utilizáveis em interações.
 - [ ] Dwell cancela corretamente em saída, bloqueio e perda de condição.
 - [ ] Não existe comportamento dependente de cooldown genérico.
 
@@ -1049,7 +1051,7 @@ Valida todos os invariantes da arquitetura em um ciclo jogável com navegação,
 |---:|---|---|
 | 1 | 01–04 | Roadmap e fundação |
 | 2 | 05–10 | Vertical Slice 1 — navegação, câmera e parallax |
-| 3 | 11–15 | Vertical Slice 2 — condições, interação, Backpack, Hotbar e ferramentas |
+| 3 | 11–15 | Vertical Slice 2 — condições, interação, Backpack, lanterna e ferramentas |
 | 4 | 16–18 | Vertical Slice 3 — Dia/Noite e checkpoint diário |
 | 5 | 19–25 | Vertical Slice 4 — arquitetura e conteúdo de áudio |
 | 6 | 26–29 | VHS, profiling e validação final |

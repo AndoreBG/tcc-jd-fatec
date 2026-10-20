@@ -128,7 +128,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 82899645}
-  - component: {fileID: 82899646}
   m_Layer: 0
   m_Name: Layer_Objects
   m_TagString: Untagged
@@ -156,26 +155,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 16.4, y: 9.6}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &82899646
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 898848915}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 280c397ddb624f44396ac0dc9f2c51fc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Whispers.HotbarController
-  lanternItem: {fileID: 11400000, guid: a4520a179aef9ed4b852097507f38ec8, type: 2}
-  secondItem: {fileID: 11400000, guid: 83ac078b656ea554ba5b01b8ef29ad77, type: 2}
-  dischargeDuration: 3
-  rechargeKey: 32
-  chargePerTap: 0.25
-  dynamoAudioClip: {fileID: 0}
-  dynamoAudioSource: {fileID: 0}
-  lanternEffect: {fileID: 1052209333}
 --- !u!1 &86621269
 GameObject:
   m_ObjectHideFlags: 0
@@ -1722,7 +1701,7 @@ MonoBehaviour:
   entityDirector: {fileID: 0}
   cycleDefinition: {fileID: 11400000, guid: 78640dafc1f5af647995893fbb625887, type: 2}
   backpack: {fileID: 1914810880}
-  hotbar: {fileID: 898848916}
+  lantern: {fileID: 898848916}
   globalSettings: {fileID: 11400000, guid: 981a7ab0623904d47a8b7c957e0e4bd1, type: 2}
   feedbackAudioSource: {fileID: 0}
 --- !u!4 &391696333
@@ -3625,7 +3604,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 280c397ddb624f44396ac0dc9f2c51fc, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Whispers.HotbarController
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.LanternController
   lanternKey: 49
   oilKey: 50
   lanternItem: {fileID: 11400000, guid: a4520a179aef9ed4b852097507f38ec8, type: 2}

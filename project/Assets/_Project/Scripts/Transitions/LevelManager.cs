@@ -74,22 +74,32 @@ namespace Whispers
 
         /// <summary>
         /// Carrega uma cena assincronamente com transição visual e barra de progresso.
+        /// O LevelManager é a cortina oficial entre cenas; o TransitionCutout local de
+        /// cada cena fica restrito às transições entre ViewNodes.
         /// </summary>
         /// <param name="sceneName">Nome ou caminho da cena no Build Profile.</param>
         /// <param name="transitionName">Nome do componente/GameObject da transição (ex: 'CrossFade' ou 'CircleWipe').</param>
         /// <param name="onBeforeLoad">Callback invocado com a tela coberta, antes de descarregar a cena atual.</param>
-        public void LoadScene(string sceneName, string transitionName = "CrossFade", Action onBeforeLoad = null)
+        /// <param name="onCompleted">Invocado quando a nova cena já está ativa (Awake/Start executados), antes da revelação.</param>
+        /// <param name="onFailed">Invocado com a mensagem de erro quando a cena não pôde ser carregada. A cena atual continua ativa.</param>
+        /// <returns>false se já existe um carregamento em andamento (nenhum callback será invocado).</returns>
+        public bool LoadScene(string sceneName, string transitionName = "CrossFade", Action onBeforeLoad = null,
+            Action onCompleted = null, Action<string> onFailed = null)
         {
             if (_isLoading)
             {
                 Debug.LogWarning("[LevelManager] Já existe um carregamento em andamento.", this);
-                return;
+                return false;
             }
 
-            StartCoroutine(LoadSceneAsync(sceneName, transitionName, onBeforeLoad));
+            // Marca já aqui (e não só dentro da corrotina) para recusar chamadas no mesmo frame.
+            _isLoading = true;
+            StartCoroutine(LoadSceneAsync(sceneName, transitionName, onBeforeLoad, onCompleted, onFailed));
+            return true;
         }
 
-        public IEnumerator LoadSceneAsync(string sceneName, string transitionName = "CrossFade", Action onBeforeLoad = null)
+        public IEnumerator LoadSceneAsync(string sceneName, string transitionName = "CrossFade", Action onBeforeLoad = null,
+            Action onCompleted = null, Action<string> onFailed = null)
         {
             _isLoading = true;
 
@@ -122,12 +132,26 @@ namespace Whispers
             }
 
             // 3. Inicia carregamento assíncrono da cena
-            AsyncOperation scene = SceneManager.LoadSceneAsync(sceneName);
+            AsyncOperation scene = null;
+            string failure = null;
+            try
+            {
+                scene = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
+            }
+            catch (Exception ex)
+            {
+                failure = ex.Message;
+            }
+
             if (scene == null)
             {
-                Debug.LogError($"[LevelManager] Falha ao iniciar carregamento assíncrono da cena: {sceneName}", this);
-                _isLoading = false;
+                failure = "Falha ao iniciar carregamento assíncrono da cena '" + sceneName + "'" +
+                          (string.IsNullOrEmpty(failure) ? ". Verifique o Build Profile." : ": " + failure);
+                Debug.LogError("[LevelManager] " + failure, this);
+                if (progressBar != null) progressBar.gameObject.SetActive(false);
                 if (transition != null) yield return transition.AnimateTransitionOut();
+                _isLoading = false;
+                SafeInvoke(onFailed, failure);
                 yield break;
             }
 
@@ -172,6 +196,9 @@ namespace Whispers
             // Aguarda um frame para execução do Awake/Start da nova cena
             yield return null;
 
+            // A cena nova é a ativa: só agora o chamador pode considerar o carregamento concluído.
+            SafeInvoke(onCompleted);
+
             if (progressBar != null)
             {
                 progressBar.gameObject.SetActive(false);
@@ -184,6 +211,20 @@ namespace Whispers
             }
 
             _isLoading = false;
+        }
+
+        private void SafeInvoke(Action callback)
+        {
+            if (callback == null) return;
+            try { callback(); }
+            catch (Exception ex) { Debug.LogException(ex, this); }
+        }
+
+        private void SafeInvoke(Action<string> callback, string message)
+        {
+            if (callback == null) return;
+            try { callback(message); }
+            catch (Exception ex) { Debug.LogException(ex, this); }
         }
     }
 }

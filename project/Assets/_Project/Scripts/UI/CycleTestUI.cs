@@ -412,7 +412,7 @@ namespace Whispers
             {
                 string error;
                 _entityMessage = director.DebugForceTerminal(_debugNightEntityId, false, out error)
-                    ? "Terminal iniciado: ainda pode navegar/usar Hotbar até a contagem."
+                    ? "Terminal iniciado: ainda pode navegar/usar a lanterna até a contagem."
                     : "Falha: " + error;
             }
             if (GUILayout.Button("Jumpscare real imediato"))

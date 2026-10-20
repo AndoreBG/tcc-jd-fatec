@@ -6,14 +6,14 @@
 > **Plataforma:** PC  
 > **Render:** URP  
 > **Input:** Input Manager legado (`StandaloneInputModule`)  
-> **Escopo:** ViewNodes, câmera e parallax, hotspots, condições, ferramentas, inventários por período (Backpack e Hotbar), transições, UI modal, áudio e checkpoint entre ciclos.  
+> **Escopo:** ViewNodes, câmera e parallax, hotspots, condições, ferramentas, Backpack do Dia, lanterna da Noite, transições, UI modal, áudio e checkpoint entre ciclos.  
 > **Status:** referência oficial para implementação. Substitui a versão 1.0 e os documentos de conceito anteriores.
 
 ---
 
 ## 0. Objetivo e terminologia
 
-Este documento define o comportamento esperado dos sistemas de navegação por pontos de visão, interação por hotspots, inventários por período (Backpack e Hotbar), apresentação de câmera, áudio e persistência entre os períodos de Dia e Noite.
+Este documento define o comportamento esperado dos sistemas de navegação por pontos de visão, interação por hotspots, Backpack do Dia, lanterna de dínamo da Noite, apresentação de câmera, áudio e persistência entre os períodos de Dia e Noite.
 
 A arquitetura privilegia simplicidade, previsibilidade e edição direta no Inspector. Não há movimentação 3D livre. O jogador navega entre composições 2D fixas, apresentadas por uma câmera compartilhada, com possibilidade de tilt, pan, shake e parallax em camadas.
 
@@ -32,7 +32,7 @@ A arquitetura privilegia simplicidade, previsibilidade e edição direta no Insp
 | **Reentrada** | Exigência de que o cursor saia fisicamente da região e volte a entrar antes de o hotspot poder reagir. |
 | **Fato persistente** | Decisão, descoberta ou alteração que pode atravessar períodos e checkpoints sem ser um item de inventário. |
 | **Backpack** | Inventário do período Dia: modal inferior com slots travados por tipo de item, aberto por tecla de atalho. |
-| **Hotbar** | Inventário do período Noite: interface fixa no canto inferior esquerdo, sem modal. |
+| **Lanterna** | Lanterna de dínamo da Noite: sempre na mão do jogador, sem HUD de inventário e sem seleção. Substitui a antiga Hotbar. |
 | **Ferramenta na mão** | Item arrastado para fora da Backpack que acompanha o cursor entre o início do arraste e o drop. |
 | **Drop** | Ato de soltar o botão do mouse com uma ferramenta na mão, sobre um `ToolHotspot` ou fora dele. |
 
@@ -62,8 +62,8 @@ Neste documento, Dia e Noite são chamados de **períodos**, evitando o uso amb�
 | 16 | Sobreposição de hotspots | Proibida entre regiões que possam ficar interativas simultaneamente dentro do mesmo ViewNode. É erro de conteúdo e gera warning. |
 | 17 | Eventos | Eventos C# entre sistemas; `UnityEvents` apenas para respostas locais e autoradas no Inspector. |
 | 18 | Áudio | `SceneAudioController` é a autoridade local de reprodução, continuidade e mixagem. ViewNode define o ambiente-alvo; link define como ocorre a mudança; `TransitionProfile` define apenas o SFX de transição. |
-| 19 | Inventário por período | **Backpack** no Dia (modal inferior, tecla de atalho, quatro slots provisórios travados por tipo de item) e **Hotbar** na Noite (interface fixa, lanterna de dínamo e recipiente de óleo). Itens são utilizáveis somente depois de encontrados. |
-| 20 | Hotbar e hotspots | As ferramentas da Hotbar não interagem com hotspots: a lanterna é efeito de apresentação sobre o ViewNode; o recipiente de óleo pertence às mecânicas futuras do lampião. |
+| 19 | Inventário por período | **Backpack** no Dia (modal inferior, tecla de atalho, quatro slots provisórios travados por tipo de item) e **Lanterna** na Noite (sempre na mão, sem inventário). Itens da Backpack são utilizáveis somente depois de encontrados. O **recipiente de óleo** continua no escopo: é usado apenas no sótão, durante a Noite, por interação própria. |
+| 20 | Lanterna e hotspots | A lanterna não interage com hotspots: é efeito de apresentação sobre o ViewNode, cuja cobertura serve apenas à defesa do Voyeur. |
 
 ---
 
@@ -113,8 +113,8 @@ GameplaySceneController
 ├── InputBlocker
 ├── BackpackController (período Dia)
 │   └── slots da Backpack
-├── HotbarController (período Noite)
-│   └── efeito da lanterna
+├── LanternController + LanternEffect (período Noite)
+│   └── halo da lanterna (criado em runtime)
 └── ModalUIController
     └── DocumentPanel
 ```
@@ -252,6 +252,13 @@ O jogo **não possui pausa de produção**. No PC, segurar `ESC` inicia o retorn
 - Carregar o slot sempre abre a cena do Dia definida no checkpoint.
 - A pausa de `CycleTestUI`/`F8` é exclusivamente ferramenta de Debug: não representa menu, fluxo de produção ou `timeScale`.
 
+### 4.10 Cortina entre cenas e contrato de carregamento
+
+- A **cortina oficial entre cenas é o `LevelManager`** (DontDestroyOnLoad, criado no `main_menu`). O `TransitionCutout` local de cada cena fica restrito às transições entre ViewNodes e ao fallback sem `LevelManager` (Play direto na cena).
+- Com `LevelManager` presente, o `GameplaySceneController` não faz fade local de boot nem de saída: no boot, remove o cutout e só libera o gameplay depois da revelação global; na saída, a cortina global cobre a tela.
+- `LevelManager.LoadScene(cena, transição, onBeforeLoad, onCompleted, onFailed)` devolve `false` se já houver uma carga em andamento. `onCompleted` é chamado com a cena nova já ativa (antes da revelação) e `onFailed` é chamado se a carga não puder começar; nesse caso a cena atual continua viva.
+- `GameSessionManager` só limpa `IsLoading`/carga pendente em `onCompleted`. Em `onFailed`, registra `LoadError` e mantém a cena pendente para `TryRetrySceneLoad`. Se o `LevelManager` estiver ocupado com a revelação anterior, a sessão espera em vez de disparar uma carga paralela sem transição.
+
 ---
 
 ## 5. Camada de cena
@@ -272,12 +279,12 @@ O jogo **não possui pausa de produção**. No PC, segurar `ESC` inicia o retorn
 | `ModalUIController` | `MonoBehaviour` | Abre e fecha modais e aplica bloqueio de gameplay/mixagem apropriada. |
 | `ReturnToMainMenuController` | `MonoBehaviour` runtime | Detecta o hold de ESC, respeita a prioridade das UIs locais e apresenta monocromia, vinheta e aviso de descarte antes do retorno sem save. |
 | `BackpackController` | `MonoBehaviour` | Inventário do Dia: modal inferior, slots travados, arraste e drop de ferramentas. |
-| `HotbarController` | `MonoBehaviour` | Inventário da Noite: interface fixa e seleção das ferramentas do período. |
+| `LanternController` | `MonoBehaviour` | Lanterna de dínamo da Noite: sempre equipada, bateria com descarga e recarga por toque, cobertura do halo para o Voyeur. |
 
 ### 5.2 Sequência de boot da cena
 
 1. `GameplaySceneController` bloqueia a entrada por motivo de boot e agrega a validação antes de inicializar sistemas.
-2. Valida referências obrigatórias: `GameplaySceneDefinition`, `GameCycleDefinition`, managers locais, configurações globais, câmera habilitada e UI de inventário correspondente ao período.
+2. Valida referências obrigatórias: `GameplaySceneDefinition`, `GameCycleDefinition`, managers locais, configurações globais, câmera habilitada, `BackpackController` no Dia e `LanternController` (com `LanternEffect`) na Noite.
 3. Valida exatamente um `EventSystem` ativo com `StandaloneInputModule`.
 4. Valida `sceneId`, `stageId`, período, cena do período no Build Profile, IDs únicos de ViewNode, `initialViewNodeId` único e perfis de câmera/áudio de cada nó.
 5. Configuração inválida gera uma única lista de erros, permanece na entrada de testes e remove o bloqueio de boot; não tenta inicializar navegação parcialmente.
@@ -1061,22 +1068,25 @@ Regras:
 - Toda tentativa de uso devolve a ferramenta à Backpack; o consumo ocorre somente em uso bem-sucedido, quando a definição da ferramenta determinar.
 - Soltar dentro do modal cancela o arraste e mantém a Backpack aberta.
 
-### 16.3 Hotbar (Noite)
+### 16.3 Lanterna (Noite)
 
 | Classe | Responsabilidade |
 |---|---|
-| `HotbarController` | Interface fixa de seleção das ferramentas da Noite pela tecla de atalho de cada uma. |
+| `LanternController` | Lanterna de dínamo sempre na mão: bateria, recarga por toque, congelamento sob bloqueio e cobertura do halo para o Voyeur. |
 | `LanternEffect` | Efeito de luz da lanterna que acompanha o ponteiro e altera a leitura visual do ViewNode. |
 
 Regras:
 
-- A Hotbar é fixa no canto inferior esquerdo da tela, visível durante toda a Noite, sem modal e sem bloqueio de entrada.
-- A Hotbar comporta duas ferramentas: a lanterna de dínamo e o recipiente de óleo.
-- A seleção ocorre pela tecla de atalho da respectiva ferramenta; pressionar a mesma tecla deseleciona.
-- A lanterna de dínamo oferece exclusivamente luz Halógena, selecionada por atalho, e projeta no ponteiro um halo que acompanha a cena.
+- A antiga Hotbar foi removida. A Noite não possui HUD de inventário nem seleção de ferramenta.
+- O jogador começa toda Noite com a lanterna já na mão e carga cheia.
+- A lanterna não é item de inventário em runtime: o `LanternController` não altera o estado de trabalho da sessão. A coleta da lanterna no Dia (`INT_PegarLanterna`) é apenas narrativa.
+- A bateria esgota de 100% a 0% em `dischargeDuration` segundos e é recarregada somente por toque na tecla de recarga (padrão: Espaço). Segurar a tecla não recarrega.
+- A intensidade da bateria reduz o raio (até 35%) e a opacidade do halo e, portanto, a cobertura.
+- A lanterna oferece exclusivamente luz Halógena e projeta no ponteiro um halo que acompanha a cena. O halo é desenhado abaixo do restante da UI, para que os fades de transição o cubram.
 - O halo não altera hotspots, condições ou interações comuns. Sua cobertura geométrica sobre a região técnica autorada é consumida exclusivamente pelo `EntityDirector` para a defesa do Voyeur.
-- As ferramentas da Hotbar não interagem com nenhum tipo de hotspot.
-- As ferramentas da Hotbar são utilizáveis somente depois de encontradas pelo jogador.
+- Com qualquer bloqueio de entrada ativo, a bateria congela. No GameOver, o halo é escondido.
+- `GameplaySceneController.lantern` é obrigatório na cena de Noite; sem ele a cena falha na validação de boot.
+- O recipiente de óleo não é ferramenta da lanterna. Ele é usado apenas no sótão (`vn_sotao`), durante a Noite, por um hotspot de interação condicionado à posse do item (`HasItemCondition` com `item_oleo`). A mecânica do lampião será detalhada quando for implementada.
 
 ---
 
@@ -1212,7 +1222,7 @@ Clip de camada-base ainda não autorado e `mainMenuScene` vazio/ausente do Build
 - `BackpackController`
 - `BackpackSlotDefinition`
 - `BackpackSlotUI`
-- `HotbarController`
+- `LanternController`
 - `LanternEffect`
 
 ---
@@ -1232,7 +1242,7 @@ Clip de camada-base ainda não autorado e `mainMenuScene` vazio/ausente do Build
 11. `ItemDefinition`, `ModalUIController` com `DocumentPanel`, e `BackpackController` com slots travados.
 12. `ToolHotspot` com drop da Backpack: sucesso, falha genérica, devolução da ferramenta e destaque opcional.
 13. `PersistentFactCondition` e fatos no estado de trabalho.
-14. Segunda cena espelhada com `HotbarController` e efeito da lanterna, e transferência Dia → Noite sem salvar checkpoint.
+14. Segunda cena espelhada com `LanternController` e efeito da lanterna, e transferência Dia → Noite sem salvar checkpoint.
 15. `SaveSystem`, checkpoint de início do Dia e consolidação Noite → próximo Dia.
 16. **Meta 2 — ciclo completo:** iniciar Dia, coletar/preparar, carregar Noite em memória, concluir Noite, criar checkpoint seguinte e confirmar que o retorno configurado ao menu descarta o ciclo sem salvar.
 17. Dwell e `HotspotFeedbackProfile`; manter ausência de cooldown.
@@ -1288,7 +1298,7 @@ Clip de camada-base ainda não autorado e `mainMenuScene` vazio/ausente do Build
 - A ferramenta sai da mão do jogador em qualquer desfecho do drop.
 - Destaque de alvo é opcional por ferramenta.
 - A Backpack abre somente durante o Dia, por tecla de atalho, e bloqueia o cenário durante as animações e o arraste.
-- A Hotbar não interfere em hotspots, condições ou interações.
+- A lanterna não interfere em hotspots, condições ou interações.
 - Itens e ferramentas são utilizáveis somente depois de encontrados.
 - Modal bloqueia cenário, mas não seus controles.
 - Fechar modal exige reentrada.
@@ -1347,4 +1357,4 @@ As seguintes regras não podem ser violadas por implementações específicas:
 12. Tilt e parallax não podem quebrar o alinhamento dos hotspots.
 13. Nenhum erro de conteúdo pode deixar o `InputBlocker` permanentemente preso.
 14. A ferramenta na mão não reage a hover, clique ou dwell: o uso ocorre somente pelo drop sobre um `ToolHotspot`.
-15. As ferramentas da Hotbar não passam pelo sistema de hotspots; a lanterna é apenas apresentação.
+15. A lanterna não passa pelo sistema de hotspots; é apenas apresentação (e cobertura para o Voyeur).

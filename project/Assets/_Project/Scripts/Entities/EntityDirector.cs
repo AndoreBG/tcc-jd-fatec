@@ -124,15 +124,17 @@ namespace Whispers
             if (scene == null) { error = "EntityDirector não recebeu GameplaySceneController."; return false; }
             if (sceneDefinition == null || sceneDefinition.period != GamePeriod.Night)
             { error = "EntityDirector só pode ser inicializado em uma cena de Noite."; return false; }
-            if (sceneDefinition.nightEntityProfile == null)
-            { error = "GameplaySceneDefinition.nightEntityProfile não foi atribuído."; return false; }
+            int currentDay = GameSessionManager.Instance != null ? GameSessionManager.Instance.day : 1;
+            NightEntityProfile resolvedProfile = sceneDefinition.ResolveNightEntityProfile(currentDay);
+            if (resolvedProfile == null)
+            { error = "GameplaySceneDefinition não possui NightEntityProfile para o Dia " + currentDay + "."; return false; }
             if (clockSettings == null) { error = "EntityDirector.clockSettings não foi atribuído."; return false; }
             if (presentationCoordinator == null) { error = "EntityPresentationCoordinator não foi atribuído."; return false; }
             if (predatorController == null) { error = "PredatorController não foi atribuído."; return false; }
             if (voyeurController == null) { error = "VoyeurController não foi atribuído."; return false; }
             if (gameOverController == null) { error = "NightGameOverController não foi atribuído."; return false; }
 
-            _profile = sceneDefinition.nightEntityProfile;
+            _profile = resolvedProfile;
             if (_profile.entries == null || _profile.entries.Length == 0)
             { error = "NightEntityProfile não possui entradas."; return false; }
 
@@ -177,7 +179,8 @@ namespace Whispers
             scene.Navigation.ViewNodeChanged += OnViewNodeChanged;
             RefreshAuthoringWarnings();
 
-            nightClockHUD.SetTime(0, 0f);
+            // HUD é apresentação opcional: sua ausência não pode derrubar o boot da Noite.
+            if (nightClockHUD != null) nightClockHUD.SetTime(0, 0f);
             ClockUpdated?.Invoke(0, 0f);
             return true;
         }
@@ -370,7 +373,7 @@ namespace Whispers
 
         /// <summary>Chamado exclusivamente pelo VoyeurController em tempo não escalado.</summary>
         public void ProcessVoyeurLight(string entityId, EntityPresentationCoordinator presentation,
-            HotbarController hotbar, float delta)
+            LanternController lantern, float delta)
         {
             if (!_initialized || !_running || _sixAmHandled || _terminalActive || IsPausedByDebug || delta <= 0f) return;
             EntityRuntime runtime;
@@ -391,9 +394,9 @@ namespace Whispers
                         coverage = Mathf.Clamp01(runtime.debugVoyeurCoverageOverride.Value);
                         hasCoverage = coverage >= definition.minimumLanternCoverage;
                     }
-                    else if (hotbar != null)
+                    else if (lantern != null)
                     {
-                        hasCoverage = hotbar.TryGetHalogenCoverage(region, out coverage) &&
+                        hasCoverage = lantern.TryGetHalogenCoverage(region, out coverage) &&
                                       coverage >= definition.minimumLanternCoverage;
                     }
                 }
@@ -731,7 +734,7 @@ namespace Whispers
                 // Nunca devolve uma cena navegável com o Director desligado. O
                 // bloqueio PeriodEnd e a UI de erro oferecem Retry/saída segura.
                 StopForGameOver();
-                _scene?.Hotbar?.HideLanternForGameOver();
+                if (_scene != null && _scene.Lantern != null) _scene.Lantern.HideForGameOver();
                 _scene?.ReportNightFailureRequestError(
                     "NightGameOverController recusou iniciar a apresentação da derrota.");
                 Debug.LogError("[EntityDirector] GameOver não iniciou; a cena foi bloqueada em erro recuperável.", this);
@@ -805,7 +808,7 @@ namespace Whispers
 
         private void PublishClock()
         {
-            nightClockHUD?.SetTime(DisplayHourIndex, NormalizedProgress);
+            if (nightClockHUD != null) nightClockHUD.SetTime(DisplayHourIndex, NormalizedProgress);
             ClockUpdated?.Invoke(DisplayHourIndex, NormalizedProgress);
         }
 

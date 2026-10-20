@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Serialization;
 
 namespace Whispers
 {
@@ -27,7 +28,9 @@ namespace Whispers
         [Header("VS3 — mesmo ciclo nas duas cenas")]
         [SerializeField] private GameCycleDefinition cycleDefinition;
         [SerializeField] private BackpackController backpack;
-        [SerializeField] private HotbarController hotbar;
+        [Tooltip("Lanterna de dínamo da Noite (antiga Hotbar). Obrigatória somente na cena de Noite.")]
+        [FormerlySerializedAs("hotbar")]
+        [SerializeField] private LanternController lantern;
 
         [Header("Configuração e feedback")]
         [SerializeField] private GlobalHotspotSettings globalSettings;
@@ -44,7 +47,7 @@ namespace Whispers
         public SceneAudioController Audio => sceneAudioController;
         public GameplayCursorController Cursor => _cursorController;
         public EntityDirector Entities => entityDirector;
-        public HotbarController Hotbar => hotbar;
+        public LanternController Lantern => lantern;
         public GlobalHotspotSettings GlobalSettings => globalSettings;
         public string FlowError { get; private set; }
         public bool IsFlowBusy { get; private set; }
@@ -59,6 +62,13 @@ namespace Whispers
         private ReturnToMainMenuController _returnToMenuController;
         private GameplayCursorController _cursorController;
         private GameSessionManager Session => GameSessionManager.Instance;
+
+        /// <summary>
+        /// Troca de cena coberta pelo LevelManager (cortina oficial). O TransitionCutout
+        /// local continua responsável apenas pelas transições entre ViewNodes e pelo
+        /// fallback sem LevelManager (Play direto na cena / Session sem LevelManager).
+        /// </summary>
+        private static bool IsSceneCurtainOwnedByLevelManager => LevelManager.Instance != null;
         private float FadeDuration => cycleDefinition != null ? Mathf.Max(0f, cycleDefinition.fadeDuration) : 0f;
 
         protected void OnEnable() { Instance = this; }
@@ -118,7 +128,18 @@ namespace Whispers
             }
             else
             {
-                yield return Fade(1f, 0f);
+                if (IsSceneCurtainOwnedByLevelManager)
+                {
+                    // Cortina oficial entre cenas = LevelManager (M1). O cutout local sai
+                    // imediatamente e o gameplay só libera depois da revelação global.
+                    transitionController.SetCover(0f);
+                    while (LevelManager.Instance != null && LevelManager.Instance.IsLoading) yield return null;
+                }
+                else
+                {
+                    // Play direto na cena (sem LevelManager): mantém o fade local de boot.
+                    yield return Fade(1f, 0f);
+                }
                 yield return new WaitForSecondsRealtime(0.05f);
                 IsReady = true;
                 // O relógio só começa com boot/fade concluídos. Assim F8 congela uma
@@ -180,8 +201,13 @@ namespace Whispers
 
             if (sceneDefinition != null && sceneDefinition.period == GamePeriod.Day && backpack == null)
                 errors.Add("BackpackController é obrigatório na cena de Dia.");
-            if (sceneDefinition != null && sceneDefinition.period == GamePeriod.Night && hotbar == null)
-                errors.Add("HotbarController é obrigatório na cena de Noite.");
+            if (sceneDefinition != null && sceneDefinition.period == GamePeriod.Night)
+            {
+                if (lantern == null)
+                    errors.Add("LanternController é obrigatório na cena de Noite (defesa do Voyeur).");
+                else if (!lantern.HasEffect)
+                    errors.Add("LanternController não possui LanternEffect atribuído.");
+            }
 
             // O clip de ambiente-base fica intencionalmente para autoria manual. O
             // controller já evita tocar uma base inválida, então aqui é diagnóstico,
@@ -325,15 +351,21 @@ namespace Whispers
 
             if (sceneDefinition.period == GamePeriod.Day)
             {
-                if (sceneDefinition.nightEntityProfile != null)
-                    warnings.Add("GameplaySceneDefinition de Dia possui nightEntityProfile; a referência será ignorada.");
+                if (sceneDefinition.CollectNightEntityProfiles().Count > 0)
+                    warnings.Add("GameplaySceneDefinition de Dia possui nightEntityProfile(s); a referência será ignorada.");
                 return;
             }
 
             if (sceneDefinition.nightEntityProfile == null)
             {
-                errors.Add("NightEntityProfile é obrigatório em GameplaySceneDefinition de Noite.");
+                errors.Add("NightEntityProfile padrão é obrigatório em GameplaySceneDefinition de Noite.");
                 return;
+            }
+            if (sceneDefinition.nightEntityProfilesByDay != null)
+            {
+                for (int i = 0; i < sceneDefinition.nightEntityProfilesByDay.Length; i++)
+                    if (sceneDefinition.nightEntityProfilesByDay[i] == null)
+                        warnings.Add("nightEntityProfilesByDay[" + i + "] (Dia " + (i + 1) + ") está vazio; usará o perfil padrão.");
             }
             if (entityDirector == null)
             {
@@ -353,9 +385,25 @@ namespace Whispers
                     errors.Add("EntityDirector não possui NightGameOverController.");
             }
 
+            // Valida todos os perfis alcançáveis: a cena precisa suportar qualquer Noite do ciclo,
+            // não só a do Dia atual (Play direto sempre usa o Dia 1).
             HashSet<string> viewNodeIds = CollectViewNodeIds();
-            sceneDefinition.nightEntityProfile.CollectValidation(viewNodeIds, errors, warnings);
-            entityDirector?.CollectPresentationValidation(navigationManager, sceneDefinition.nightEntityProfile, errors, warnings);
+            foreach (NightEntityProfile profile in sceneDefinition.CollectNightEntityProfiles())
+            {
+                int errorsBefore = errors.Count;
+                int warningsBefore = warnings.Count;
+                profile.CollectValidation(viewNodeIds, errors, warnings);
+                if (entityDirector != null)
+                    entityDirector.CollectPresentationValidation(navigationManager, profile, errors, warnings);
+                PrefixNew(errors, errorsBefore, profile.name);
+                PrefixNew(warnings, warningsBefore, profile.name);
+            }
+        }
+
+        private static void PrefixNew(List<string> messages, int from, string profileName)
+        {
+            for (int i = from; i < messages.Count; i++)
+                messages[i] = "[" + profileName + "] " + messages[i];
         }
 
         private HashSet<string> CollectViewNodeIds()
@@ -594,6 +642,7 @@ namespace Whispers
             // Importante: resultados, consumo de ferramenta e onActivated terminam ANTES do save.
             yield return null;
             string error = null;
+            bool localCover = false;
             try { PrepareLocalShutdown(); }
             catch (Exception exception) { error = "Falha no encerramento local: " + exception.Message; Debug.LogException(exception, this); }
             if (error == null)
@@ -607,7 +656,9 @@ namespace Whispers
                         yield return new WaitForSecondsRealtime(_returnToMenuController.PresentationLeadDuration);
                 }
 
-                yield return Fade(0f, 1f);
+                // Com LevelManager, a cortina global cobre a tela; sem ele, fade local.
+                localCover = !IsSceneCurtainOwnedByLevelManager;
+                if (localCover) yield return Fade(0f, 1f);
                 bool accepted = false;
                 try
                 {
@@ -642,7 +693,8 @@ namespace Whispers
             }
             FlowError = error ?? "A operação não pôde ser concluída.";
             Debug.LogWarning("[Ciclo] " + FlowError, this);
-            yield return Fade(1f, 0f);
+            if (localCover) yield return Fade(1f, 0f);
+            else transitionController?.SetCover(0f);
             if (flow == Flow.ReturnToMainMenu)
                 _returnToMenuController?.CancelExitPresentation();
             IsFlowBusy = false;
@@ -667,9 +719,9 @@ namespace Whispers
             // Estado de entidades é exclusivamente local à Noite: saída normal,
             // retorno sem save, reset e destruição nunca o persistem.
             entityDirector?.ClearRuntime();
-            backpack?.PrepareForPeriodChange();
+            if (backpack != null) backpack.PrepareForPeriodChange();
             modalUI?.CloseForPeriodChange();
-            hotbar?.PrepareForPeriodChange();
+            if (lantern != null) lantern.PrepareForPeriodChange();
             sceneAudioController?.BeginSceneExit();
             Session?.PrepareForPeriodChange();
         }
