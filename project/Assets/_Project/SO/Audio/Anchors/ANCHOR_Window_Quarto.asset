@@ -16,4 +16,4 @@ MonoBehaviour:
   displayName: Janela do Quarto
   category: 0
   encounterViewNodeId: vn_quarto
-  mapPosition: {x: 2, y: 1}
+  mapPosition: {x: -2, y: -2}

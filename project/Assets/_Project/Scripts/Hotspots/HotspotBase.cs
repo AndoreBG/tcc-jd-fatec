@@ -40,6 +40,13 @@ namespace Whispers
         [Tooltip("Perfil de feedback deste hotspot. Vazio = perfil default do GlobalHotspotSettings.")]
         [SerializeField] private HotspotFeedbackProfile feedbackProfile;
 
+        [Header("Cursor individual")]
+        [Tooltip("Skin aplicada sobre este hotspot disponível. Vazio = cursor hover do HotspotFeedbackProfile; se também vazio, cursor padrão global.")]
+        [SerializeField] private Texture2D cursorSkin;
+
+        [Tooltip("Ponto de acesso da skin individual dentro da textura.")]
+        [SerializeField] private Vector2 cursorSkinHotspot = new Vector2(16f, 16f);
+
         [Header("Respostas autoradas (locais)")]
         public UnityEvent onActivated;
         public UnityEvent onUnavailable;
@@ -55,7 +62,6 @@ namespace Whispers
         private bool _wasBlocked;
         private bool _dwellActive;
         private bool _sessionSubscribed;
-        private bool _customCursorApplied;
         private float _dwellElapsed;
 
         public bool IsPresented => _presented;
@@ -64,6 +70,7 @@ namespace Whispers
 
         protected GameplaySceneController Scene => GameplaySceneController.Instance;
         protected InputBlocker Blocker => Scene != null ? Scene.Blocker : null;
+        private GameplayCursorController CursorController => Scene != null ? Scene.Cursor : null;
 
         /// <summary>Bloqueio de gameplay visto por este hotspot (ponto único de consulta).</summary>
         protected bool IsGameplayBlocked => Blocker != null && Blocker.IsBlocked;
@@ -108,12 +115,14 @@ namespace Whispers
         {
             _isAvailable = EvaluateConditionsInternal();
             ApplyAvailabilityPresentation();
+            RefreshCursorForHoverState();
         }
 
         public bool RevalidateConditions()
         {
             _isAvailable = EvaluateConditionsInternal();
             ApplyAvailabilityPresentation();
+            RefreshCursorForHoverState();
             return _isAvailable;
         }
 
@@ -198,6 +207,8 @@ namespace Whispers
             if (!presented)
             {
                 CancelDwell();
+                _cursorOver = false;
+                RestoreCursor();
                 // Preserva a reentrada pendente dos modos hover ao sair do ViewNode.
                 // Modos de clique ignoram essa marca.
             }
@@ -271,6 +282,7 @@ namespace Whispers
             if (!_isAvailable && unavailableMode == HotspotUnavailableMode.Hidden) return; // oculto não comunica
 
             _cursorOver = true;
+            ApplyHoverCursor();
 
             bool blocked = IsGameplayBlocked;
             if (blocked)
@@ -286,7 +298,6 @@ namespace Whispers
                 return;
             }
 
-            ApplyHoverCursor();
             HotspotFeedbackProfile hoverFeedback = Feedback;
             if (hoverFeedback != null && hoverFeedback.hoverClip != null && Scene != null)
                 Scene.PlayFeedback(hoverFeedback.hoverClip);
@@ -392,6 +403,7 @@ namespace Whispers
                     if (_cursorOver && UsesHoverReentry) _requiresExit = true;
                 }
                 _wasBlocked = blocked;
+                RefreshCursorForHoverState();
             }
 
             // Dwell em tempo escalado, apenas para HoverWithDwell
@@ -411,23 +423,52 @@ namespace Whispers
 
         // ---------------- Cursor ----------------
 
+        private void RefreshCursorForHoverState()
+        {
+            if (!_cursorOver) return;
+            if (!enabledForGameplay || !_presented || (!_isAvailable && unavailableMode == HotspotUnavailableMode.Hidden))
+            {
+                RestoreCursor();
+                return;
+            }
+            ApplyHoverCursor();
+        }
+
         private void ApplyHoverCursor()
         {
+            if (!_cursorOver) return;
+            GameplayCursorController cursorController = CursorController;
+            if (cursorController == null) return;
+
+            // Cursor bloqueado é uma regra global: não há override em hotspot nem
+            // HotspotFeedbackProfile para esse estado.
+            if (IsGameplayBlocked || !_isAvailable)
+            {
+                cursorController.RequestBlockedCursor(this);
+                return;
+            }
+
+            if (cursorSkin != null)
+            {
+                cursorController.RequestHotspotCursor(this, cursorSkin, cursorSkinHotspot);
+                return;
+            }
+
             HotspotFeedbackProfile feedback = Feedback;
-            if (feedback == null) return;
+            if (feedback != null && feedback.hoverCursor != null)
+            {
+                cursorController.RequestHotspotCursor(this, feedback.hoverCursor, feedback.cursorHotspot);
+                return;
+            }
 
-            Texture2D cursor = _isAvailable ? feedback.hoverCursor : feedback.blockedCursor;
-            if (cursor == null) return;
-
-            Cursor.SetCursor(cursor, feedback.cursorHotspot, CursorMode.Auto);
-            _customCursorApplied = true;
+            // Sem cursor local ou de perfil: o controller reaplica o padrão global.
+            cursorController.ReleaseHotspotCursor(this);
         }
 
         private void RestoreCursor()
         {
-            if (!_customCursorApplied) return;
-            _customCursorApplied = false;
-            Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+            GameplayCursorController cursorController = CursorController;
+            if (cursorController != null) cursorController.ReleaseHotspotCursor(this);
         }
     }
 }

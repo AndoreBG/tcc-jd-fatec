@@ -49,7 +49,7 @@ namespace Whispers
         private IEnumerator Run(EntityDefinition winner)
         {
             AddGameOverBlock();
-            _scene.Hotbar?.HideLanternForGameOver();
+            if (_scene.Lantern != null) _scene.Lantern.HideForGameOver();
             _director.StopForGameOver();
             EntityJumpscarePresentation presentation = winner.jumpscare;
             float duration = presentation != null ? Mathf.Max(0f, presentation.durationSeconds) : 0f;

@@ -129,7 +129,7 @@ O VS4 deve provar que o jogo possui uma arquitetura sonora contínua e autoráve
 - hotspots;
 - Backpack;
 - documentos;
-- Hotbar;
+- lanterna de dínamo da Noite;
 - equipamentos persistentes;
 - sinais de ameaça;
 - mídia, rádio e fitas;
@@ -267,7 +267,7 @@ A branch de referência possuía a base dos VS1, VS2 e VS3, mas o VS4 ainda não
 - `HotspotFeedbackProfile`;
 - `ModalUIController`;
 - `BackpackController`;
-- `HotbarController`;
+- `LanternController` (antigo `HotbarController`);
 - `GameSessionManager`;
 - `CycleTestUI` com abertura em F8.
 
@@ -416,7 +416,7 @@ Gameplay
 ├── InteractionManager
 ├── ModalUIController
 ├── BackpackController
-├── HotbarController
+├── LanternController (Noite)
 └── CycleTestUI
 ```
 
@@ -909,7 +909,7 @@ O sinal deve continuar funcionando mesmo se:
 
 ---
 
-# 12. Modais, Debug F8, retorno e Hotbar
+# 12. Modais, Debug F8, retorno e lanterna
 
 ## 12.1 Backpack
 
@@ -950,11 +950,11 @@ A pausa de Debug F8 não deve gerar novos sinais críticos enquanto o jogador n�
 
 Não há pausa de produção. Segurar `ESC` só começa após modal, Backpack ou `ToolDrag` terem consumido/cancelado a pressão atual. Ao confirmar, a cena usa saída controlada de áudio e bloqueia gameplay enquanto a apresentação fullscreen de monocromia, vinheta e aviso de descarte entra. O retorno só pode descartar o ciclo depois de `GameCycleDefinition.mainMenuScene` estar configurado e disponível no Build Profile; caso contrário, o áudio e a sessão atuais continuam intactos.
 
-## 12.5 Hotbar
+## 12.5 Lanterna
 
-A Hotbar não interage com hotspots.
+A Hotbar foi removida: a lanterna fica sempre na mão durante a Noite e não interage com hotspots.
 
-A lanterna é apresentação. Sons associados à seleção da lanterna devem ser classificados como `UI` ou `Equipment`, conforme o significado do som, sem alterar condições ou navegação.
+A lanterna é apresentação. O som da manivela do dínamo (`LanternController.dynamoAudioClip`) é tocado pelo `SceneAudioController.PlayUi` quando não há `dynamoAudioSource` dedicado. Ele deve ser classificado como `UI` ou `Equipment`, conforme o significado do som, sem alterar condições ou navegação.
 
 ---
 

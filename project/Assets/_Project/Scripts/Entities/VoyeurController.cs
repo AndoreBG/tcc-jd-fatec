@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Whispers
 {
     /// <summary>
-    /// Adaptador de defesa do Voyeur. A Hotbar/LanternEffect fornece somente a
+    /// Adaptador de defesa do Voyeur. O LanternController/LanternEffect fornece somente a
     /// cobertura Halógena; estados, timers, reservas e Terminal permanecem sob
     /// autoridade exclusiva do EntityDirector.
     /// </summary>
@@ -13,7 +13,7 @@ namespace Whispers
         {
             if (Director == null || Presentation == null || IsDebugPaused) return;
             GameplaySceneController scene = GameplaySceneController.Instance;
-            Director.ProcessVoyeurLight(EntityId, Presentation, scene != null ? scene.Hotbar : null,
+            Director.ProcessVoyeurLight(EntityId, Presentation, scene != null ? scene.Lantern : null,
                 Time.unscaledDeltaTime);
         }
     }

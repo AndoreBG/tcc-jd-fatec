@@ -142,7 +142,13 @@ namespace Whispers
             return data;
         }
 
-        public bool TryNewGame(out string error)
+        public void SetCycle(GameCycleDefinition cycle)
+        {
+            _cycle = cycle;
+            if (cycle != null) stageId = cycle.stageId;
+        }
+
+        public bool PrepareNewGameSession(out string error)
         {
             if (!CanLoad(GamePeriod.Day, out error)) return false;
             GameSaveData initial = GameSaveData.Empty(_cycle.stageId);
@@ -151,11 +157,10 @@ namespace Whispers
             _initialized = true;
             Notice = null;
             Apply(initial);
-            StartLoading(_cycle.dayScene);
             return true;
         }
 
-        public bool TryContinue(out string error)
+        public bool PrepareContinueSession(out string error)
         {
             if (!CanLoad(GamePeriod.Day, out error)) return false;
             if (!_save.TryLoad(1, out GameSaveData checkpoint, out bool backup, out error)) return false;
@@ -164,6 +169,19 @@ namespace Whispers
             _initialized = true;
             Notice = backup ? "Principal inválido/ausente. Recuperado o último checkpoint válido do backup; ele pode ser de um Dia anterior." : null;
             Apply(checkpoint);
+            return true;
+        }
+
+        public bool TryNewGame(out string error)
+        {
+            if (!PrepareNewGameSession(out error)) return false;
+            StartLoading(_cycle.dayScene);
+            return true;
+        }
+
+        public bool TryContinue(out string error)
+        {
+            if (!PrepareContinueSession(out error)) return false;
             StartLoading(_cycle.dayScene);
             return true;
         }
@@ -351,7 +369,46 @@ namespace Whispers
             _pendingScene = scene;
             LoadError = null;
             IsLoading = true;
-            StartCoroutine(LoadSceneRoutine());
+            if (LevelManager.Instance != null) StartCoroutine(LoadWithLevelManagerRoutine(scene));
+            else StartCoroutine(LoadSceneRoutine());
+        }
+
+        /// <summary>
+        /// O LevelManager é a cortina oficial entre cenas. O estado de carregamento só é
+        /// limpo na conclusão (cena nova ativa) ou na falha; em falha, _pendingScene
+        /// permanece para TryRetrySceneLoad e a cena atual continua viva.
+        /// </summary>
+        private IEnumerator LoadWithLevelManagerRoutine(string scene)
+        {
+            // Sai da pilha da interação e aguarda a revelação anterior terminar, em vez de
+            // disparar um carregamento paralelo sem transição.
+            yield return null;
+            LevelManager loader = LevelManager.Instance;
+            while (loader != null && loader.IsLoading) { yield return null; loader = LevelManager.Instance; }
+
+            if (loader == null)
+            {
+                yield return LoadSceneRoutine();
+                yield break;
+            }
+
+            bool started = loader.LoadScene(scene, "CrossFade", null,
+                onCompleted: () =>
+                {
+                    _pendingScene = null;
+                    IsLoading = false;
+                },
+                onFailed: message =>
+                {
+                    LoadError = string.IsNullOrEmpty(message) ? "O carregamento não pôde ser iniciado." : message;
+                    IsLoading = false;
+                });
+
+            if (!started)
+            {
+                LoadError = "O LevelManager recusou o carregamento: já existe outra carga em andamento.";
+                IsLoading = false;
+            }
         }
 
         public bool TryRetrySceneLoad(out string error)

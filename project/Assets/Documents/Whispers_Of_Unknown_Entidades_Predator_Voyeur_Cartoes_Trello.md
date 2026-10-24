@@ -345,7 +345,7 @@ Permitir que entidades apresentem SFX de entrada e loops opcionais por estado, a
 # ENT-08 — Simplifica a lanterna para Halógeno e expõe cobertura
 
 **Coluna inicial:** 📋 Programação  
-**Etiqueta:** Prioridade Alta · Hotbar  
+**Etiqueta:** Prioridade Alta · Lanterna  
 **Vertical Slice:** VS7 — Voyeur: defesa por lanterna  
 **Dependências:** ENT-06
 
@@ -362,14 +362,14 @@ Remover UV e tornar a lanterna Halógena uma fonte confiável de cobertura circu
 ## Checklist
 
 - [ ] Enum e estado UV foram removidos.
-- [ ] Hotbar mantém seleção por tecla da lanterna.
+- [ ] Lanterna fica sempre na mão durante a Noite (sem Hotbar e sem seleção por tecla); `HotbarController` renomeado para `LanternController`.
 - [ ] Halo segue o cursor como hoje.
 - [ ] API informa se Halógeno está realmente ativo.
 - [ ] Cobertura é definida por `area(círculo ∩ rect) / area(rect)`.
 - [ ] Threshold vem de `VoyeurDefinition`.
 - [ ] Canvas/região incompatíveis geram warning seguro.
 - [ ] LanternEffect continua sem interagir com hotspots comuns.
-- [ ] Documentação da Hotbar remove referência a UV.
+- [ ] Documentação da lanterna remove referência a UV e à Hotbar.
 
 ---
 
@@ -382,12 +382,12 @@ Remover UV e tornar a lanterna Halógena uma fonte confiável de cobertura circu
 
 ## Objetivo
 
-Garantir que Backpack e documentos não possam ser usados na Noite, mantendo Hotbar e Debug F8 disponíveis em gameplay normal.
+Garantir que Backpack e documentos não possam ser usados na Noite, mantendo a lanterna e o Debug F8 disponíveis em gameplay normal.
 
 ## Critério de pronto
 
 - Documentos e Backpack não abrem na Noite por atalho, evento ou referência residual.
-- Hotbar permanece disponível até Terminal/jumpscare, conforme regra aprovada.
+- A lanterna permanece disponível até Terminal/jumpscare, conforme regra aprovada.
 - F8 permanece disponível e congela IA enquanto aberto.
 
 ## Checklist
@@ -395,10 +395,10 @@ Garantir que Backpack e documentos não possam ser usados na Noite, mantendo Hot
 - [ ] Backpack valida período antes de abrir/arrastar.
 - [ ] ModalUI bloqueia abertura de documentos no período Night.
 - [ ] UIs já abertas são fechadas com segurança na entrada da Noite.
-- [ ] Hotbar não recebe bloqueio indevido em Noite normal.
+- [ ] A lanterna não recebe bloqueio indevido em Noite normal.
 - [ ] F8 continua autorizado como ferramenta de debug.
-- [ ] Terminal não bloqueia navegação/Hotbar por si só.
-- [ ] Jumpscare bloqueia Hotbar, F8 e toda UI de gameplay.
+- [ ] Terminal não bloqueia navegação/lanterna por si só.
+- [ ] Jumpscare bloqueia lanterna, F8 e toda UI de gameplay.
 
 ---
 
@@ -505,7 +505,7 @@ Implementar a infraestrutura genérica de Terminal inicialmente exercida pelo Pr
 
 ## Critério de pronto
 
-- Terminal elimina a capacidade de resolver a entidade, mas preserva navegação/Hotbar até o jumpscare.
+- Terminal elimina a capacidade de resolver a entidade, mas preserva navegação/lanterna até o jumpscare.
 - Outras entidades são limpas imediatamente.
 - Dois Terminals no mesmo tick escolhem vencedor aleatório reproduzível.
 - 6 AM cancela qualquer derrota pendente ainda sem jumpscare.
@@ -545,7 +545,7 @@ Apresentar jumpscare fullscreen da entidade vencedora e retornar ao checkpoint d
 
 - [ ] `InputBlockReason.GameOver` foi adicionado.
 - [ ] GameOverController usa tempo não escalado.
-- [ ] Jumpscare bloqueia navegação, Hotbar, F8 e retorno ao menu.
+- [ ] Jumpscare bloqueia navegação, lanterna, F8 e retorno ao menu.
 - [ ] Fallback seguro funciona sem imagem ou clip atribuídos.
 - [ ] `GameSessionManager.TryFailNight` não grava checkpoint.
 - [ ] Falha restaura o início do Dia atual.
@@ -748,7 +748,7 @@ Validar todo o pacote no Play Mode e por diagnóstico, incluindo IA, estados, UI
 ### Terminal, 6 AM e sessão
 
 - [ ] Terminal limpa outra entidade.
-- [ ] Terminal pendente ainda permite navegação/Hotbar.
+- [ ] Terminal pendente ainda permite navegação/lanterna.
 - [ ] Jumpscare bloqueia tudo e usa tempo não escalado.
 - [ ] Game over não grava nem consolida Noite.
 - [ ] Game over retorna ao checkpoint do início do Dia.
@@ -758,7 +758,7 @@ Validar todo o pacote no Play Mode e por diagnóstico, incluindo IA, estados, UI
 ### Regressão
 
 - [ ] Documentos e Backpack permanecem indisponíveis na Noite.
-- [ ] Hotbar Halógena continua funcionando.
+- [ ] Lanterna Halógena continua funcionando.
 - [ ] Não existe UV, tecla F ou label de modo restante.
 - [ ] Retorno ao menu sem save continua seguro.
 - [ ] Dia → Noite → próximo Dia continua funcional sem entidades ativas no Dia.

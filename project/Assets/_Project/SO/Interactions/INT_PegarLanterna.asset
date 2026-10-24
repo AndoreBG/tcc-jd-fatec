@@ -25,7 +25,7 @@ MonoBehaviour:
     document: {fileID: 0}
   - type: 2
     itemId: 
-    collectionId: coleta_lanterna_playground
+    collectionId: coleta_lanterna
     amount: 0
     flagId: 
     factId: 

@@ -15,7 +15,7 @@ Implementar uma arquitetura de entidades noturnas que seja:
 - autorável por Noite;
 - determinística para diagnóstico quando necessário, mas com rolagens de IA reproduzíveis;
 - independente de `GameObject` visual para decidir lógica;
-- integrada a ViewNodes, áudio por anchor, Hotbar/Lanterna, HUD de horário, game over e checkpoint;
+- integrada a ViewNodes, áudio por anchor, lanterna de dínamo (`LanternController`), HUD de horário, game over e checkpoint;
 - extensível para futuras entidades sem transformar `SceneAudioController`, `GameplaySceneController` ou hotspots em autoridades de IA.
 
 O comportamento é inspirado no ritmo de *Five Nights at Freddy’s*: cada entidade recebe oportunidades periódicas de movimento governadas por uma dificuldade `0..20`, mas a rota, os timers de ataque e os confrontos são autorados.
@@ -44,8 +44,8 @@ O comportamento é inspirado no ritmo de *Five Nights at Freddy’s*: cada entid
 | Escolha de anchor | Uniforme entre os anchors permitidos e livres. |
 | Confronto | Cada `AudioAnchorDefinition` possui um único `encounterViewNodeId`. |
 | Views do Voyeur | Reutiliza ViewNodes existentes de Sala e Corredor; não serão criados ViewNodes de janela. |
-| UI noturna | Hotbar/Halogênio e Debug F8 permitidos; documentos e Backpack indisponíveis. |
-| Terminal | Permite navegação e Hotbar, porém a entidade terminal não pode mais ser enfrentada. |
+| UI noturna | Lanterna Halógena (sempre na mão, sem Hotbar) e Debug F8 permitidos; documentos e Backpack indisponíveis. |
+| Terminal | Permite navegação e uso da lanterna, porém a entidade terminal não pode mais ser enfrentada. |
 | 6 AM vs. Terminal | `6 AM` vence qualquer Terminal ainda pendente; cancela a derrota e encerra a Noite. |
 | Jumpscare | Fullscreen, tempo não escalado, bloqueia todos os inputs e retorna ao checkpoint do início do Dia. |
 | Ausência de assets | Não criar placeholders ou atribuir clips/imagens. Campos permanecem para autoria manual; warnings seguros são esperados. |
@@ -496,7 +496,7 @@ Responsabilidades:
 
 1. receber a entidade vencedora e sua `JumpscarePresentation`;
 2. adicionar `InputBlockReason.GameOver`;
-3. bloquear Hotbar, F8, navegação, modal e entrada de gameplay;
+3. bloquear lanterna, F8, navegação, modal e entrada de gameplay;
 4. apresentar imagem/animacão fullscreen e SFX por tempo não escalado;
 5. em asset ausente, registrar warning e usar fallback visual seguro sem gerar asset de mídia;
 6. ao concluir, solicitar fluxo de falha da Noite;
@@ -557,16 +557,16 @@ Bindings de região devem estar no mesmo Canvas e não devem ter rotação; a va
 
 ## 11. Lanterna Halógena e contato do Voyeur
 
-### 11.1 Mudanças na Hotbar
+### 11.1 Mudanças na lanterna (antiga Hotbar)
 
-`HotbarController` e `LanternEffect` deverão remover:
+A Hotbar foi removida. O antigo `HotbarController` virou `LanternController` (`Scripts/Lantern/`, mesmo GUID): a lanterna fica sempre na mão durante a Noite, sem seleção por tecla e sem passar pelo inventário. `LanternController` e `LanternEffect` deverão remover:
 
 - enum/estado UV;
 - alternância pela tecla `F`;
 - rótulo e apresentação de modo UV;
 - raio/cor/ramo de lógica UV.
 
-A Hotbar continuará oferecendo Lanterna Halógena e Óleo conforme o escopo atual, mas somente Halógeno é método de defesa.
+A lanterna oferece somente luz Halógena, que é o único método de defesa contra o Voyeur. O recipiente de óleo continua no escopo, mas não é ferramenta da lanterna: é usado apenas no sótão, durante a Noite, por interação própria e fora do sistema de defesa contra entidades.
 
 ### 11.2 API planejada de `LanternEffect`
 
@@ -700,7 +700,7 @@ Terminal
 Enquanto há Terminal pendente:
 
 - a entidade terminal não pode mais ser resolvida;
-- jogador pode navegar e usar Hotbar;
+- jogador pode navegar e usar a lanterna;
 - outras entidades são limpas imediatamente;
 - documentos e Backpack continuam indisponíveis;
 - nenhuma nova entidade pode entrar em IA;
@@ -740,9 +740,9 @@ NightGameOverController
 
 | Sistema | Política |
 |---|---|
-| Hotbar | Disponível. |
+| Lanterna | Disponível. |
 | Lanterna Halógena | Disponível se o item tiver sido encontrado. |
-| Óleo | Mantido no escopo atual da Hotbar. |
+| Óleo | Mantido no escopo; usado somente no sótão, na Noite, sem relação com a defesa. |
 | Documentos | Indisponíveis. |
 | Backpack | Indisponível. |
 | Debug F8 | Disponível; congela IA e timers. |
@@ -759,7 +759,7 @@ Ao abrir F8:
 
 ### 15.3 Jumpscare
 
-Adicionar `InputBlockReason.GameOver` ao enum. Durante jumpscare, nenhum input de gameplay, Hotbar, F8 ou retorno pode competir com o fluxo.
+Adicionar `InputBlockReason.GameOver` ao enum. Durante jumpscare, nenhum input de gameplay, lanterna, F8 ou retorno pode competir com o fluxo.
 
 ---
 
@@ -769,7 +769,8 @@ Adicionar `InputBlockReason.GameOver` ao enum. Durante jumpscare, nenhum input d
 
 A validação de boot deve bloquear a cena se:
 
-- `GameplaySceneDefinition.period == Night` e `nightEntityProfile` está nulo;
+- `GameplaySceneDefinition.period == Night` e o `nightEntityProfile` padrão está nulo;
+- algum perfil alcançável (padrão ou `nightEntityProfilesByDay`) não passa na validação de perfil/bindings. Todos os perfis da lista são validados no boot, não só o da Noite atual;
 - perfil não contém exatamente uma entrada válida para Predator e Voyeur no primeiro slice;
 - `entityId` está vazio ou duplicado;
 - curva de dificuldade não possui seis valores ou contém valor fora de `0..20`;
@@ -898,15 +899,15 @@ Nomes finais podem ser consolidados em menos arquivos sem misturar responsabilid
 
 | Arquivo | Alteração planejada |
 |---|---|
-| `Scene/GameplaySceneDefinition.cs` | Campo `nightEntityProfile` válido somente em Noite. |
+| `Scene/GameplaySceneDefinition.cs` | Campo `nightEntityProfile` (padrão) válido somente em Noite, mais a lista opcional `nightEntityProfilesByDay` (índice 0 = Noite do Dia 1; Dias além do fim reutilizam o último; entrada vazia cai no padrão), resolvida por `ResolveNightEntityProfile(day)` no `EntityDirector.Initialize`. |
 | `Scene/GameplaySceneController.cs` | Boot/validação noturna, referência ao diretor e fluxo `NightFailure`. |
 | `Session/GameSessionManager.cs` | Operação explícita de falha noturna sem save, retornando ao checkpoint do Dia. |
 | `Core/InputBlockReason.cs` | Adicionar `GameOver`. |
 | `Navigation/NavigationManager.cs` | Evento confiável de ViewNode apresentado/trocado. |
 | `Audio/SceneAudioController.cs` | API de áudio direto para estado de entidade e limpeza por entityId. |
 | `Audio/AudioAnchorDefinition.cs` | Campo `encounterViewNodeId`. |
-| `Hotbar/HotbarController.cs` | Remover UV/F; expor estado de Halógeno selecionado. |
-| `Hotbar/LanternEffect.cs` | Remover UV e expor cálculo de cobertura contra região. |
+| `Lantern/LanternController.cs` (antigo `Hotbar/HotbarController.cs`) | Remover UV/F e a seleção de ferramenta; expor estado de Halógeno ativo e cobertura. |
+| `Lantern/LanternEffect.cs` | Remover UV e expor cálculo de cobertura contra região. |
 | `UI/ModalUIController.cs` | Bloquear documentos durante Noite. |
 | `Backpack/BackpackController.cs` | Garantir indisponibilidade no período Night. |
 | `UI/CycleTestUI.cs` | Aba/controles completos de entidades, seed e game over real. |
@@ -1008,7 +1009,7 @@ Cada passo deve manter a cena segura: erro de conteúdo não pode manter `InputB
 ### Terminal, jumpscare e sessão
 
 - [ ] Terminal limpa a outra entidade e impede nova IA.
-- [ ] Terminal pendente ainda permite navegação/Hotbar, mas não nova resolução.
+- [ ] Terminal pendente ainda permite navegação/lanterna, mas não nova resolução.
 - [ ] Se dois Terminals surgirem no mesmo tick, um vencedor aleatório é escolhido de forma reproduzível pela seed.
 - [ ] 6 AM cancela Terminal pendente antes do jumpscare.
 - [ ] Jumpscare bloqueia todos os inputs e usa tempo não escalado.
