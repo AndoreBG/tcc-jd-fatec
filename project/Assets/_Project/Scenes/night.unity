@@ -6832,8 +6832,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.LanternEffect
   lightSprite: {fileID: -999114337931196057, guid: 51ae56ae12aa07d4cb0f0a8dd5312851, type: 3}
   targetCanvas: {fileID: 1393504266}
-  halogenRadius: 400
-  halogenColor: {r: 1, g: 0.93, b: 0.75, a: 0.78431374}
+  halogenRadius: 350
+  halogenColor: {r: 1, g: 0.7490196, b: 0, a: 0.13725491}
+  dischargeMinRadiusFactor: 0.95
+  darknessEnabled: 1
+  darknessColor: {r: 0, g: 0, b: 0, a: 0.9843137}
+  darknessMaterial: {fileID: 21000000, guid: 431c36749d824a159ad44a4c2eb00611, type: 2}
 --- !u!114 &1960000010
 MonoBehaviour:
   m_ObjectHideFlags: 0

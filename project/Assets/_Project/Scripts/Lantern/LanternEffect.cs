@@ -1,33 +1,81 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Sprites;
 using UnityEngine.UI;
 
 namespace Whispers
 {
     /// <summary>
-    /// Efeito visual da lanterna de dínamo Halógena (controlado pelo LanternController): halo radial que segue o
-    /// ponteiro do mouse sobre o VN apresentado (overlay suave, SEM escurecer a
-    /// cena). Não interage com hotspots nem com o InteractionManager. A cobertura
-    /// geométrica é exposta exclusivamente para a defesa do Voyeur, cuja transição
-    /// continua sob autoridade do EntityDirector. Sprite opcional via Inspector;
-    /// ausente, gera um gradiente radial procedural em runtime.
+    /// Efeito visual da lanterna de dínamo Halógena (controlado pelo LanternController): um ÚNICO
+    /// sistema composto de duas camadas de UI criadas em runtime no Canvas alvo:
+    ///
+    /// 1) Halo — Image com o sprite da lanterna que segue o cursor (glow quente);
+    /// 2) Escuridão — Image de tela cheia com o shader "Whispers/UI/LanternDarkness", que escurece
+    ///    todo o conteúdo abaixo dela (os ViewNodes em world space) EXCETO a área iluminada.
+    ///
+    /// A área iluminada é recortada pelo MESMO sprite do halo: o shader amostra o alpha da textura
+    /// do sprite exatamente no retângulo que o halo ocupa na tela (mesmo centro = cursor, mesmo
+    /// tamanho = raio efetivo). Ou seja, a forma do spot de luz — falloff, bordas, arte — vem da
+    /// mesma fonte visual, sem duplicação de parâmetros.
+    ///
+    /// Regras (documento de arquitetura §16.3):
+    /// - Não interage com hotspots nem com o InteractionManager: as duas camadas têm
+    ///   raycastTarget desligado e a cobertura geométrica é exposta exclusivamente para a
+    ///   defesa do Voyeur, cuja transição continua sob autoridade do EntityDirector.
+    /// - A escuridão acompanha a bateria: o raio encolhe conforme <see cref="dischargeMinRadiusFactor"/>
+    ///   e a intensidade zera a luz; com carga esgotada a cena fica completamente escura.
+    /// - Com qualquer bloqueio de gameplay a bateria congela (visual preservado); no GameOver
+    ///   (Hide) as duas camadas são escondidas juntas.
+    /// - Ambas as camadas ficam ABAIXO do restante da UI (TransitionCutout, modais, Debug F8,
+    ///   GameOverOverlay), para que os fades as cubram.
+    ///
+    /// Sprite do halo opcional via Inspector; ausente, gera um gradiente radial procedural em runtime
+    /// (que também passa a ser a máscara da escuridão).
     /// </summary>
     public class LanternEffect : MonoBehaviour
     {
+        private const string DarknessShaderName = "Whispers/UI/LanternDarkness";
+
+        private static readonly int DarknessCenterId = Shader.PropertyToID("_LanternDarknessCenter");
+        private static readonly int DarknessSizeId = Shader.PropertyToID("_LanternDarknessSize");
+        private static readonly int DarknessIntensityId = Shader.PropertyToID("_LanternLightIntensity");
+        private static readonly int LightTexId = Shader.PropertyToID("_LanternTex");
+        private static readonly int LightTexUVId = Shader.PropertyToID("_LanternTexUV");
+
         [Header("Configuração")]
-        [Tooltip("Sprite radial (gradiente). Vazio = gerado proceduralmente em runtime.")]
+        [Tooltip("Sprite do halo de luz (gradiente radial). Vazio = gerado proceduralmente em runtime. "
+               + "Este mesmo sprite também é a máscara que define a área iluminada da escuridão.")]
         [SerializeField] private Sprite lightSprite;
 
-        [Tooltip("Canvas de UI onde o halo é criado (padrão: canvas pai).")]
+        [Tooltip("Canvas de UI onde as camadas da lanterna são criadas (padrão: canvas pai).")]
         [SerializeField] private Canvas targetCanvas;
 
         [Header("Halógeno")]
         [SerializeField] private float halogenRadius = 240f;
         [SerializeField] private Color halogenColor = new Color(1f, 0.93f, 0.75f, 0.55f);
 
+        [Tooltip("Fator mínimo do raio do halo com a bateria zerada (0–1). "
+               + "0,35 = o halo encolhe até 35% do raio cheio conforme a bateria descarrega.")]
+        [Range(0f, 1f)]
+        [SerializeField] private float dischargeMinRadiusFactor = 0.35f;
+
+        [Header("Escurecimento")]
+        [Tooltip("Escurece a cena deixando iluminada somente a área do sprite da lanterna. "
+               + "Avaliado uma única vez no Awake (autoria por cena).")]
+        [SerializeField] private bool darknessEnabled;
+
+        [Tooltip("Cor e opacidade da escuridão fora da área iluminada.")]
+        [SerializeField] private Color darknessColor = new Color(0f, 0f, 0f, 0.93f);
+
+        [Tooltip("Material da camada de escuridão (shader 'Whispers/UI/LanternDarkness'). "
+               + "Vazio = localiza o shader em runtime via Shader.Find.")]
+        [SerializeField] private Material darknessMaterial;
+
         private Image _halo;
+        private Image _darkness;
+        private Material _darknessMat; // instância exclusiva: mutações de runtime não sujam o asset
         private float _currentIntensity = 1f;
-        private bool _visible; // Show/Hide é a autoridade; a intensidade só modula o halo visível.
+        private bool _visible; // Show/Hide é a autoridade; a intensidade só modula as camadas visíveis.
         private readonly Vector3[] _coverageCorners = new Vector3[4];
         private readonly HashSet<int> _coverageWarnings = new HashSet<int>();
 
@@ -35,7 +83,12 @@ namespace Whispers
         public bool IsHalogenActive => _visible && _halo != null && _halo.gameObject.activeInHierarchy && _currentIntensity > 0.01f;
         public float CurrentIntensity => _currentIntensity;
         public Canvas TargetCanvas => targetCanvas;
-        public float RadiusInCanvasSpace => Mathf.Max(0f, halogenRadius * Mathf.Lerp(0.35f, 1f, _currentIntensity));
+        public float DischargeMinRadiusFactor => dischargeMinRadiusFactor;
+
+        /// <summary>Raio efetivo do halo (unidades do Canvas), já modulado pela carga da bateria.</summary>
+        public float EffectiveRadius => halogenRadius * Mathf.Lerp(dischargeMinRadiusFactor, 1f, _currentIntensity);
+
+        public float RadiusInCanvasSpace => Mathf.Max(0f, EffectiveRadius);
         public Vector2 ScreenCenter => Input.mousePosition;
 
         /// <summary>Atualiza a intensidade do feixe de luz proporcional à carga da bateria do dínamo.</summary>
@@ -118,7 +171,7 @@ namespace Whispers
 
             const int slices = 64;
             float step = width / slices;
-            float effectiveRadius = halogenRadius * Mathf.Lerp(0.35f, 1f, _currentIntensity);
+            float effectiveRadius = EffectiveRadius;
             float radiusSquared = effectiveRadius * effectiveRadius;
             float intersection = 0f;
             for (int index = 0; index < slices; index++)
@@ -155,10 +208,10 @@ namespace Whispers
         private void Awake()
         {
             if (targetCanvas == null) targetCanvas = GetComponentInParent<Canvas>();
-            CreateHalo();
+            CreateVisuals();
         }
 
-        private void CreateHalo()
+        private void CreateVisuals()
         {
             if (targetCanvas == null)
             {
@@ -166,58 +219,135 @@ namespace Whispers
                 return;
             }
 
-            GameObject go = new GameObject("LanternHalo");
-            go.transform.SetParent(targetCanvas.transform, false);
-            // Primeiro filho = desenhado ABAIXO do restante da UI (TransitionCutout, modais).
-            // Assim os fades de transição/boot cobrem o halo em vez de deixá-lo por cima do preto.
-            go.transform.SetAsFirstSibling();
-            _halo = go.AddComponent<Image>();
+            // A escuridão é criada ANTES do halo: ao final, o halo fica como primeiro filho do Canvas
+            // (desenhado abaixo de toda a UI) e a escuridão logo acima dele — as duas camadas continuam
+            // cobertas pelo TransitionCutout, modais, Debug F8 e GameOverOverlay, conforme a arquitetura.
+            if (darknessEnabled) CreateDarkness();
+
+            GameObject haloGo = new GameObject("LanternHalo");
+            haloGo.transform.SetParent(targetCanvas.transform, false);
+            haloGo.transform.SetAsFirstSibling();
+            if (_darkness != null) _darkness.transform.SetSiblingIndex(haloGo.transform.GetSiblingIndex() + 1);
+
+            _halo = haloGo.AddComponent<Image>();
             _halo.sprite = lightSprite != null ? lightSprite : CreateRadialSprite();
             _halo.raycastTarget = false; // nunca intercepta o cursor
             _halo.gameObject.SetActive(false);
+
+            ApplyLightTextureToDarkness();
             ApplyHalogen();
         }
 
-        /// <summary>Exibe o halo Halógeno.</summary>
+        private void CreateDarkness()
+        {
+            Shader shader = darknessMaterial != null ? darknessMaterial.shader : null;
+            if (shader == null) shader = Shader.Find(DarknessShaderName);
+            if (shader == null)
+            {
+                Debug.LogWarning("[LanternEffect] Shader '" + DarknessShaderName + "' não encontrado; escurecimento desativado.", this);
+                return;
+            }
+
+            // Instância exclusiva do material: as mutações por frame (centro/tamanho/intensidade)
+            // não podem sujar o asset compartilhado no Editor. Com template, copia os valores autorados.
+            _darknessMat = darknessMaterial != null ? new Material(darknessMaterial) : new Material(shader);
+
+            GameObject darknessGo = new GameObject("LanternDarkness", typeof(RectTransform));
+            darknessGo.transform.SetParent(targetCanvas.transform, false);
+
+            RectTransform rt = (RectTransform)darknessGo.transform;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+
+            _darkness = darknessGo.AddComponent<Image>();
+            _darkness.material = _darknessMat;
+            _darkness.raycastTarget = false; // nunca intercepta o cursor
+            _darkness.gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// O recorte da escuridão usa a MESMA textura de sprite do halo: repassa a textura e a
+        /// sub-região UV (resolvida com o sprite procedural, quando houver) para o material.
+        /// </summary>
+        private void ApplyLightTextureToDarkness()
+        {
+            if (_darknessMat == null || _halo == null || _halo.sprite == null || _halo.sprite.texture == null) return;
+
+            _darknessMat.SetTexture(LightTexId, _halo.sprite.texture);
+            Vector4 outerUV = DataUtility.GetOuterUV(_halo.sprite); // (minU, minV, maxU, maxV)
+            _darknessMat.SetVector(LightTexUVId, new Vector4(outerUV.x, outerUV.y, outerUV.z - outerUV.x, outerUV.w - outerUV.y));
+        }
+
+        /// <summary>Exibe as camadas da lanterna (halo e, se habilitada, a escuridão).</summary>
         public void Show()
         {
             _visible = true;
             ApplyHalogen();
         }
 
-        /// <summary>Esconde o halo.</summary>
+        /// <summary>Esconde o halo e a escuridão.</summary>
         public void Hide()
         {
             _visible = false;
             if (_halo != null && _halo.gameObject.activeSelf) _halo.gameObject.SetActive(false);
+            if (_darkness != null && _darkness.gameObject.activeSelf) _darkness.gameObject.SetActive(false);
         }
 
         private void ApplyHalogen()
         {
-            if (_halo == null) return;
+            bool haloActive = _visible && _currentIntensity > 0.001f;
+            float effectiveRadius = EffectiveRadius;
 
-            if (!_visible || _currentIntensity <= 0.001f)
+            if (_halo != null)
             {
-                if (_halo.gameObject.activeSelf)
+                if (haloActive)
+                {
+                    if (!_halo.gameObject.activeSelf)
+                        _halo.gameObject.SetActive(true);
+
+                    RectTransform rt = (RectTransform)_halo.transform;
+                    rt.sizeDelta = new Vector2(effectiveRadius * 2f, effectiveRadius * 2f);
+
+                    Color c = halogenColor;
+                    c.a = halogenColor.a * _currentIntensity;
+                    _halo.color = c;
+                }
+                else if (_halo.gameObject.activeSelf)
+                {
                     _halo.gameObject.SetActive(false);
+                }
+            }
+
+            // Escuridão vive junto com o halo: exibida enquanto a lanterna estiver visível,
+            // com o MESMO retângulo do halo (centro = cursor, diâmetro = raio efetivo × 2).
+            // A intensidade da bateria modula a máscara: sem carga, a cena escurece por completo.
+            if (_darkness == null) return;
+
+            if (!_visible)
+            {
+                if (_darkness.gameObject.activeSelf) _darkness.gameObject.SetActive(false);
                 return;
             }
 
-            if (!_halo.gameObject.activeSelf)
-                _halo.gameObject.SetActive(true);
+            _darkness.color = darknessColor;
+            if (_darknessMat != null)
+            {
+                _darknessMat.SetFloat(DarknessSizeId, Mathf.Max(effectiveRadius * 2f, 0.0001f));
+                _darknessMat.SetFloat(DarknessIntensityId, _currentIntensity);
+            }
 
-            float effectiveRadius = halogenRadius * Mathf.Lerp(0.35f, 1f, _currentIntensity);
-            RectTransform rt = (RectTransform)_halo.transform;
-            rt.sizeDelta = new Vector2(effectiveRadius * 2f, effectiveRadius * 2f);
-
-            Color c = halogenColor;
-            c.a = halogenColor.a * _currentIntensity;
-            _halo.color = c;
+            if (!_darkness.gameObject.activeSelf) _darkness.gameObject.SetActive(true);
         }
 
         private void Update()
         {
-            if (_halo == null || !_halo.gameObject.activeSelf || targetCanvas == null) return;
+            if (targetCanvas == null) return;
+
+            bool haloActive = _halo != null && _halo.gameObject.activeSelf;
+            bool darknessActive = _darkness != null && _darkness.gameObject.activeSelf;
+            if (!haloActive && !darknessActive) return;
 
             RectTransform canvasRect = targetCanvas.transform as RectTransform;
             if (canvasRect == null) return;
@@ -225,9 +355,24 @@ namespace Whispers
                 ? null
                 : ResolveCanvasCamera(targetCanvas);
             Vector2 localPoint;
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
                     canvasRect, Input.mousePosition, camera, out localPoint))
+                return;
+
+            // Mesmo centro para as duas camadas: o spot iluminado coincide exatamente com o sprite do halo.
+            if (haloActive)
                 ((RectTransform)_halo.transform).anchoredPosition = localPoint;
+
+            if (darknessActive && _darknessMat != null)
+                _darknessMat.SetVector(DarknessCenterId, localPoint);
+        }
+
+        private void OnDestroy()
+        {
+            if (_darkness != null && _darkness.gameObject != null) Destroy(_darkness.gameObject);
+            if (_darknessMat != null) Destroy(_darknessMat);
+            _darkness = null;
+            _darknessMat = null;
         }
 
         /// <summary>Gradiente radial branco (colorido pelo tint Halógeno).</summary>
