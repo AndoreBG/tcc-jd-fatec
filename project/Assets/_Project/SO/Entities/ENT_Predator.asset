@@ -15,8 +15,43 @@ MonoBehaviour:
   entityId: predator
   displayName: Predator
   allowedAnchorCategory: 1
-  stateAudio: []
+  stateAudio:
+  - state: 2
+    enterSfxClip: {fileID: 8300000, guid: 978c9f2c941671845b53791d7f1806c3, type: 3}
+    enterSfxVolume: 1
+    presenceLoopClip: {fileID: 0}
+    presenceLoopVolume: 0
+    fadeInSeconds: 0
+    fadeOutSeconds: 0
+  - state: 3
+    enterSfxClip: {fileID: 8300000, guid: e1be3436097edf742a94353b6fe95347, type: 3}
+    enterSfxVolume: 1
+    presenceLoopClip: {fileID: 0}
+    presenceLoopVolume: 0
+    fadeInSeconds: 0
+    fadeOutSeconds: 0
+  - state: 4
+    enterSfxClip: {fileID: 0}
+    enterSfxVolume: 0
+    presenceLoopClip: {fileID: 8300000, guid: a1f4559aea83e1644a85f84da93a1fe9, type: 3}
+    presenceLoopVolume: 1
+    fadeInSeconds: 0
+    fadeOutSeconds: 0
+  - state: 5
+    enterSfxClip: {fileID: 8300000, guid: 40b3ce95fa047d14a94dd49fb6862c58, type: 3}
+    enterSfxVolume: 1
+    presenceLoopClip: {fileID: 0}
+    presenceLoopVolume: 0
+    fadeInSeconds: 0
+    fadeOutSeconds: 0
+  - state: 6
+    enterSfxClip: {fileID: 8300000, guid: cf8fc4d2487cdc94f8c76f7110c245f1, type: 3}
+    enterSfxVolume: 1
+    presenceLoopClip: {fileID: 0}
+    presenceLoopVolume: 0
+    fadeInSeconds: 0
+    fadeOutSeconds: 0
   jumpscare:
     fullscreenSprite: {fileID: 0}
-    jumpscareSfx: {fileID: 0}
+    jumpscareSfx: {fileID: 8300000, guid: 5f23264f79138cc4a8cac98531dc0b98, type: 3}
     durationSeconds: 2.5

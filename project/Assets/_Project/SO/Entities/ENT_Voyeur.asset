@@ -15,9 +15,51 @@ MonoBehaviour:
   entityId: voyeur
   displayName: Voyeur
   allowedAnchorCategory: 0
-  stateAudio: []
+  stateAudio:
+  - state: 1
+    enterSfxClip: {fileID: 8300000, guid: 6b2da4889086eb5419d670ff039760ba, type: 3}
+    enterSfxVolume: 1
+    presenceLoopClip: {fileID: 0}
+    presenceLoopVolume: 0
+    fadeInSeconds: 0
+    fadeOutSeconds: 0
+  - state: 2
+    enterSfxClip: {fileID: 8300000, guid: 264dd63e73384d14881549da169eb470, type: 3}
+    enterSfxVolume: 1
+    presenceLoopClip: {fileID: 0}
+    presenceLoopVolume: 0
+    fadeInSeconds: 0
+    fadeOutSeconds: 0
+  - state: 3
+    enterSfxClip: {fileID: 8300000, guid: 5e98ccbddce50e34ab7c133cc0f13787, type: 3}
+    enterSfxVolume: 1
+    presenceLoopClip: {fileID: 0}
+    presenceLoopVolume: 0
+    fadeInSeconds: 0
+    fadeOutSeconds: 0.5
+  - state: 4
+    enterSfxClip: {fileID: 8300000, guid: f1229ec5837664f4eb64c97b3d885031, type: 3}
+    enterSfxVolume: 1
+    presenceLoopClip: {fileID: 0}
+    presenceLoopVolume: 0
+    fadeInSeconds: 0
+    fadeOutSeconds: 0
+  - state: 5
+    enterSfxClip: {fileID: 8300000, guid: 7a63642c2450b234b88acb543bc89b11, type: 3}
+    enterSfxVolume: 1
+    presenceLoopClip: {fileID: 0}
+    presenceLoopVolume: 0
+    fadeInSeconds: 0
+    fadeOutSeconds: 0
+  - state: 6
+    enterSfxClip: {fileID: 8300000, guid: 0c64a124ff292ac4ba8b70ca142ac633, type: 3}
+    enterSfxVolume: 1
+    presenceLoopClip: {fileID: 0}
+    presenceLoopVolume: 0
+    fadeInSeconds: 0
+    fadeOutSeconds: 0
   jumpscare:
-    fullscreenSprite: {fileID: 0}
-    jumpscareSfx: {fileID: 0}
+    fullscreenSprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+    jumpscareSfx: {fileID: 8300000, guid: 2bdb95ef6c1308f408ae8a1eec9884a9, type: 3}
     durationSeconds: 2.5
   minimumLanternCoverage: 0.5

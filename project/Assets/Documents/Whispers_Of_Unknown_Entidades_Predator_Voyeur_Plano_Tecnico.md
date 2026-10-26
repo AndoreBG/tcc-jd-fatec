@@ -143,7 +143,7 @@ Resolved
 Terminal
 ```
 
-O enum atual `ThreatAudioState` continuará sendo uma apresentação de áudio e não será usado como estado completo de gameplay. Uma camada de mapeamento deverá associar os estados audíveis a `ThreatAudioState` quando necessário:
+~~O enum atual `ThreatAudioState` continuará sendo uma apresentação de áudio e não será usado como estado completo de gameplay. Uma camada de mapeamento deverá associar os estados audíveis a `ThreatAudioState` quando necessário:~~
 
 ```text
 Inactive / Resolved  → Inactive
@@ -152,6 +152,8 @@ Near                 → Near
 Critical             → Critical
 Resolving / Terminal → Critical ou reprodução direta da entidade
 ```
+
+> **ERRATA (2026-10-24):** o mapeamento acima foi aposentado junto com `ThreatAudioState`. O estado de áudio de entidade passou a registrar o próprio `EntityState` no modelo unificado (`AudioEntityRuntimeState.entityState`), com emissor único `entity:{id}` compartilhado entre produção e F8. Ver `Whispers_Of_Unknown_Audio_Unificacao_Entidade_Debug_Plano.md`.
 
 A reprodução nova deverá aceitar clips diretos da definição, sem depender do `AudioDebugCatalog`.
 

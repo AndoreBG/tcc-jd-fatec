@@ -65,16 +65,10 @@ namespace Whispers
         Window,
         Door,
         Room,
+        Bedroom,
+        Loft,
         Exterior,
         Other
-    }
-
-    public enum ThreatAudioState
-    {
-        Inactive,
-        Light,
-        Near,
-        Critical
     }
 
     public enum TransitionSfxTiming

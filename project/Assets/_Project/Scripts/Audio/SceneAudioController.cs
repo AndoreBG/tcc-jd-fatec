@@ -81,6 +81,9 @@ namespace Whispers
         private readonly Dictionary<string, RuntimeVoice> _continuousVoices = new Dictionary<string, RuntimeVoice>();
         private readonly Dictionary<string, RuntimeVoice> _persistentVoices = new Dictionary<string, RuntimeVoice>();
         private readonly Dictionary<string, AudioEntityRuntimeState> _entities = new Dictionary<string, AudioEntityRuntimeState>();
+        // Entidades cujo registro foi criado pela simulação do F8 (sem produção).
+        // A produção remove a marca ao reivindicar a entidade em ApplyEntityStateAudio.
+        private readonly HashSet<string> _debugOwnedEntities = new HashSet<string>(StringComparer.Ordinal);
         private readonly List<RuntimeVoice> _allVoices = new List<RuntimeVoice>();
         private readonly List<RuntimeVoice> _oneShotVoices = new List<RuntimeVoice>();
         private readonly Dictionary<string, RuntimeVoice> _localVoices = new Dictionary<string, RuntimeVoice>();
@@ -1208,12 +1211,16 @@ namespace Whispers
                                          " " + detail + " autorado; a lógica continua sem áudio.", this);
                     }
                 }
+                UnregisterEntityAudioState(entityId);
                 BeginEntityAudioTransition(entityId, null, null, EntityState.Inactive, false);
                 return true;
             }
 
             // Light ainda não possui anchor, porém seu SFX de entrada é autorado e
             // deve tocar. Loops permanecem restritos a estados com perspectiva.
+            // O registro do estado unificado acontece sincronamente: qualquer
+            // override de debug ativo é revogado e o F8 passa a refletir a produção.
+            RegisterEntityAudioState(entityId, anchorId, state);
             BeginEntityAudioTransition(entityId, anchorId, presentation, state, hasLoop);
             return true;
         }
@@ -1222,6 +1229,7 @@ namespace Whispers
         public void ClearEntityAudio(string entityId)
         {
             if (string.IsNullOrWhiteSpace(entityId)) return;
+            UnregisterEntityAudioState(entityId);
             StopEntityOneShots(entityId);
             BeginEntityAudioTransition(entityId, null, null, EntityState.Inactive, false);
         }
@@ -1230,6 +1238,7 @@ namespace Whispers
         public void ClearEntityAudioImmediate(string entityId)
         {
             if (string.IsNullOrWhiteSpace(entityId)) return;
+            UnregisterEntityAudioState(entityId);
             string emitterId = "entity:" + entityId;
             Coroutine routine;
             if (_entityAudioRoutines.TryGetValue(emitterId, out routine) && routine != null)
@@ -1271,6 +1280,40 @@ namespace Whispers
             }
         }
 
+        /// <summary>
+        /// Registra o estado unificado de áudio da entidade ("entity:{id}"). Sempre
+        /// revoga override de debug: a produção é a fonte de verdade e passa a ser
+        /// refletida pelo painel F8 no próximo GetDebugSnapshot.
+        /// </summary>
+        private void RegisterEntityAudioState(string entityId, string anchorId, EntityState state)
+        {
+            AudioEntityRuntimeState entity;
+            if (!_entities.TryGetValue(entityId, out entity))
+            {
+                entity = new AudioEntityRuntimeState { entityId = entityId };
+                _entities.Add(entityId, entity);
+            }
+            entity.anchorId = anchorId;
+            entity.entityState = state;
+            entity.debugSignalId = null;
+            _debugOwnedEntities.Remove(entityId);
+        }
+
+        private void UnregisterEntityAudioState(string entityId)
+        {
+            _entities.Remove(entityId);
+            _debugOwnedEntities.Remove(entityId);
+        }
+
+        /// <summary>Interrompe a transição em corrotina do emissor unificado, se houver.</summary>
+        private void StopEntityTransitionRoutine(string emitterId)
+        {
+            Coroutine routine;
+            if (_entityAudioRoutines.TryGetValue(emitterId, out routine) && routine != null)
+                StopCoroutine(routine);
+            _entityAudioRoutines.Remove(emitterId);
+        }
+
         private void BeginEntityAudioTransition(string entityId, string anchorId,
             EntityStateAudioPresentation presentation, EntityState state, bool allowLoop)
         {
@@ -1282,9 +1325,7 @@ namespace Whispers
                 SetPersistentEmitter(emitterId, null, AudioSourceRole.Threats, null, false);
                 return;
             }
-            Coroutine routine;
-            if (_entityAudioRoutines.TryGetValue(emitterId, out routine) && routine != null)
-                StopCoroutine(routine);
+            StopEntityTransitionRoutine(emitterId);
             _entityAudioRoutines[emitterId] = StartCoroutine(TransitionEntityAudio(
                 emitterId, entityId, anchorId, presentation, state, allowLoop));
         }
@@ -1336,98 +1377,6 @@ namespace Whispers
             VoiceTarget target = CalculateTarget(voice, _currentProfile);
             yield return FadeVoiceToTarget(voice, target, Mathf.Max(0f, presentation.fadeInSeconds));
             _entityAudioRoutines.Remove(emitterId);
-        }
-
-        public bool SetThreatState(string entityId, string anchorId, ThreatAudioState state)
-        {
-            if (string.IsNullOrWhiteSpace(entityId)) return false;
-            EnsureInitialized();
-
-            if (state == ThreatAudioState.Inactive)
-            {
-                ClearThreatState(entityId);
-                return true;
-            }
-
-            if (string.IsNullOrWhiteSpace(anchorId))
-            {
-                Debug.LogWarning($"[SceneAudioController] A entidade '{entityId}' precisa de anchorId.", this);
-                return false;
-            }
-
-            AudioEntityRuntimeState entity;
-            if (!_entities.TryGetValue(entityId, out entity))
-            {
-                entity = new AudioEntityRuntimeState { entityId = entityId };
-                _entities.Add(entityId, entity);
-            }
-
-            entity.activeAnchorId = anchorId;
-            entity.threatState = state;
-            entity.isActive = true;
-
-            RuntimeVoice voice = AcquirePersistentVoice("threat:" + entityId, AudioSourceRole.Threats);
-            if (voice == null) return false;
-            voice.anchorId = anchorId;
-            voice.emitterId = entityId;
-            ApplyTarget(voice, CalculateTarget(voice, _currentProfile));
-            return true;
-        }
-
-        public void ClearThreatState(string entityId)
-        {
-            if (string.IsNullOrWhiteSpace(entityId)) return;
-            _entities.Remove(entityId);
-
-            RuntimeVoice voice;
-            if (_persistentVoices.TryGetValue("threat:" + entityId, out voice))
-            {
-                ReleasePersistentVoice(voice);
-                _persistentVoices.Remove("threat:" + entityId);
-            }
-        }
-
-        public bool PlayThreatSignal(string entityId, string signalId)
-        {
-            AudioEntityRuntimeState entity;
-            if (!_entities.TryGetValue(entityId, out entity) || !entity.isActive)
-            {
-                Debug.LogWarning($"[SceneAudioController] Entidade '{entityId}' não está ativa.", this);
-                return false;
-            }
-
-            AudioDebugEntry entry = debugCatalog != null ? debugCatalog.Find(signalId) : null;
-            if (entry == null)
-            {
-                Debug.LogWarning($"[SceneAudioController] Sinal de ameaça não encontrado: '{signalId}'.", this);
-                return false;
-            }
-
-            RuntimeVoice voice = AcquirePersistentVoice("threat:" + entityId, AudioSourceRole.Threats);
-            if (voice == null) return false;
-            voice.anchorId = entity.activeAnchorId;
-            voice.emitterId = entityId;
-            voice.debugId = entry.id;
-            ConfigureVoice(voice, AudioSourceRole.Threats, entry.clip, entry.loop, entry.defaultVolume);
-            ApplyTarget(voice, CalculateTarget(voice, _currentProfile));
-
-            entity.currentSignalId = entry.id;
-            if (entry.clip == null)
-            {
-                Debug.LogWarning($"[SceneAudioController] Sinal '{signalId}' não possui AudioClip.", this);
-                return false;
-            }
-
-            if (entry.loop)
-            {
-                voice.source.Play();
-                voice.reserved = true;
-            }
-            else
-            {
-                voice.source.PlayOneShot(entry.clip);
-            }
-            return true;
         }
 
         public void SetMixState(AudioMixState state, bool immediate = false)
@@ -1536,36 +1485,155 @@ namespace Whispers
 
         public bool DebugStopAudio(string audioId) => StopCatalogEntry(audioId);
 
-        public bool DebugSetEntityAnchor(string entityId, string anchorId)
+        /// <summary>
+        /// [DEBUG F8] Simula a posição/estado audível de uma entidade ocupando o
+        /// mesmo emissor unificado "entity:{id}" usado pela produção — nunca cria
+        /// uma voz paralela. Simulação de apresentação: não altera IA, entidade
+        /// lógica, inventário ou save. Estados não apresentáveis desligam a simulação.
+        /// </summary>
+        public bool DebugSimulateEntityState(string entityId, string anchorId, EntityState state)
         {
-            if (string.IsNullOrWhiteSpace(entityId) || string.IsNullOrWhiteSpace(anchorId)) return false;
+            if (string.IsNullOrWhiteSpace(entityId)) return false;
+            EnsureInitialized();
+
+            if (state == EntityState.Inactive || state == EntityState.Resolved)
+            {
+                DebugClearEntityAudio(entityId);
+                return true;
+            }
+
+            if (string.IsNullOrWhiteSpace(anchorId))
+            {
+                Debug.LogWarning($"[SceneAudioController] A entidade '{entityId}' precisa de anchorId para simulação sonora.", this);
+                return false;
+            }
+
             AudioEntityRuntimeState entity;
             if (!_entities.TryGetValue(entityId, out entity))
             {
-                entity = new AudioEntityRuntimeState
-                {
-                    entityId = entityId,
-                    threatState = ThreatAudioState.Light,
-                    isActive = true
-                };
+                entity = new AudioEntityRuntimeState { entityId = entityId };
                 _entities.Add(entityId, entity);
+                _debugOwnedEntities.Add(entityId);
             }
+            entity.anchorId = anchorId;
+            entity.entityState = state;
 
-            entity.activeAnchorId = anchorId;
-            entity.isActive = true;
-            if (entity.threatState == ThreatAudioState.Inactive) entity.threatState = ThreatAudioState.Light;
-            return SetThreatState(entityId, anchorId, entity.threatState);
+            // Uma voz por entidade: interrompe transição de produção em andamento
+            // e reutiliza a voz persistente já existente, se houver.
+            string emitterId = "entity:" + entityId;
+            StopEntityTransitionRoutine(emitterId);
+            RuntimeVoice voice = AcquirePersistentVoice(emitterId, AudioSourceRole.Threats);
+            if (voice == null) return false;
+            voice.anchorId = anchorId;
+            ApplyTarget(voice, CalculateTarget(voice, _currentProfile));
+            return true;
         }
 
-        public bool DebugSetThreatState(string entityId, ThreatAudioState state)
+        /// <summary>
+        /// [DEBUG F8] Reproduz um sinal do AudioDebugCatalog na voz unificada da
+        /// entidade, substituindo — nunca somando — qualquer áudio de produção em
+        /// curso. O override fica marcado em debugSignalId até DebugClearEntityAudio
+        /// ou até a próxima transição real de produção.
+        /// </summary>
+        public bool DebugPlayEntitySignal(string entityId, string anchorId, string signalId, out string error)
         {
-            AudioEntityRuntimeState entity;
-            if (!_entities.TryGetValue(entityId, out entity) || string.IsNullOrWhiteSpace(entity.activeAnchorId))
+            error = null;
+            if (string.IsNullOrWhiteSpace(entityId))
             {
-                Debug.LogWarning($"[SceneAudioController] Configure o anchor da entidade '{entityId}' antes do estado.", this);
+                error = "entityId vazio.";
                 return false;
             }
-            return SetThreatState(entityId, entity.activeAnchorId, state);
+            EnsureInitialized();
+
+            AudioDebugEntry entry = debugCatalog != null ? debugCatalog.Find(signalId) : null;
+            if (entry == null)
+            {
+                error = $"Sinal '{signalId}' não encontrado no AudioDebugCatalog.";
+                Debug.LogWarning("[SceneAudioController] " + error, this);
+                return false;
+            }
+            if (entry.clip == null)
+            {
+                error = $"Sinal '{signalId}' não possui AudioClip.";
+                Debug.LogWarning("[SceneAudioController] " + error, this);
+                return false;
+            }
+
+            AudioEntityRuntimeState entity;
+            if (!_entities.TryGetValue(entityId, out entity))
+            {
+                entity = new AudioEntityRuntimeState { entityId = entityId };
+                _entities.Add(entityId, entity);
+                _debugOwnedEntities.Add(entityId);
+            }
+
+            string resolvedAnchor = !string.IsNullOrWhiteSpace(anchorId) ? anchorId : entity.anchorId;
+            if (string.IsNullOrWhiteSpace(resolvedAnchor))
+            {
+                error = $"Configure o anchor da entidade '{entityId}' antes do sinal.";
+                Debug.LogWarning("[SceneAudioController] " + error, this);
+                return false;
+            }
+
+            entity.anchorId = resolvedAnchor;
+            if (entity.entityState == EntityState.Inactive || entity.entityState == EntityState.Resolved)
+                entity.entityState = EntityState.Light;
+
+            // Substituição imediata na mesma voz unificada: libera o que estiver
+            // ocupando "entity:{id}" (loop de produção ou sinal anterior) e instala
+            // o sinal do catálogo. Nenhum segundo emissor é criado.
+            string emitterId = "entity:" + entityId;
+            StopEntityTransitionRoutine(emitterId);
+            RuntimeVoice previous;
+            if (_persistentVoices.TryGetValue(emitterId, out previous) && previous != null)
+                ReleasePersistentVoice(previous);
+
+            RuntimeVoice voice = AcquirePersistentVoice(emitterId, AudioSourceRole.Threats);
+            if (voice == null)
+            {
+                error = "Pool de fontes persistentes esgotado.";
+                return false;
+            }
+
+            ConfigureVoice(voice, AudioSourceRole.Threats, entry.clip, entry.loop,
+                Mathf.Max(0f, entry.defaultVolume));
+            voice.anchorId = resolvedAnchor;
+            voice.debugId = entry.id;
+            entity.debugSignalId = entry.id;
+            ApplyTarget(voice, CalculateTarget(voice, _currentProfile));
+
+            if (entry.loop) voice.source.Play();
+            else voice.source.PlayOneShot(entry.clip);
+            return true;
+        }
+
+        /// <summary>
+        /// [DEBUG F8] Encerra o áudio de debug da entidade. Se a entrada foi criada
+        /// pela simulação, ela é removida; se pertence à produção, apenas o override
+        /// é descartado e a apresentação real retorna na próxima transição do
+        /// EntityDirector, que reaplica ApplyEntityStateAudio.
+        /// </summary>
+        public void DebugClearEntityAudio(string entityId)
+        {
+            if (string.IsNullOrWhiteSpace(entityId)) return;
+
+            string emitterId = "entity:" + entityId;
+            StopEntityTransitionRoutine(emitterId);
+            StopEntityOneShots(entityId);
+
+            RuntimeVoice voice;
+            if (_persistentVoices.TryGetValue(emitterId, out voice) && voice != null)
+                ReleasePersistentVoice(voice);
+
+            if (_debugOwnedEntities.Contains(entityId))
+            {
+                UnregisterEntityAudioState(entityId);
+                return;
+            }
+
+            AudioEntityRuntimeState entity;
+            if (_entities.TryGetValue(entityId, out entity))
+                entity.debugSignalId = null;
         }
 
         public AudioDebugSnapshot GetDebugSnapshot()
@@ -1591,7 +1659,14 @@ namespace Whispers
 
             List<AudioEntityRuntimeState> entities = new List<AudioEntityRuntimeState>();
             foreach (AudioEntityRuntimeState entity in _entities.Values)
-                entities.Add(entity.Copy());
+            {
+                AudioEntityRuntimeState copy = entity.Copy();
+                RuntimeVoice entityVoice;
+                if (_persistentVoices.TryGetValue("entity:" + copy.entityId, out entityVoice) &&
+                    entityVoice != null && entityVoice.source != null && entityVoice.source.clip != null)
+                    copy.currentClipName = entityVoice.source.clip.name;
+                entities.Add(copy);
+            }
 
             return new AudioDebugSnapshot
             {

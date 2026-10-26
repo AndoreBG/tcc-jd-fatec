@@ -9,6 +9,8 @@
 > **Linguagem:** C#  
 > **Escopo:** Vertical Slice 4 — Áudio, integração e debug em runtime
 
+> **⚠ ERRATA (2026-10-24):** a API de ameaças de debug aqui especificada (`ThreatAudioState`, `SetThreatState`, `ClearThreatState`, `PlayThreatSignal`, `DebugSetEntityAnchor`, `DebugSetThreatState`, emissores `threat:{id}`) foi **substituída** pela unificação de áudio de entidades descrita em `Whispers_Of_Unknown_Audio_Unificacao_Entidade_Debug_Plano.md`: modelo único com `EntityState` + `debugSignalId`, emissor único `entity:{id}` e endpoints `DebugSimulateEntityState`/`DebugPlayEntitySignal`/`DebugClearEntityAudio`. As demais seções deste documento (perfis por ViewNode, perspectivas, mixer, snapshots) permanecem vigentes.
+
 ---
 
 ## 0. Como este documento deve ser usado por um AI agent

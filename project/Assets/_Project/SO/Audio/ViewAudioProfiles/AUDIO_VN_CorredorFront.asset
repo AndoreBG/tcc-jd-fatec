@@ -37,23 +37,14 @@ MonoBehaviour:
     volumeMultiplier: 1
     occlusion: 0.15
     lowPassFrequency: 9000
-    reverbSend: 0.308
-  - anchorId: window_quarto
-    isAudible: 1
-    direction: 6
-    distance: 1
-    pan: 0.5
-    volumeMultiplier: 1
-    occlusion: 0.302
-    lowPassFrequency: 1500
-    reverbSend: 0.6
+    reverbSend: 0.918
   - anchorId: window_corredor
     isAudible: 1
     direction: 4
-    distance: 2
+    distance: 0
     pan: 0
-    volumeMultiplier: 1.2
+    volumeMultiplier: 1.3
     occlusion: 0
-    lowPassFrequency: 12000
-    reverbSend: 0.195
+    lowPassFrequency: 22000
+    reverbSend: 0.862
   localLayers: []

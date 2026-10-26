@@ -22,9 +22,10 @@ namespace Whispers
             EntityState.Inactive, EntityState.Light, EntityState.Near,
             EntityState.Critical, EntityState.Resolving, EntityState.Resolved
         };
-        private static readonly ThreatAudioState[] DebugThreatStates =
+        private static readonly EntityState[] DebugEntityStates =
         {
-            ThreatAudioState.Light, ThreatAudioState.Near, ThreatAudioState.Critical
+            EntityState.Light, EntityState.Near, EntityState.Critical,
+            EntityState.Resolving, EntityState.Terminal
         };
 
         [SerializeField] private GameplaySceneController scene;
@@ -41,7 +42,7 @@ namespace Whispers
         private string _selectedSignalId;
         private Vector2 _scroll;
         private DebugTab _tab;
-        private ThreatAudioState _selectedThreatState = ThreatAudioState.Light;
+        private EntityState _selectedEntityState = EntityState.Light;
         private string _debugNightEntityId = "predator";
         private string _debugNightAnchorId;
         private string _debugSeedText;
@@ -442,7 +443,7 @@ namespace Whispers
 
             DrawAudioState(audio);
             DrawAudioLibrary(audio);
-            DrawThreatSimulation(audio);
+            DrawEntityAudioSimulation(audio);
             DrawViewProfiles(audio);
             DrawAudioMix(audio);
         }
@@ -470,8 +471,16 @@ namespace Whispers
             if (snapshot.entities != null)
             {
                 foreach (AudioEntityRuntimeState entity in snapshot.entities)
-                    GUILayout.Label($"Entidade {entity.entityId} | {entity.threatState} | " +
-                        $"anchor {entity.activeAnchorId} | sinal {entity.currentSignalId}");
+                {
+                    string debugTag = string.IsNullOrWhiteSpace(entity.debugSignalId)
+                        ? string.Empty
+                        : $" | sinal [DEBUG] {entity.debugSignalId}";
+                    string clipTag = string.IsNullOrWhiteSpace(entity.currentClipName)
+                        ? string.Empty
+                        : $" | clip {entity.currentClipName}";
+                    GUILayout.Label($"Entidade {entity.entityId} | {entity.entityState} | " +
+                        $"anchor {entity.anchorId}{debugTag}{clipTag}");
+                }
             }
             GUILayout.EndVertical();
         }
@@ -513,13 +522,15 @@ namespace Whispers
             GUILayout.EndVertical();
         }
 
-        private void DrawThreatSimulation(SceneAudioController audio)
+        private void DrawEntityAudioSimulation(SceneAudioController audio)
         {
             GUILayout.BeginVertical(GUI.skin.box);
-            GUILayout.Label("PONTOS DE PERIGO — UMA ENTIDADE, UM ANCHOR");
+            GUILayout.Label("ÁUDIO DE ENTIDADE — SIMULAÇÃO");
+            GUILayout.Label("Simulação de APRESENTAÇÃO sonora: ocupa a mesma voz da produção " +
+                "e não altera IA, entidade lógica, inventário ou save.");
             GUILayout.Label("Entidade: " + debugEntityId);
             GUILayout.Label("Anchor selecionado: " + _selectedAnchorId);
-            GUILayout.Label("Estado selecionado: " + _selectedThreatState);
+            GUILayout.Label("Estado selecionado: " + _selectedEntityState);
 
             GUILayout.BeginHorizontal();
             if (debugAnchorIds != null)
@@ -532,36 +543,39 @@ namespace Whispers
             }
             GUILayout.EndHorizontal();
 
-            if (GUILayout.Button("Ativar entidade no anchor selecionado"))
+            if (GUILayout.Button("Posicionar entidade no anchor selecionado"))
             {
-                bool ok = audio.DebugSetEntityAnchor(debugEntityId, _selectedAnchorId);
+                bool ok = audio.DebugSimulateEntityState(debugEntityId, _selectedAnchorId, _selectedEntityState);
                 _audioMessage = ok
-                    ? $"{debugEntityId} ativo em {_selectedAnchorId}."
+                    ? $"{debugEntityId} em {_selectedAnchorId} ({_selectedEntityState})."
                     : "Não foi possível configurar a entidade.";
             }
 
             GUILayout.BeginHorizontal();
-            foreach (ThreatAudioState state in DebugThreatStates)
+            foreach (EntityState state in DebugEntityStates)
             {
                 if (GUILayout.Button(state.ToString()))
                 {
-                    _selectedThreatState = state;
-                    bool ok = audio.DebugSetThreatState(debugEntityId, state);
-                    _audioMessage = ok ? "Estado aplicado: " + state : "Configure o anchor antes do estado.";
+                    _selectedEntityState = state;
+                    bool ok = audio.DebugSimulateEntityState(debugEntityId, _selectedAnchorId, state);
+                    _audioMessage = ok ? "Estado simulado: " + state : "Configure o anchor antes do estado.";
                 }
             }
             if (GUILayout.Button("Desativar"))
             {
-                audio.ClearThreatState(debugEntityId);
-                _audioMessage = "Entidade desativada.";
+                audio.DebugClearEntityAudio(debugEntityId);
+                _audioMessage = "Áudio de debug da entidade encerrado.";
             }
             GUILayout.EndHorizontal();
 
             GUILayout.Label("Sinal selecionado: " + (_selectedSignalId ?? "nenhum"));
             if (!string.IsNullOrWhiteSpace(_selectedSignalId) && GUILayout.Button("Reproduzir sinal na entidade"))
             {
-                bool ok = audio.PlayThreatSignal(debugEntityId, _selectedSignalId);
-                _audioMessage = ok ? "Sinal reproduzido." : "Não foi possível reproduzir o sinal.";
+                string error;
+                bool ok = audio.DebugPlayEntitySignal(debugEntityId, _selectedAnchorId, _selectedSignalId, out error);
+                _audioMessage = ok
+                    ? "Sinal [DEBUG] reproduzido na voz da entidade (substitui o áudio atual)."
+                    : "Sinal não reproduzido: " + error;
             }
 
             AudioPerspectiveSnapshot perspective;

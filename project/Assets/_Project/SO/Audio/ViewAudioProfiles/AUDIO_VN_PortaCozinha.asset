@@ -28,5 +28,23 @@ MonoBehaviour:
     reverbSend: 0
   useDefaultForMissingPoints: 1
   layerPerspectives: []
-  pointPerspectives: []
+  pointPerspectives:
+  - anchorId: window_sala
+    isAudible: 1
+    direction: 0
+    distance: 0
+    pan: 0
+    volumeMultiplier: 1.7
+    occlusion: 0.179
+    lowPassFrequency: 22000
+    reverbSend: 0.646
+  - anchorId: window_corredor
+    isAudible: 1
+    direction: 5
+    distance: 2
+    pan: 0
+    volumeMultiplier: 0.9
+    occlusion: 0.185
+    lowPassFrequency: 11287
+    reverbSend: 0.944
   localLayers: []

@@ -24,24 +24,34 @@ namespace Whispers
         public float pan;
     }
 
+    /// <summary>
+    /// Estado unificado de áudio por entidade — uma entidade lógica possui no
+    /// máximo um registro e uma voz persistente ("entity:{id}"). Escrito tanto
+    /// pela produção (ApplyEntityStateAudio) quanto pelo painel F8
+    /// (DebugSimulateEntityState/DebugPlayEntitySignal). "Ativa" é derivação:
+    /// a entrada existe no dicionário e entityState é apresentável; por isso
+    /// não há flag de ativação persistida. debugSignalId só é preenchido por
+    /// override de debug; currentClipName só é preenchido no GetDebugSnapshot,
+    /// derivado da voz persistente atual (não é estado de autoridade).
+    /// </summary>
     [Serializable]
     public class AudioEntityRuntimeState
     {
         public string entityId;
-        public string activeAnchorId;
-        public ThreatAudioState threatState = ThreatAudioState.Inactive;
-        public bool isActive;
-        public string currentSignalId;
+        public string anchorId;
+        public EntityState entityState = EntityState.Inactive;
+        public string debugSignalId;
+        public string currentClipName;
 
         public AudioEntityRuntimeState Copy()
         {
             return new AudioEntityRuntimeState
             {
                 entityId = entityId,
-                activeAnchorId = activeAnchorId,
-                threatState = threatState,
-                isActive = isActive,
-                currentSignalId = currentSignalId
+                anchorId = anchorId,
+                entityState = entityState,
+                debugSignalId = debugSignalId,
+                currentClipName = currentClipName
             };
         }
     }

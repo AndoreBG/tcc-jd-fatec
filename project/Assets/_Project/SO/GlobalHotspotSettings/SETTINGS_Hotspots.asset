@@ -15,10 +15,10 @@ MonoBehaviour:
   defaultDwell: 0.6
   postTransitionMargin: 0.05
   defaultCursor: {fileID: 2800000, guid: ddc8b72069653354c98a4a0e5a12d97d, type: 3}
-  defaultCursorHotspot: {x: 16, y: 16}
+  defaultCursorHotspot: {x: 2, y: 2}
   defaultNightCursor: {fileID: 0}
-  defaultNightCursorHotspot: {x: 16, y: 16}
+  defaultNightCursorHotspot: {x: 2, y: 2}
   defaultBlockedCursor: {fileID: 2800000, guid: 6a06fd76da0f2f44a9f3b9e57658cf9d, type: 3}
-  defaultBlockedCursorHotspot: {x: 16, y: 16}
+  defaultBlockedCursorHotspot: {x: 2, y: 2}
   defaultFeedback: {fileID: 11400000, guid: 41e9e5f4e36268945b58a341c9f413d6, type: 2}
   defaultTransition: {fileID: 11400000, guid: 1d8ecbbcdd378c047a08d52a5a189cae, type: 2}
