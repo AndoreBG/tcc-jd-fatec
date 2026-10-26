@@ -79,9 +79,12 @@ namespace Whispers
                     }
                     if (!configuredStates.Add(presentation.state))
                         warnings.Add("Entidade '" + entityId + "' possui apresentação de áudio duplicada para " + presentation.state + ".");
-                    if (presentation.state == EntityState.Inactive || presentation.state == EntityState.Resolved)
-                        warnings.Add("Entidade '" + entityId + "' possui áudio em " + presentation.state +
-                                     ", estado que deve permanecer silencioso por padrão.");
+                    if (presentation.state == EntityState.Inactive)
+                        warnings.Add("Entidade '" + entityId +
+                                     "' possui áudio em Inactive, estado que permanece sempre silencioso.");
+                    else if (presentation.state == EntityState.Resolved && presentation.presenceLoopClip != null)
+                        warnings.Add("Entidade '" + entityId +
+                                     "' possui presenceLoop em Resolved; somente o SFX de entrada autorado é reproduzido nesse estado, uma única vez e sem loop.");
                 }
             }
 

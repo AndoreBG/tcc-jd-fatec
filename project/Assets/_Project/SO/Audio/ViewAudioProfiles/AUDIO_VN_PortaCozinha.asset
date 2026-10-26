@@ -47,4 +47,22 @@ MonoBehaviour:
     occlusion: 0.185
     lowPassFrequency: 11287
     reverbSend: 0.944
+  - anchorId: door_sala
+    isAudible: 1
+    direction: 4
+    distance: 2
+    pan: 0
+    volumeMultiplier: 0.7
+    occlusion: 0.828
+    lowPassFrequency: 14323
+    reverbSend: 0.911
+  - anchorId: door_cozinha
+    isAudible: 1
+    direction: 3
+    distance: 0
+    pan: 0
+    volumeMultiplier: 2
+    occlusion: 0.237
+    lowPassFrequency: 16145
+    reverbSend: 0.923
   localLayers: []

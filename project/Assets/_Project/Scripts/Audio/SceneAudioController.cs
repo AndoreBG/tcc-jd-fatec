@@ -58,6 +58,9 @@ namespace Whispers
             public bool reserved;
             public bool continuous;
             public float lastUseTime;
+            // Vozes de entidade sem anchor ativo (Light, Resolved) resolvem a
+            // defaultPerspective do ViewAudioProfile em vez de tocar "flat".
+            public bool useDefaultPerspectiveWhenAnchorless;
         }
 
         private struct VoiceTarget
@@ -594,21 +597,23 @@ namespace Whispers
                     target.reverb = ReverbToDb(layer.reverbSend);
                 }
 
-                if (!string.IsNullOrWhiteSpace(voice.anchorId))
+                bool resolveAnchorPoint = !string.IsNullOrWhiteSpace(voice.anchorId);
+                bool resolveDefaultPoint = !resolveAnchorPoint && voice.useDefaultPerspectiveWhenAnchorless;
+                if (resolveAnchorPoint || resolveDefaultPoint)
                 {
+                    // Sem anchorId, a consulta cai direto na defaultPerspective do
+                    // perfil (TryGetPointPerspective honra useDefaultForMissingPoints
+                    // e isAudible, podendo deixar a voz inaudível por autoria).
                     AudioPointPerspective perspective;
-                    bool audible = profile.TryGetPointPerspective(voice.anchorId, out perspective, out _);
+                    bool audible = profile.TryGetPointPerspective(
+                        resolveAnchorPoint ? voice.anchorId : null, out perspective, out _);
                     if (!audible || perspective == null)
                     {
                         target.volume = 0f;
                     }
                     else
                     {
-                        target.volume *= perspective.volumeMultiplier * DistanceMultiplier(perspective.distance);
-                        target.pan = CalculatePan(perspective);
-                        float occlusionCutoff = Mathf.Lerp(22000f, 1800f, Mathf.Clamp01(perspective.occlusion));
-                        target.lowPass = Mathf.Min(target.lowPass, Mathf.Min(occlusionCutoff, perspective.lowPassFrequency));
-                        target.reverb = ReverbToDb(Mathf.Max(perspective.reverbSend, DirectionReverb(perspective.direction)));
+                        ApplyPointPerspective(ref target, perspective);
                     }
                 }
             }
@@ -617,6 +622,16 @@ namespace Whispers
             target.pan = Mathf.Clamp(target.pan, -1f, 1f);
             target.lowPass = Mathf.Clamp(target.lowPass, 10f, 22000f);
             return target;
+        }
+
+        /// <summary>Aplica volume/distância, pan, oclusão e reverb de uma perspectiva pontual.</summary>
+        private static void ApplyPointPerspective(ref VoiceTarget target, AudioPointPerspective perspective)
+        {
+            target.volume *= perspective.volumeMultiplier * DistanceMultiplier(perspective.distance);
+            target.pan = CalculatePan(perspective);
+            float occlusionCutoff = Mathf.Lerp(22000f, 1800f, Mathf.Clamp01(perspective.occlusion));
+            target.lowPass = Mathf.Min(target.lowPass, Mathf.Min(occlusionCutoff, perspective.lowPassFrequency));
+            target.reverb = ReverbToDb(Mathf.Max(perspective.reverbSend, DirectionReverb(perspective.direction)));
         }
 
         private static float CalculatePan(AudioPointPerspective perspective)
@@ -1012,6 +1027,9 @@ namespace Whispers
             voice.reserved = true;
             voice.emitterId = emitterId;
             voice.role = role;
+            // A marca de perspectiva padrão pertence a vozes de entidade; uma voz
+            // reutilizada do pool nunca pode herdá-la de um uso anterior.
+            voice.useDefaultPerspectiveWhenAnchorless = false;
             if (!string.IsNullOrWhiteSpace(emitterId)) _persistentVoices[emitterId] = voice;
             return voice;
         }
@@ -1039,6 +1057,7 @@ namespace Whispers
             voice.anchorId = null;
             voice.debugId = null;
             voice.baseVolume = 1f;
+            voice.useDefaultPerspectiveWhenAnchorless = false;
         }
 
         private RuntimeVoice AcquireOneShotVoice(AudioSourceRole role)
@@ -1075,7 +1094,8 @@ namespace Whispers
         }
 
         private bool PlayClipInternal(AudioClip clip, AudioSourceRole role, float volume, float pan,
-            string anchorId, string debugId, bool loop, string emitterId = null)
+            string anchorId, string debugId, bool loop, string emitterId = null,
+            bool useDefaultPerspectiveWhenAnchorless = false)
         {
             if (clip == null)
             {
@@ -1091,9 +1111,12 @@ namespace Whispers
             voice.anchorId = anchorId;
             voice.emitterId = emitterId;
             voice.debugId = debugId;
+            voice.useDefaultPerspectiveWhenAnchorless = useDefaultPerspectiveWhenAnchorless;
             voice.source.panStereo = Mathf.Clamp(pan, -1f, 1f);
             ApplyTarget(voice, CalculateTarget(voice, _currentProfile));
-            if (string.IsNullOrWhiteSpace(anchorId))
+            // Sem anchor e sem perspectiva padrão o pan é o parâmetro explícito;
+            // com perspectiva padrão, o pan já veio resolvido do perfil acima.
+            if (string.IsNullOrWhiteSpace(anchorId) && !useDefaultPerspectiveWhenAnchorless)
                 voice.source.panStereo = Mathf.Clamp(pan, -1f, 1f);
 
             if (loop)
@@ -1195,6 +1218,19 @@ namespace Whispers
             bool hasEntrySfx = presentation != null && presentation.enterSfxClip != null;
             bool hasConfiguredLoop = presentation != null && presentation.presenceLoopClip != null;
             bool hasLoop = hasConfiguredLoop && canUseAnchorLoop;
+
+            // Resolved permanece fora do registro unificado e nunca inicia loop — o
+            // anchor já foi liberado pelo EntityDirector —, mas o plano técnico admite
+            // autoria explícita ("sem áudio por padrão, salvo autoria explícita"): um
+            // SFX de entrada autorado toca uma única vez, seguindo o ViewAudioProfile
+            // atual via defaultPerspective (a transição já dissolve o loop anterior).
+            if (state == EntityState.Resolved && hasEntrySfx)
+            {
+                UnregisterEntityAudioState(entityId);
+                BeginEntityAudioTransition(entityId, anchorId, presentation, state, false);
+                return true;
+            }
+
             if (!presentableState || (!hasEntrySfx && !hasLoop))
             {
                 if (presentableState)
@@ -1217,7 +1253,8 @@ namespace Whispers
             }
 
             // Light ainda não possui anchor, porém seu SFX de entrada é autorado e
-            // deve tocar. Loops permanecem restritos a estados com perspectiva.
+            // deve tocar, seguindo a defaultPerspective do ViewAudioProfile atual.
+            // Loops permanecem restritos a estados com perspectiva de anchor.
             // O registro do estado unificado acontece sincronamente: qualquer
             // override de debug ativo é revogado e o F8 passa a refletir a produção.
             RegisterEntityAudioState(entityId, anchorId, state);
@@ -1350,9 +1387,12 @@ namespace Whispers
 
             if (presentation.enterSfxClip != null)
             {
+                // SFX de entrada de entidade segue o ViewAudioProfile: com anchor usa a
+                // perspectiva do ponto; sem anchor (Light/Resolved) usa a defaultPerspective.
                 PlayClipInternal(presentation.enterSfxClip, AudioSourceRole.Threats,
                     Mathf.Max(0f, presentation.enterSfxVolume), 0f, anchorId,
-                    "entity-enter:" + entityId + ":" + state, false, entityId);
+                    "entity-enter:" + entityId + ":" + state, false, entityId,
+                    useDefaultPerspectiveWhenAnchorless: true);
             }
 
             if (!allowLoop || presentation.presenceLoopClip == null)
@@ -1371,6 +1411,7 @@ namespace Whispers
             ConfigureVoice(voice, AudioSourceRole.Threats, presentation.presenceLoopClip, true,
                 Mathf.Max(0f, presentation.presenceLoopVolume));
             voice.anchorId = anchorId;
+            voice.useDefaultPerspectiveWhenAnchorless = true;
             voice.debugId = "entity-loop:" + entityId + ":" + state;
             voice.source.volume = 0f;
             voice.source.Play();
@@ -1453,6 +1494,36 @@ namespace Whispers
             {
                 anchorId = anchorId,
                 hasExplicitOverride = explicitOverride,
+                isAudible = audible,
+                direction = perspective.direction,
+                distance = perspective.distance,
+                pan = CalculatePan(perspective),
+                volumeMultiplier = perspective.volumeMultiplier * DistanceMultiplier(perspective.distance),
+                occlusion = perspective.occlusion,
+                lowPassFrequency = perspective.lowPassFrequency,
+                reverbSend = Mathf.Max(perspective.reverbSend, DirectionReverb(perspective.direction))
+            };
+            return true;
+        }
+
+        /// <summary>
+        /// Perspectiva efetiva de uma voz de entidade sem anchor ativo (Light, Resolved):
+        /// a defaultPerspective do perfil atual, respeitando useDefaultForMissingPoints
+        /// e isAudible. É a mesma regra aplicada à reprodução, exposta para o F8 e testes.
+        /// </summary>
+        public bool TryGetAnchorlessPerspectiveSnapshot(out AudioPerspectiveSnapshot snapshot)
+        {
+            snapshot = null;
+            if (_currentProfile == null) return false;
+
+            AudioPointPerspective perspective;
+            bool audible = _currentProfile.TryGetPointPerspective(null, out perspective, out _);
+            if (perspective == null) return false;
+
+            snapshot = new AudioPerspectiveSnapshot
+            {
+                anchorId = string.Empty,
+                hasExplicitOverride = false,
                 isAudible = audible,
                 direction = perspective.direction,
                 distance = perspective.distance,

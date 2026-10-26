@@ -40,11 +40,29 @@ MonoBehaviour:
     reverbSend: 0.918
   - anchorId: window_corredor
     isAudible: 1
-    direction: 4
+    direction: 2
     distance: 0
-    pan: 0
+    pan: 0.8
     volumeMultiplier: 1.3
     occlusion: 0
     lowPassFrequency: 22000
     reverbSend: 0.862
+  - anchorId: door_sala
+    isAudible: 1
+    direction: 2
+    distance: 1
+    pan: 0.8
+    volumeMultiplier: 0.85
+    occlusion: 0.811
+    lowPassFrequency: 9000
+    reverbSend: 0
+  - anchorId: door_cozinha
+    isAudible: 1
+    direction: 1
+    distance: 1
+    pan: -0.8
+    volumeMultiplier: 0.85
+    occlusion: 0.811
+    lowPassFrequency: 9000
+    reverbSend: 0
   localLayers: []

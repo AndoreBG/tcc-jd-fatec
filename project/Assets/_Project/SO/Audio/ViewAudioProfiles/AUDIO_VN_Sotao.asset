@@ -28,5 +28,41 @@ MonoBehaviour:
     reverbSend: 0
   useDefaultForMissingPoints: 1
   layerPerspectives: []
-  pointPerspectives: []
+  pointPerspectives:
+  - anchorId: window_sala
+    isAudible: 1
+    direction: 5
+    distance: 2
+    pan: 0
+    volumeMultiplier: 0.75
+    occlusion: 0.716
+    lowPassFrequency: 2742
+    reverbSend: 0.905
+  - anchorId: window_corredor
+    isAudible: 1
+    direction: 0
+    distance: 0
+    pan: 0
+    volumeMultiplier: 0.9
+    occlusion: 0.781
+    lowPassFrequency: 3133
+    reverbSend: 0.935
+  - anchorId: door_sala
+    isAudible: 1
+    direction: 5
+    distance: 2
+    pan: -0.62
+    volumeMultiplier: 0.55
+    occlusion: 0.6
+    lowPassFrequency: 4304
+    reverbSend: 0.905
+  - anchorId: door_cozinha
+    isAudible: 1
+    direction: 6
+    distance: 2
+    pan: 0.62
+    volumeMultiplier: 0.55
+    occlusion: 0.6
+    lowPassFrequency: 4434
+    reverbSend: 0.905
   localLayers: []

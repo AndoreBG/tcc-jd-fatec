@@ -29,13 +29,40 @@ MonoBehaviour:
   useDefaultForMissingPoints: 1
   layerPerspectives: []
   pointPerspectives:
-  - anchorId: window_quarto
+  - anchorId: window_sala
     isAudible: 1
-    direction: 0
+    direction: 1
+    distance: 1
+    pan: -0.72
+    volumeMultiplier: 1
+    occlusion: 0.811
+    lowPassFrequency: 14063
+    reverbSend: 0.905
+  - anchorId: window_corredor
+    isAudible: 1
+    direction: 2
+    distance: 1
+    pan: 0.74
+    volumeMultiplier: 1.17
+    occlusion: 0.805
+    lowPassFrequency: 12111
+    reverbSend: 0.864
+  - anchorId: door_sala
+    isAudible: 1
+    direction: 1
     distance: 0
-    pan: 0
-    volumeMultiplier: 1.0
-    occlusion: 0
-    lowPassFrequency: 18000
-    reverbSend: 0.0
+    pan: -0.63
+    volumeMultiplier: 0.75
+    occlusion: 0.675
+    lowPassFrequency: 6000
+    reverbSend: 0.888
+  - anchorId: door_cozinha
+    isAudible: 1
+    direction: 5
+    distance: 2
+    pan: -0.63
+    volumeMultiplier: 0.75
+    occlusion: 0.3
+    lowPassFrequency: 6000
+    reverbSend: 0.888
   localLayers: []
