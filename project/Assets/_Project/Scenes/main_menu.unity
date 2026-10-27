@@ -1625,6 +1625,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Whispers::Whispers.MainMenuController
   cycleDefinition: {fileID: 11400000, guid: 6fd8a18f8d469cc4cb106447ca6dcd56, type: 2}
+  cursorSettings: {fileID: 11400000, guid: 981a7ab0623904d47a8b7c957e0e4bd1, type: 2}
   playButton: {fileID: 1796649344}
   continueButton: {fileID: 1678950299}
   continueDisabledObject: {fileID: 6432099}

@@ -134,10 +134,12 @@ namespace Whispers
             if (scene == null) { error = "EntityDirector não recebeu GameplaySceneController."; return false; }
             if (sceneDefinition == null || sceneDefinition.period != GamePeriod.Night)
             { error = "EntityDirector só pode ser inicializado em uma cena de Noite."; return false; }
-            int currentDay = GameSessionManager.Instance != null ? GameSessionManager.Instance.day : 1;
-            NightEntityProfile resolvedProfile = sceneDefinition.ResolveNightEntityProfile(currentDay);
+            // A dificuldade da Noite vem do índice da Noite atual do ciclo (1-based), não do Dia:
+            // a mesma cena serve a Noite 1 e a Noite 2 com perfis diferentes.
+            int currentNight = GameSessionManager.Instance != null ? Mathf.Max(1, GameSessionManager.Instance.night) : 1;
+            NightEntityProfile resolvedProfile = sceneDefinition.ResolveNightEntityProfile(currentNight);
             if (resolvedProfile == null)
-            { error = "GameplaySceneDefinition não possui NightEntityProfile para o Dia " + currentDay + "."; return false; }
+            { error = "GameplaySceneDefinition não possui NightEntityProfile para a Noite " + currentNight + "."; return false; }
             if (clockSettings == null) { error = "EntityDirector.clockSettings não foi atribuído."; return false; }
             if (presentationCoordinator == null) { error = "EntityPresentationCoordinator não foi atribuído."; return false; }
             if (predatorController == null) { error = "PredatorController não foi atribuído."; return false; }

@@ -16,22 +16,15 @@ MonoBehaviour:
   displayName: Voyeur
   allowedAnchorCategory: 0
   stateAudio:
-  - state: 1
+  - state: 2
     enterSfxClip: {fileID: 8300000, guid: 6b2da4889086eb5419d670ff039760ba, type: 3}
     enterSfxVolume: 1
     presenceLoopClip: {fileID: 0}
     presenceLoopVolume: 0
     fadeInSeconds: 0
     fadeOutSeconds: 0
-  - state: 2
-    enterSfxClip: {fileID: 8300000, guid: 264dd63e73384d14881549da169eb470, type: 3}
-    enterSfxVolume: 1
-    presenceLoopClip: {fileID: 0}
-    presenceLoopVolume: 0
-    fadeInSeconds: 0
-    fadeOutSeconds: 0
   - state: 3
-    enterSfxClip: {fileID: 8300000, guid: 5e98ccbddce50e34ab7c133cc0f13787, type: 3}
+    enterSfxClip: {fileID: 8300000, guid: 264dd63e73384d14881549da169eb470, type: 3}
     enterSfxVolume: 1
     presenceLoopClip: {fileID: 0}
     presenceLoopVolume: 0
@@ -40,8 +33,8 @@ MonoBehaviour:
   - state: 4
     enterSfxClip: {fileID: 8300000, guid: f1229ec5837664f4eb64c97b3d885031, type: 3}
     enterSfxVolume: 1
-    presenceLoopClip: {fileID: 0}
-    presenceLoopVolume: 0
+    presenceLoopClip: {fileID: 8300000, guid: 5e98ccbddce50e34ab7c133cc0f13787, type: 3}
+    presenceLoopVolume: 0.7
     fadeInSeconds: 0
     fadeOutSeconds: 0
   - state: 5

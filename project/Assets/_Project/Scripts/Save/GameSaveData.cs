@@ -10,16 +10,27 @@ namespace Whispers
         public int quantity;
     }
 
-    /// <summary>Somente o início de um Dia. Sem objetos Unity ou estado local de cena.</summary>
+    /// <summary>
+    /// Checkpoint do início de um período: início do Dia (night = 0) ou início de uma Noite (night = N).
+    /// Sem objetos Unity ou estado local de cena.
+    /// </summary>
     [Serializable]
     public class GameSaveData
     {
-        public const int CurrentVersion = 1;
+        /// <summary>Versão gravada. A 2 acrescenta o campo 'night' (Dia 1 + várias Noites por ciclo).</summary>
+        public const int CurrentVersion = 2;
+
+        /// <summary>Versão mais antiga ainda aceita na leitura (checkpoint de início de Dia).</summary>
+        public const int MinimumSupportedVersion = 1;
+
         // Sem valores default: JSON incompleto deve falhar na validação.
         public int formatVersion;
         public int slot;
         public string stageId;
         public int day;
+
+        /// <summary>0 = início do Dia; N = início da Noite N do ciclo. Ausente em saves da versão 1.</summary>
+        public int night;
         public string savedAtUtc;
         public List<InventoryEntry> inventory;
         public List<string> collectedIds;
@@ -34,6 +45,7 @@ namespace Whispers
                 slot = slotNumber,
                 stageId = stage,
                 day = 1,
+                night = 0,
                 savedAtUtc = DateTime.UtcNow.ToString("O"),
                 inventory = new List<InventoryEntry>(),
                 collectedIds = new List<string>(),
@@ -47,7 +59,7 @@ namespace Whispers
             var copy = new GameSaveData
             {
                 formatVersion = formatVersion, slot = slot, stageId = stageId,
-                day = day, savedAtUtc = savedAtUtc,
+                day = day, night = night, savedAtUtc = savedAtUtc,
                 inventory = new List<InventoryEntry>(),
                 collectedIds = new List<string>(collectedIds),
                 foundItemIds = new List<string>(foundItemIds),
@@ -61,10 +73,10 @@ namespace Whispers
         public bool IsValid(out string error)
         {
             error = null;
-            if (formatVersion != CurrentVersion)
+            if (formatVersion < MinimumSupportedVersion || formatVersion > CurrentVersion)
                 error = "Versão de checkpoint ausente ou não suportada.";
-            else if (slot < 1 || day < 1 || string.IsNullOrWhiteSpace(stageId))
-                error = "Slot, etapa ou Dia inválido.";
+            else if (slot < 1 || day < 1 || night < 0 || string.IsNullOrWhiteSpace(stageId))
+                error = "Slot, etapa, Dia ou Noite inválido.";
             else if (!DateTimeOffset.TryParse(savedAtUtc, out _))
                 error = "Data do checkpoint inválida.";
             else if (inventory == null || collectedIds == null || foundItemIds == null || facts == null)

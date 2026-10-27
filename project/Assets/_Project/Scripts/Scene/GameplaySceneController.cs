@@ -280,6 +280,12 @@ namespace Whispers
                 errors.Add("Cena do período não está no Build Profile: '" + expectedScene + "'.");
             }
 
+            if (cycleDefinition.nightCount < 1)
+                errors.Add("GameCycleDefinition.nightCount precisa ser pelo menos 1 (Dia + Noites do ciclo).");
+
+            if (Session != null && Session.night > cycleDefinition.EffectiveNightCount)
+                warnings.Add("A Noite atual (" + Session.night + ") excede nightCount (" + cycleDefinition.nightCount + ") do GameCycleDefinition.");
+
             if (cycleDefinition.fadeDuration < 0f)
                 warnings.Add("GameCycleDefinition.fadeDuration negativo será tratado como zero.");
         }
@@ -361,11 +367,11 @@ namespace Whispers
                 errors.Add("NightEntityProfile padrão é obrigatório em GameplaySceneDefinition de Noite.");
                 return;
             }
-            if (sceneDefinition.nightEntityProfilesByDay != null)
+            if (sceneDefinition.nightEntityProfilesByNight != null)
             {
-                for (int i = 0; i < sceneDefinition.nightEntityProfilesByDay.Length; i++)
-                    if (sceneDefinition.nightEntityProfilesByDay[i] == null)
-                        warnings.Add("nightEntityProfilesByDay[" + i + "] (Dia " + (i + 1) + ") está vazio; usará o perfil padrão.");
+                for (int i = 0; i < sceneDefinition.nightEntityProfilesByNight.Length; i++)
+                    if (sceneDefinition.nightEntityProfilesByNight[i] == null)
+                        warnings.Add("nightEntityProfilesByNight[" + i + "] (Noite " + (i + 1) + ") está vazio; usará o perfil padrão.");
             }
             if (entityDirector == null)
             {

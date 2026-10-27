@@ -31,10 +31,10 @@ MonoBehaviour:
     predatorDeathBelowClosedPercent: 25
     predatorHoldOpenSpeed: 8
     predatorReleaseOpenSpeed: 22
-    predatorRecoverCloseSpeed: 18
+    predatorRecoverCloseSpeed: 14
     predatorWobbleSpeed: 0.35
-    predatorBangIntervalSeconds: 2.5
-    predatorBangExtraPixels: 80
+    predatorBangIntervalSeconds: 2
+    predatorBangExtraPixels: 100
     predatorBangShoveSeconds: 0.12
     predatorBangShakeIntensity: 0.08
     voyeurLightContactRequiredSeconds: 5
