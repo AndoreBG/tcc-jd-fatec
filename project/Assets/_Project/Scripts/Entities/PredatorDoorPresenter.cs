@@ -23,6 +23,8 @@ namespace Whispers
         [Tooltip("Região da maçaneta. Deve ser a encounterRegion do EntityVisualBinding.")]
         [SerializeField] private RectTransform handleRegion;
         [SerializeField] private GameObject handsRoot;
+        [Tooltip("Corpo do Predator, filho do hinge e atrás da folha. Não gira com a porta.")]
+        [SerializeField] private GameObject predatorBehindDoor;
         [SerializeField] private ParallaxLayer doorParallax;
         [SerializeField] private Texture2D holdCursor;
         [SerializeField] private Vector2 holdCursorHotspot;
@@ -92,6 +94,9 @@ namespace Whispers
             ApplyYaw(snapshot.closedPercent);
             bool showHands = snapshot.state == EntityState.Resolving && snapshot.holdStarted;
             if (handsRoot != null && handsRoot.activeSelf != showHands) handsRoot.SetActive(showHands);
+            bool showPredator = snapshot.state == EntityState.Resolving;
+            if (predatorBehindDoor != null && predatorBehindDoor.activeSelf != showPredator)
+                predatorBehindDoor.SetActive(showPredator);
             ApplyCursor(snapshot);
             ApplyVignette(snapshot);
         }
@@ -208,6 +213,8 @@ namespace Whispers
             {
                 Transform child = doorHinge.GetChild(index);
                 if (handsRoot != null && child == handsRoot.transform) continue;
+                if (predatorBehindDoor != null && child == predatorBehindDoor.transform) continue;
+                if (child.name != "Layer_Background_Porta") continue;
                 RectTransform rect = child as RectTransform;
                 if (rect != null) return rect;
             }
@@ -295,6 +302,7 @@ namespace Whispers
         {
             RestoreDoor();
             if (handsRoot != null && handsRoot.activeSelf) handsRoot.SetActive(false);
+            if (predatorBehindDoor != null && predatorBehindDoor.activeSelf) predatorBehindDoor.SetActive(false);
             if (doorParallax != null) doorParallax.SetMotionSuppressed(false);
             ReleaseCursor(GameplaySceneController.Instance != null ? GameplaySceneController.Instance.Cursor : null);
             if (_drivingVignette)

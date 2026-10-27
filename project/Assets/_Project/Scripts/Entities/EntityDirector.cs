@@ -115,7 +115,10 @@ namespace Whispers
                                        _scene.Blocker.HasReason(InputBlockReason.Pause);
         /// <summary>Luta na maçaneta. Só a navegação entre ViewNodes deve recusar.</summary>
         public bool IsPredatorBattleActive => IsBattleActive();
+        /// <summary>Critical ou Resolving do Voyeur. Near e Terminal não contam.</summary>
+        public bool IsVoyeurBattleActive => IsVoyeurFightActive();
         public string PredatorEntityId => predatorController != null ? predatorController.EntityId : null;
+        public string VoyeurEntityId => voyeurController != null ? voyeurController.EntityId : null;
         public event Action<PredatorBangSignal> PredatorBanged;
 
         public event Action<EntityRuntimeSnapshot> EntityStateChanged;
@@ -248,6 +251,8 @@ namespace Whispers
                         break;
 
                     case EntityState.Critical:
+                        if (definition is VoyeurDefinition)
+                            break;
                         if (definition is PredatorDefinition && IsPlayerAtEncounter(runtime))
                         {
                             TryTransition(id, EntityState.Resolving, null, "jogador presente na porta");
@@ -255,12 +260,7 @@ namespace Whispers
                         }
                         runtime.criticalRemaining -= delta;
                         if (runtime.criticalRemaining <= 0f)
-                        {
-                            // O Voyeur já visível na janela mata imediatamente; fora
-                            // dela mantém a contagem terminal e ainda permite navegar.
-                            bool immediate = definition is VoyeurDefinition && IsPlayerAtEncounter(runtime);
-                            QueueTerminal(id, immediate, "timer Critical expirado");
-                        }
+                            QueueTerminal(id, false, "timer Critical expirado");
                         break;
 
                     case EntityState.Resolved:
@@ -429,6 +429,14 @@ namespace Whispers
                    runtime.state == EntityState.Resolving;
         }
 
+        private bool IsVoyeurFightActive()
+        {
+            if (!_initialized || voyeurController == null || string.IsNullOrWhiteSpace(voyeurController.EntityId)) return false;
+            EntityRuntime runtime;
+            if (!_entities.TryGetValue(voyeurController.EntityId, out runtime) || runtime == null) return false;
+            return runtime.state == EntityState.Critical || runtime.state == EntityState.Resolving;
+        }
+
         private Camera ResolveRegionEventCamera(RectTransform region)
         {
             Canvas canvas = region != null ? region.GetComponentInParent<Canvas>() : null;
@@ -473,24 +481,66 @@ namespace Whispers
                 }
             }
 
-            if (runtime.state == EntityState.Critical)
+            VoyeurWindowState window = ReadVoyeurWindow(runtime);
+            VoyeurWindowEvent events = VoyeurWindowMath.Step(ref window, runtime.state == EntityState.Resolving, hasCoverage,
+                new VoyeurWindowConfig
+                {
+                    criticalDurationSeconds = runtime.entry.criticalToTerminalSeconds,
+                    minimumResolveSeconds = runtime.entry.voyeurLightContactRequiredSeconds
+                }, delta);
+            WriteVoyeurWindow(runtime, window);
+            runtime.voyeurHoldingLight = hasCoverage &&
+                (runtime.state == EntityState.Critical || runtime.state == EntityState.Resolving ||
+                 (events & VoyeurWindowEvent.EnteredResolving) != 0);
+
+            if ((events & VoyeurWindowEvent.FullyOpened) != 0)
             {
-                if (hasCoverage)
-                    TryTransition(entityId, EntityState.Resolving, null,
-                        "Halógeno com cobertura " + coverage.ToString("0.00") + " >= " + definition.minimumLanternCoverage.ToString("0.00"));
+                bool atWindow = IsPlayerAtEncounter(runtime);
+                QueueTerminal(entityId, atWindow, atWindow
+                    ? "janela do Voyeur atingiu 100% com o jogador presente"
+                    : "janela do Voyeur atingiu 100% fora do cômodo");
+                ResolveTerminalRequests();
                 return;
             }
 
-            if (!hasCoverage)
+            if ((events & VoyeurWindowEvent.EnteredResolving) != 0)
             {
-                TryTransition(entityId, EntityState.Critical, null,
-                    "cobertura Halógena perdida; progresso preservado");
-                return;
+                float dwell = VoyeurWindowMath.CriticalDwellSeconds(window.openPercent, runtime.entry.criticalToTerminalSeconds);
+                TryTransition(entityId, EntityState.Resolving, null,
+                    "Halógeno inicia Resolving; mínimo " + runtime.entry.voyeurLightContactRequiredSeconds.ToString("0.00") +
+                    " s + Critical " + dwell.ToString("0.00") + " s = " + window.requiredLightSeconds.ToString("0.00") + " s");
             }
 
-            runtime.resolveProgress += delta;
-            if (runtime.resolveProgress >= runtime.entry.voyeurLightContactRequiredSeconds)
-                TryTransition(entityId, EntityState.Resolved, null, "contato Halógeno acumulado concluído");
+            if ((events & VoyeurWindowEvent.LightCompleted) != 0)
+                TryTransition(entityId, EntityState.Resolved, null, "contato Halógeno concluído; Voyeur recua");
+        }
+
+        private static VoyeurWindowState ReadVoyeurWindow(EntityRuntime runtime)
+        {
+            return new VoyeurWindowState
+            {
+                openPercent = runtime.voyeurOpenPercent,
+                lightProgress = runtime.resolveProgress,
+                requiredLightSeconds = runtime.voyeurRequiredLightSeconds,
+                resolveLatched = runtime.voyeurResolveLatched
+            };
+        }
+
+        private static void WriteVoyeurWindow(EntityRuntime runtime, VoyeurWindowState state)
+        {
+            runtime.voyeurOpenPercent = state.openPercent;
+            runtime.resolveProgress = state.lightProgress;
+            runtime.voyeurRequiredLightSeconds = state.requiredLightSeconds;
+            runtime.voyeurResolveLatched = state.resolveLatched;
+            runtime.voyeurHoldingLight = false;
+            float duration = Mathf.Max(0.0001f, runtime.entry.criticalToTerminalSeconds);
+            runtime.criticalRemaining = duration * (1f - Mathf.Clamp(state.openPercent, 0f, 100f) / 100f);
+        }
+
+        private static void ResetVoyeurWindow(EntityRuntime runtime)
+        {
+            WriteVoyeurWindow(runtime, VoyeurWindowState.Begin());
+            runtime.criticalRemaining = runtime.entry.criticalToTerminalSeconds;
         }
 
         private void EvaluateGlobalTick()
@@ -728,6 +778,20 @@ namespace Whispers
                 runtime.closedPercent = 100f;
                 runtime.resolveStartRemaining = runtime.entry.predatorResolveStartWindowSeconds;
             }
+            if (runtime.entry.entityDefinition is VoyeurDefinition)
+            {
+                if (targetState == EntityState.Critical)
+                    ResetVoyeurWindow(runtime);
+                else if (targetState == EntityState.Resolving)
+                {
+                    runtime.voyeurResolveLatched = true;
+                    runtime.voyeurRequiredLightSeconds = VoyeurWindowMath.RequiredLightSeconds(
+                        runtime.voyeurOpenPercent, runtime.entry.criticalToTerminalSeconds,
+                        runtime.entry.voyeurLightContactRequiredSeconds);
+                }
+                else
+                    runtime.voyeurResolveLatched = false;
+            }
             PublishEntity(runtime, previousState, previousAnchor, "forçado pelo Debug F8");
             return true;
         }
@@ -902,6 +966,14 @@ namespace Whispers
             if (!_initialized || _sixAmHandled) return false;
             EntityRuntime runtime;
             if (!_entities.TryGetValue(entityId, out runtime)) return false;
+            if (runtime.entry.entityDefinition is VoyeurDefinition &&
+                runtime.state == EntityState.Resolving && targetState == EntityState.Critical)
+            {
+                WarnOnce("voyeur-no-reentry|" + entityId,
+                    "[EntityDirector] Voyeur já entrou em Resolving; retorno a Critical recusado.");
+                return false;
+            }
+
             if (!IsAllowedTransition(runtime.state, targetState))
             {
                 Debug.LogWarning("[EntityDirector] Transição recusada: '" + entityId + "' " + runtime.state + " → " + targetState + ".", this);
@@ -919,24 +991,34 @@ namespace Whispers
 
             EntityState previousState = runtime.state;
             AudioAnchorDefinition previousAnchor = runtime.anchor;
-            bool preserveVoyeurLightProgress = runtime.entry.entityDefinition is VoyeurDefinition &&
-                ((previousState == EntityState.Resolving && targetState == EntityState.Critical) ||
-                 (previousState == EntityState.Critical && targetState == EntityState.Resolving));
+            bool keepVoyeurLightProgress = runtime.entry.entityDefinition is VoyeurDefinition &&
+                                           targetState == EntityState.Resolving;
             runtime.state = targetState;
             runtime.anchor = newAnchor;
             runtime.stateElapsed = 0f;
             runtime.resolveStarted = false;
-            if (!preserveVoyeurLightProgress) runtime.resolveProgress = 0f;
+            if (!keepVoyeurLightProgress) runtime.resolveProgress = 0f;
 
-            // Ao perder a luz, o Voyeur retoma Critical com o tempo restante e
-            // mantém seu progresso acumulado. As demais entradas em Critical são
-            // novos confrontos e recebem o timer completo.
-            if (targetState == EntityState.Critical && !preserveVoyeurLightProgress)
+            if (targetState == EntityState.Critical)
+            {
                 runtime.criticalRemaining = runtime.entry.criticalToTerminalSeconds;
+                if (runtime.entry.entityDefinition is VoyeurDefinition)
+                    ResetVoyeurWindow(runtime);
+            }
             else if (targetState == EntityState.Resolving && runtime.entry.entityDefinition is PredatorDefinition)
                 ResetPredatorStruggle(runtime);
             else if (targetState == EntityState.Terminal)
                 runtime.terminalRemaining = runtime.entry.terminalCountdownSeconds;
+
+            if (runtime.entry.entityDefinition is VoyeurDefinition &&
+                (targetState == EntityState.Resolved || targetState == EntityState.Inactive || targetState == EntityState.Terminal))
+            {
+                runtime.voyeurResolveLatched = false;
+                runtime.voyeurHoldingLight = false;
+            }
+            if (runtime.entry.entityDefinition is VoyeurDefinition &&
+                (targetState == EntityState.Resolved || targetState == EntityState.Inactive))
+                runtime.voyeurOpenPercent = 0f;
 
             if (targetState == EntityState.Resolved || targetState == EntityState.Inactive)
                 runtime.closedPercent = 100f;
@@ -1151,7 +1233,11 @@ namespace Whispers
                 closedPercent = runtime.closedPercent,
                 holdStarted = runtime.holdStarted,
                 holding = runtime.holding,
-                terminalOpensDoor = runtime.terminalOpensDoor
+                terminalOpensDoor = runtime.terminalOpensDoor,
+                voyeurOpenPercent = runtime.voyeurOpenPercent,
+                voyeurRequiredLightSeconds = runtime.voyeurRequiredLightSeconds,
+                voyeurResolveLatched = runtime.voyeurResolveLatched,
+                voyeurHoldingLight = runtime.voyeurHoldingLight
             };
         }
 
@@ -1175,6 +1261,10 @@ namespace Whispers
             public float bangCooldown;
             public bool holding;
             public bool terminalOpensDoor;
+            public float voyeurOpenPercent;
+            public float voyeurRequiredLightSeconds;
+            public bool voyeurResolveLatched;
+            public bool voyeurHoldingLight;
             public bool? debugEncounterOverride;
             public float? debugVoyeurCoverageOverride;
             public EntityRuntime(EntityNightEntry value) { entry = value; state = EntityState.Inactive; }
@@ -1211,5 +1301,9 @@ namespace Whispers
         public bool holdStarted;
         public bool holding;
         public bool terminalOpensDoor;
+        public float voyeurOpenPercent;
+        public float voyeurRequiredLightSeconds;
+        public bool voyeurResolveLatched;
+        public bool voyeurHoldingLight;
     }
 }

@@ -19,6 +19,8 @@ namespace Whispers
         private float _roll;
         private float _shakeTime;
         private float _shakeIntensity;
+        private float _threatShake;
+        private float _threatShakeHold;
 
         private GameplaySceneController Scene => GameplaySceneController.Instance;
         private InputBlocker Blocker => Scene != null ? Scene.Blocker : null;
@@ -94,10 +96,23 @@ namespace Whispers
 
         private Vector3 ShakeOffset()
         {
-            if (_shakeTime <= 0f) return Vector3.zero;
-            _shakeTime -= Time.unscaledDeltaTime;
-            float factor = Mathf.Clamp01(_shakeTime / _shakeIntensity);
-            return new Vector3(Random.value - 0.5f, Random.value - 0.5f, 0f) * factor;
+            Vector3 offset = Vector3.zero;
+            if (_shakeTime > 0f)
+            {
+                _shakeTime -= Time.unscaledDeltaTime;
+                float factor = Mathf.Clamp01(_shakeTime / _shakeIntensity);
+                offset += new Vector3(Random.value - 0.5f, Random.value - 0.5f, 0f) * factor;
+            }
+
+            if (_threatShakeHold > 0f)
+            {
+                _threatShakeHold -= Time.unscaledDeltaTime;
+                offset += new Vector3(Random.value - 0.5f, Random.value - 0.5f, 0f) * (_threatShake * 2f);
+            }
+            else
+                _threatShake = 0f;
+
+            return offset;
         }
 
         /// <summary>Dispara um shake de curta duração.</summary>
@@ -105,6 +120,16 @@ namespace Whispers
         {
             _shakeTime = intensity;
             _shakeIntensity = Mathf.Max(0.0001f, intensity);
+        }
+
+        /// <summary>
+        /// Tremor contínuo, em unidades da câmera. Precisa ser renovado a cada frame;
+        /// se o presenter parar, ele some em cerca de 0,1 s.
+        /// </summary>
+        public void SetThreatShake(float amplitude)
+        {
+            _threatShake = Mathf.Max(0f, amplitude);
+            _threatShakeHold = _threatShake > 0.0001f ? 0.12f : 0f;
         }
 
         private static Vector2 ScreenToNorm(Vector2 screen)

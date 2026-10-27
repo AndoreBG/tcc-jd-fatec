@@ -66,6 +66,17 @@ namespace Whispers
             if (suppressed) ApplyOffset(Vector2.zero);
         }
 
+        /// <summary>
+        /// A base do parallax passa a ser a pose atual. Chamar depois de devolver
+        /// a janela ao ponto inicial, senão o LateUpdate puxa a folha para o zero local.
+        /// </summary>
+        public void RecaptureBasePosition()
+        {
+            _baseLocal = transform.localPosition;
+            _baseCaptured = true;
+            _cameraRelativeBaseCaptured = false;
+        }
+
         private void LateUpdate()
         {
             if (_motionSuppressed) return;

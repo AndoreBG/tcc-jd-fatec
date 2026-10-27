@@ -266,6 +266,12 @@ namespace Whispers
                     GUILayout.Label("  porta " + snapshot.closedPercent.ToString("0") + "% fechada | segurando " +
                         (snapshot.holding ? "sim" : "não") + " | vitória " + snapshot.resolveProgress.ToString("0.0") +
                         " s | navegação " + (snapshot.navigationLocked ? "presa" : "livre"));
+                if (string.Equals(snapshot.entityId, director.VoyeurEntityId, System.StringComparison.Ordinal) &&
+                    (snapshot.state == EntityState.Critical || snapshot.state == EntityState.Resolving || snapshot.voyeurResolveLatched))
+                    GUILayout.Label("  janela " + snapshot.voyeurOpenPercent.ToString("0") + "% aberta | luz " +
+                        snapshot.resolveProgress.ToString("0.00") + "/" + snapshot.voyeurRequiredLightSeconds.ToString("0.00") +
+                        " s | Resolving " + (snapshot.voyeurResolveLatched ? "travado" : "livre") +
+                        " | cobertura " + (snapshot.voyeurHoldingLight ? "válida" : "não"));
                 GUILayout.Label("  binding técnico: " + (hasVisualBinding ? "OK" : "ausente/não aplicável") +
                     " | áudio da entidade: " + (hasAudio ? "ativo" : "inativo") +
                     " | encontro: " + encounter + " | cobertura Halógeno: " + coverage);

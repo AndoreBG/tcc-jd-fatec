@@ -166,6 +166,7 @@ namespace Whispers
         [Min(0f)] public float predatorBangShakeIntensity = 0.08f;
 
         [Header("Voyeur (usado somente por VoyeurDefinition)")]
+        [Tooltip("Tempo mínimo de luz no Resolving. O total exigido é este valor mais o tempo que o Voyeur já passou em Critical.")]
         [Min(0f)] public float voyeurLightContactRequiredSeconds = 5f;
 
         public PredatorStruggleConfig ToStruggleConfig()

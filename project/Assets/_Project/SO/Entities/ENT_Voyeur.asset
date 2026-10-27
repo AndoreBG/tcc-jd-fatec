@@ -59,7 +59,7 @@ MonoBehaviour:
     fadeInSeconds: 0
     fadeOutSeconds: 0
   jumpscare:
-    fullscreenSprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+    fullscreenSprite: {fileID: -1425768506, guid: 097746620c97a304397d1b81788fd4f5, type: 3}
     jumpscareSfx: {fileID: 8300000, guid: 2bdb95ef6c1308f408ae8a1eec9884a9, type: 3}
     durationSeconds: 2.5
   minimumLanternCoverage: 0.5

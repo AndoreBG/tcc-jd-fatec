@@ -4,8 +4,7 @@ namespace Whispers
 {
     /// <summary>
     /// Adaptador de defesa do Voyeur. O LanternController/LanternEffect fornece somente a
-    /// cobertura Halógena; estados, timers, reservas e Terminal permanecem sob
-    /// autoridade exclusiva do EntityDirector.
+    /// cobertura Halógena. Abertura, trava de Resolving e Terminal ficam no EntityDirector.
     /// </summary>
     public sealed class VoyeurController : EntityControllerBase
     {

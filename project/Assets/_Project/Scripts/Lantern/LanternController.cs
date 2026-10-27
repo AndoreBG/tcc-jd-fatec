@@ -26,6 +26,10 @@ namespace Whispers
         [Min(0.1f)]
         [SerializeField] private float dischargeDuration = 3f;
 
+        [Tooltip("Multiplica a descarga enquanto o Voyeur está em Critical ou Resolving. 2 esvazia na metade do tempo. 1 não altera.")]
+        [Min(1f)]
+        [SerializeField] private float voyeurBattleDrainMultiplier = 2f;
+
         [Tooltip("Tecla para manivelar e recarregar o dínamo (somente toque/tap).")]
         [SerializeField] private KeyCode rechargeKey = KeyCode.Space;
 
@@ -54,6 +58,7 @@ namespace Whispers
         public bool IsEquipped => _equipped;
         public float BatteryCharge => _batteryCharge;
         public float DischargeDuration => dischargeDuration;
+        public float VoyeurBattleDrainMultiplier => voyeurBattleDrainMultiplier;
         public float ChargePerTap => chargePerTap;
         public bool HasEffect => lanternEffect != null;
 
@@ -128,9 +133,18 @@ namespace Whispers
             }
 
             float drainPerSecond = 1f / Mathf.Max(0.1f, dischargeDuration);
+            drainPerSecond *= ResolveDrainMultiplier();
             _batteryCharge = Mathf.Clamp01(_batteryCharge - drainPerSecond * Time.deltaTime);
 
             if (lanternEffect != null) lanternEffect.SetIntensity(_batteryCharge);
+        }
+
+        private float ResolveDrainMultiplier()
+        {
+            GameplaySceneController scene = GameplaySceneController.Instance;
+            EntityDirector director = scene != null ? scene.Entities : null;
+            if (director == null || !director.IsVoyeurBattleActive) return 1f;
+            return Mathf.Max(1f, voyeurBattleDrainMultiplier);
         }
 
         private void PlayDynamoSfx()
