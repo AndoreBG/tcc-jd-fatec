@@ -35,6 +35,7 @@ namespace Whispers
 
         private Vector3 _baseLocal;
         private bool _baseCaptured;
+        private bool _motionSuppressed;
         private Vector3 _cameraRelativeBasePosition;
         private Quaternion _cameraRelativeBaseRotation;
         private bool _cameraRelativeBaseCaptured;
@@ -54,8 +55,20 @@ namespace Whispers
             if (!_baseCaptured) CaptureBasePosition();
         }
 
+        /// <summary>
+        /// Impede o LateUpdate de reescrever a posição local. Usado enquanto a porta
+        /// do Predator gira no hinge; a pose de repouso volta a seguir o parallax.
+        /// </summary>
+        public void SetMotionSuppressed(bool suppressed)
+        {
+            if (_motionSuppressed == suppressed) return;
+            _motionSuppressed = suppressed;
+            if (suppressed) ApplyOffset(Vector2.zero);
+        }
+
         private void LateUpdate()
         {
+            if (_motionSuppressed) return;
             ViewCameraController viewCamera = Camera;
             if (viewCamera == null)
             {

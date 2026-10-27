@@ -262,6 +262,10 @@ namespace Whispers
                     snapshot.resolveProgress.ToString("0.0") + " s | cooldown " +
                     snapshot.resolvedCooldownRemaining.ToString("0.0") + " s | terminal " +
                     snapshot.terminalRemaining.ToString("0.0") + " s");
+                if (snapshot.navigationLocked || snapshot.holdStarted || snapshot.holding || snapshot.terminalOpensDoor)
+                    GUILayout.Label("  porta " + snapshot.closedPercent.ToString("0") + "% fechada | segurando " +
+                        (snapshot.holding ? "sim" : "não") + " | vitória " + snapshot.resolveProgress.ToString("0.0") +
+                        " s | navegação " + (snapshot.navigationLocked ? "presa" : "livre"));
                 GUILayout.Label("  binding técnico: " + (hasVisualBinding ? "OK" : "ausente/não aplicável") +
                     " | áudio da entidade: " + (hasAudio ? "ativo" : "inativo") +
                     " | encontro: " + encounter + " | cobertura Halógeno: " + coverage);

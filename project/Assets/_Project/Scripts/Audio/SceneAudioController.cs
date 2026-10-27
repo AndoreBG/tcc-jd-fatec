@@ -1137,6 +1137,17 @@ namespace Whispers
         public bool PlayInteraction(AudioClip clip, float volume = 1f)
             => PlayClipInternal(clip, AudioSourceRole.Interactions, volume, 0f, null, "interaction", false);
 
+        /// <summary>
+        /// One-shot de entidade que não interrompe o loop presence da mesma entidade.
+        /// Clip vazio retorna falso sem warning; o chamador decide o aviso de autoria.
+        /// </summary>
+        public bool PlayEntityOneShot(string entityId, string anchorId, AudioClip clip, float volume)
+        {
+            if (clip == null || string.IsNullOrWhiteSpace(entityId)) return false;
+            return PlayClipInternal(clip, AudioSourceRole.Threats, Mathf.Clamp(volume, 0f, 2f), 0f, anchorId,
+                "bang:" + entityId, false, entityId, useDefaultPerspectiveWhenAnchorless: true);
+        }
+
         public bool PlayTransition(AudioClip clip, float volume = 1f)
             => PlayClipInternal(clip, AudioSourceRole.Transition, volume, 0f, null, "transition", false);
 

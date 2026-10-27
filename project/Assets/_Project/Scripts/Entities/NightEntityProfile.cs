@@ -136,11 +136,81 @@ namespace Whispers
         [Min(0f)] public float terminalCountdownSeconds = 5f;
 
         [Header("Predator (usado somente por PredatorDefinition)")]
-        [Min(0f)] public float predatorResolveStartWindowSeconds = 2.5f;
+        [Tooltip("Segundos para começar a segurar a maçaneta depois que a luta começa.")]
+        [Min(0f)] public float predatorResolveStartWindowSeconds = 2f;
+        [Tooltip("Tempo de vitória acumulado só enquanto o botão esquerdo está na maçaneta.")]
         [Min(0f)] public float predatorResolveHoldSeconds = 4f;
+        [Tooltip("Fechamento alvo da luta. 100 = porta encostada.")]
+        [Range(0f, 100f)] public float predatorStruggleClosedPercent = 75f;
+        [Tooltip("Oscilação em torno do alvo, em pontos percentuais de fechamento.")]
+        [Min(0f)] public float predatorStruggleVariationPercent = 10f;
+        [Tooltip("Abaixo deste fechamento, segurar de novo fecha a porta de volta ao alvo.")]
+        [Range(0f, 100f)] public float predatorRecoverBelowClosedPercent = 65f;
+        [Tooltip("Morte se o fechamento ficar estritamente abaixo deste valor.")]
+        [Range(0f, 100f)] public float predatorDeathBelowClosedPercent = 25f;
+        [Tooltip("Pontos de fechamento por segundo em direção ao alvo, enquanto segura e a porta ainda está mais fechada.")]
+        [Min(0f)] public float predatorHoldOpenSpeed = 8f;
+        [Tooltip("Pontos de fechamento por segundo que a porta abre com a mão fora.")]
+        [Min(0f)] public float predatorReleaseOpenSpeed = 22f;
+        [Tooltip("Pontos de fechamento por segundo ao voltar ao alvo depois de passar do limite de recuperação.")]
+        [Min(0f)] public float predatorRecoverCloseSpeed = 18f;
+        [Tooltip("Frequência da oscilação em torno do alvo, em Hz.")]
+        [Min(0f)] public float predatorWobbleSpeed = 0.35f;
+        [Tooltip("Intervalo entre batidas enquanto o jogador segura. 0 dispara uma batida por frame.")]
+        [Min(0f)] public float predatorBangIntervalSeconds = 2.5f;
+        [Tooltip("Distância extra, em pixels, além da borda da maçaneta.")]
+        [Min(0f)] public float predatorBangExtraPixels = 80f;
+        [Tooltip("Duração do empurrão do cursor. 0 é teleporte.")]
+        [Min(0f)] public float predatorBangShoveSeconds = 0.12f;
+        [Tooltip("Intensidade repassada a ViewCameraController.Shake.")]
+        [Min(0f)] public float predatorBangShakeIntensity = 0.08f;
 
         [Header("Voyeur (usado somente por VoyeurDefinition)")]
         [Min(0f)] public float voyeurLightContactRequiredSeconds = 5f;
+
+        public PredatorStruggleConfig ToStruggleConfig()
+        {
+            return new PredatorStruggleConfig
+            {
+                startWindowSeconds = predatorResolveStartWindowSeconds,
+                holdDurationSeconds = predatorResolveHoldSeconds,
+                struggleClosedPercent = predatorStruggleClosedPercent,
+                variationPercent = predatorStruggleVariationPercent,
+                recoverBelowClosedPercent = predatorRecoverBelowClosedPercent,
+                deathBelowClosedPercent = predatorDeathBelowClosedPercent,
+                holdOpenSpeed = predatorHoldOpenSpeed,
+                releaseOpenSpeed = predatorReleaseOpenSpeed,
+                recoverCloseSpeed = predatorRecoverCloseSpeed,
+                wobbleSpeed = predatorWobbleSpeed,
+                bangIntervalSeconds = predatorBangIntervalSeconds
+            };
+        }
+
+        private void CollectPredatorStruggleValidation(List<string> errors)
+        {
+            if (predatorStruggleVariationPercent < 0f || predatorHoldOpenSpeed < 0f || predatorReleaseOpenSpeed < 0f ||
+                predatorRecoverCloseSpeed < 0f || predatorWobbleSpeed < 0f || predatorBangIntervalSeconds < 0f ||
+                predatorBangShoveSeconds < 0f || predatorBangExtraPixels < 0f || predatorBangShakeIntensity < 0f)
+            {
+                errors.Add("Tuning de luta do Predator '" + entityDefinition.entityId + "' contém valor negativo.");
+            }
+            if (predatorDeathBelowClosedPercent < 0f ||
+                predatorDeathBelowClosedPercent >= predatorRecoverBelowClosedPercent)
+            {
+                errors.Add("Limite de morte do Predator '" + entityDefinition.entityId +
+                           "' deve ser menor que o limite de recuperação.");
+            }
+            if (predatorRecoverBelowClosedPercent >= predatorStruggleClosedPercent)
+            {
+                errors.Add("Recuperação do Predator '" + entityDefinition.entityId +
+                           "' deve ficar abaixo do alvo da luta.");
+            }
+            if (predatorStruggleClosedPercent - predatorStruggleVariationPercent < 0f ||
+                predatorStruggleClosedPercent + predatorStruggleVariationPercent > 100f)
+            {
+                errors.Add("Faixa de oscilação do Predator '" + entityDefinition.entityId + "' sai de 0..100.");
+            }
+        }
 
         public int GetAiLevel(int hourIndex)
         {
@@ -205,6 +275,8 @@ namespace Whispers
             {
                 errors.Add("Timers de resolução do Predator inválidos.");
             }
+            if (entityDefinition is PredatorDefinition)
+                CollectPredatorStruggleValidation(errors);
             if (entityDefinition is VoyeurDefinition && voyeurLightContactRequiredSeconds < 0f)
                 errors.Add("Timer de resolução do Voyeur inválido.");
 

@@ -23,8 +23,20 @@ MonoBehaviour:
     criticalToTerminalSeconds: 10
     resolvedCooldownSeconds: 30
     terminalCountdownSeconds: 5
-    predatorResolveStartWindowSeconds: 2.5
-    predatorResolveHoldSeconds: 4
+    predatorResolveStartWindowSeconds: 2
+    predatorResolveHoldSeconds: 6
+    predatorStruggleClosedPercent: 75
+    predatorStruggleVariationPercent: 10
+    predatorRecoverBelowClosedPercent: 65
+    predatorDeathBelowClosedPercent: 25
+    predatorHoldOpenSpeed: 8
+    predatorReleaseOpenSpeed: 22
+    predatorRecoverCloseSpeed: 14
+    predatorWobbleSpeed: 0.35
+    predatorBangIntervalSeconds: 2
+    predatorBangExtraPixels: 80
+    predatorBangShoveSeconds: 0.12
+    predatorBangShakeIntensity: 0.08
     voyeurLightContactRequiredSeconds: 5
   - entityDefinition: {fileID: 11400000, guid: 8c8f3c7979b83788f9153d34420a531e, type: 2}
     allowedAnchors:
@@ -35,6 +47,18 @@ MonoBehaviour:
     criticalToTerminalSeconds: 12
     resolvedCooldownSeconds: 25
     terminalCountdownSeconds: 4
-    predatorResolveStartWindowSeconds: 2.5
+    predatorResolveStartWindowSeconds: 2
     predatorResolveHoldSeconds: 4
+    predatorStruggleClosedPercent: 75
+    predatorStruggleVariationPercent: 10
+    predatorRecoverBelowClosedPercent: 65
+    predatorDeathBelowClosedPercent: 25
+    predatorHoldOpenSpeed: 8
+    predatorReleaseOpenSpeed: 22
+    predatorRecoverCloseSpeed: 18
+    predatorWobbleSpeed: 0.35
+    predatorBangIntervalSeconds: 2.5
+    predatorBangExtraPixels: 80
+    predatorBangShoveSeconds: 0.12
+    predatorBangShakeIntensity: 0.08
     voyeurLightContactRequiredSeconds: 5

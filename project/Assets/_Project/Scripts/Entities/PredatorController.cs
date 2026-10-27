@@ -3,8 +3,8 @@ using UnityEngine;
 namespace Whispers
 {
     /// <summary>
-    /// Adaptador de input do Predator. Hold, janela e transições continuam sob
-    /// autoridade do EntityDirector; este componente apenas coleta LMB/região local.
+    /// Adaptador de input do Predator. A luta na maçaneta, a janela e as transições
+    /// continuam sob autoridade do EntityDirector.
     /// </summary>
     public sealed class PredatorController : EntityControllerBase
     {

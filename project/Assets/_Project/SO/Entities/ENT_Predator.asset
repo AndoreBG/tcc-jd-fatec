@@ -52,6 +52,8 @@ MonoBehaviour:
     fadeInSeconds: 0
     fadeOutSeconds: 0
   jumpscare:
-    fullscreenSprite: {fileID: 0}
+    fullscreenSprite: {fileID: -1616178531410456441, guid: b94e23b40e3eda748afc4c14f1ed024b, type: 3}
     jumpscareSfx: {fileID: 8300000, guid: 5f23264f79138cc4a8cac98531dc0b98, type: 3}
     durationSeconds: 2.5
+  bangSfxClip: {fileID: 8300000, guid: 760cb6953bdb82343bdd548139d38760, type: 3}
+  bangSfxVolume: 1

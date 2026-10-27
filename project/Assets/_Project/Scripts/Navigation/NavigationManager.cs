@@ -75,6 +75,9 @@ namespace Whispers
                 Debug.LogWarning("[NavigationManager] Transição já em andamento; solicitação descartada.", this);
                 return false;
             }
+            EntityDirector entities = Scene != null ? Scene.Entities : null;
+            if (entities != null && entities.IsPredatorBattleActive)
+                return false;
             if (string.IsNullOrEmpty(destinationId))
             {
                 Debug.LogWarning("[NavigationManager] Destino com ID vazio.", this);

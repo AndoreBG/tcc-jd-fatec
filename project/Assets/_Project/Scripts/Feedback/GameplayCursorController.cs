@@ -19,6 +19,8 @@ namespace Whispers
 
         private readonly Dictionary<HotspotBase, CursorClaim> _claims =
             new Dictionary<HotspotBase, CursorClaim>();
+        private readonly Dictionary<object, CursorClaim> _externalClaims =
+            new Dictionary<object, CursorClaim>();
 
         private GlobalHotspotSettings _settings;
         private GamePeriod _period = GamePeriod.Day;
@@ -82,6 +84,38 @@ namespace Whispers
             if (_claims.Remove(owner)) RefreshCursor();
         }
 
+        /// <summary>
+        /// Pedido de cursor que não vem de um hotspot. A última solicitação, de
+        /// qualquer origem, continua vencendo.
+        /// </summary>
+        public void RequestCursor(object owner, Texture2D texture, Vector2 hotspot)
+        {
+            if (owner == null || texture == null)
+            {
+                ReleaseCursor(owner);
+                return;
+            }
+
+            CursorClaim claim;
+            if (!_externalClaims.TryGetValue(owner, out claim))
+            {
+                claim = new CursorClaim();
+                _externalClaims.Add(owner, claim);
+            }
+
+            claim.texture = texture;
+            claim.hotspot = hotspot;
+            claim.sequence = ++_sequence;
+            RefreshCursor();
+        }
+
+        /// <summary>Remove somente a solicitação do dono informado.</summary>
+        public void ReleaseCursor(object owner)
+        {
+            if (owner == null) return;
+            if (_externalClaims.Remove(owner)) RefreshCursor();
+        }
+
         private void RefreshCursor()
         {
             CursorClaim selected = null;
@@ -101,6 +135,22 @@ namespace Whispers
                     selected = pair.Value;
             }
             if (hasStaleOwner) _claims.Remove(staleOwner);
+
+            object staleExternal = null;
+            bool hasStaleExternal = false;
+            foreach (KeyValuePair<object, CursorClaim> pair in _externalClaims)
+            {
+                UnityEngine.Object unityOwner = pair.Key as UnityEngine.Object;
+                if (unityOwner == null && pair.Key is UnityEngine.Object)
+                {
+                    staleExternal = pair.Key;
+                    hasStaleExternal = true;
+                    continue;
+                }
+                if (selected == null || pair.Value.sequence > selected.sequence)
+                    selected = pair.Value;
+            }
+            if (hasStaleExternal) _externalClaims.Remove(staleExternal);
 
             if (selected != null && selected.texture != null)
             {
@@ -128,6 +178,7 @@ namespace Whispers
         private void OnDisable()
         {
             _claims.Clear();
+            _externalClaims.Clear();
             Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
         }
     }

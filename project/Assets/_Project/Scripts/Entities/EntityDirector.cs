@@ -94,6 +94,9 @@ namespace Whispers
                 EntityDefinition definition = entry != null ? entry.entityDefinition : null;
                 if (definition == null || !inspected.Add(definition.entityId)) continue;
                 definition.CollectPresentationWarnings(warnings);
+                PredatorDefinition predator = definition as PredatorDefinition;
+                if (predator != null && predator.bangSfxClip == null)
+                    warnings.Add("Entidade '" + definition.entityId + "' não possui SFX de batida autorado.");
             }
         }
 
@@ -110,6 +113,10 @@ namespace Whispers
 
         public bool IsPausedByDebug => _scene != null && _scene.Blocker != null &&
                                        _scene.Blocker.HasReason(InputBlockReason.Pause);
+        /// <summary>Luta na maçaneta. Só a navegação entre ViewNodes deve recusar.</summary>
+        public bool IsPredatorBattleActive => IsBattleActive();
+        public string PredatorEntityId => predatorController != null ? predatorController.EntityId : null;
+        public event Action<PredatorBangSignal> PredatorBanged;
 
         public event Action<EntityRuntimeSnapshot> EntityStateChanged;
         public event Action<int, float> ClockUpdated;
@@ -234,13 +241,7 @@ namespace Whispers
                 switch (runtime.state)
                 {
                     case EntityState.Near:
-                        // Só o Predator acelera Near ao jogador observar a porta. O
-                        // Voyeur continua determinístico pelo timer e pela luz.
-                        if (definition is PredatorDefinition && IsPlayerAtEncounter(runtime))
-                        {
-                            TryTransition(id, EntityState.Critical, null, "entrada no ViewNode de confronto");
-                            break;
-                        }
+                        // Near não inicia a luta. O Predator só entra em Critical pelo timer.
                         runtime.stateElapsed += delta;
                         if (runtime.stateElapsed >= runtime.entry.nearToCriticalSeconds)
                             TryTransition(id, EntityState.Critical, null, "timer Near expirado");
@@ -300,13 +301,12 @@ namespace Whispers
             EntityRuntime predator;
             if (!_entities.TryGetValue(predatorController.EntityId, out predator)) return;
 
-            if (predator.state == EntityState.Near && IsPlayerAtEncounter(predator))
-                TryTransition(predator.entry.entityDefinition.entityId, EntityState.Critical, null, "entrada na porta durante Near");
-            else if (predator.state == EntityState.Critical && IsPlayerAtEncounter(predator))
+            if (predator.state == EntityState.Critical && IsPlayerAtEncounter(predator))
                 TryTransition(predator.entry.entityDefinition.entityId, EntityState.Resolving, null, "entrada na porta durante Critical");
             else if (predator.state == EntityState.Resolving && !IsPlayerAtEncounter(predator))
             {
-                QueueTerminal(predator.entry.entityDefinition.entityId, true, "saída da porta durante resolução");
+                QueueTerminal(predator.entry.entityDefinition.entityId, true, "saída da porta durante resolução", false);
+                ResolveTerminalRequests();
             }
         }
 
@@ -320,7 +320,8 @@ namespace Whispers
 
             if (!IsPlayerAtEncounter(runtime))
             {
-                QueueTerminal(entityId, true, "jogador não está no ViewNode da porta");
+                QueueTerminal(entityId, true, "jogador não está no ViewNode da porta", false);
+                ResolveTerminalRequests();
                 return;
             }
 
@@ -328,39 +329,104 @@ namespace Whispers
             if (presentation == null || !presentation.TryGetEncounterRegion(entityId, runtime.anchor != null ? runtime.anchor.id : null, out region))
             {
                 WarnOnce("region|" + entityId, "[EntityDirector] Predator sem encounterRegion autorada; resolução falhou de forma segura.");
-                QueueTerminal(entityId, true, "encounterRegion ausente");
+                QueueTerminal(entityId, true, "encounterRegion ausente", false);
+                ResolveTerminalRequests();
                 return;
             }
 
             Camera camera = ResolveRegionEventCamera(region);
             bool inside = RectTransformUtility.RectangleContainsScreenPoint(region, Input.mousePosition, camera);
             bool holding = Input.GetMouseButton(0) && inside;
+            StepPredatorStruggle(runtime, holding, delta);
+        }
 
-            if (!runtime.resolveStarted)
+        private void StepPredatorStruggle(EntityRuntime runtime, bool holding, float delta)
+        {
+            PredatorStruggleState struggle = ReadStruggle(runtime);
+            PredatorStruggleEvent events = PredatorStruggleMath.Step(ref struggle, holding,
+                runtime.entry.ToStruggleConfig(), delta);
+            WriteStruggle(runtime, struggle);
+
+            if ((events & PredatorStruggleEvent.Bang) != 0)
+                RaisePredatorBang(runtime);
+            if ((events & PredatorStruggleEvent.StartWindowExpired) != 0)
+                QueueTerminal(runtime.entry.entityDefinition.entityId, true, "janela inicial de defesa expirou", false);
+            else if ((events & PredatorStruggleEvent.ReachedDeath) != 0)
+                QueueTerminal(runtime.entry.entityDefinition.entityId, true, "porta do Predator abriu além do limite", false);
+            else if ((events & PredatorStruggleEvent.HoldCompleted) != 0)
+                TryTransition(runtime.entry.entityDefinition.entityId, EntityState.Resolved, null, "tempo de segurar concluído");
+
+            if ((events & (PredatorStruggleEvent.StartWindowExpired | PredatorStruggleEvent.ReachedDeath)) != 0)
+                ResolveTerminalRequests();
+        }
+
+        private void RaisePredatorBang(EntityRuntime runtime)
+        {
+            PredatorDefinition definition = runtime.entry.entityDefinition as PredatorDefinition;
+            if (definition == null) return;
+            string anchorId = runtime.anchor != null ? runtime.anchor.id : null;
+            if (definition.bangSfxClip == null)
             {
-                if (holding)
-                {
-                    runtime.resolveStarted = true;
-                    runtime.resolveProgress = 0f;
-                    return;
-                }
-                runtime.resolveStartRemaining -= delta;
-                if (runtime.resolveStartRemaining <= 0f)
-                {
-                    QueueTerminal(entityId, true, "janela inicial de defesa expirou");
-                }
-                return;
+                WarnOnce("bang-sfx|" + definition.entityId,
+                    "[EntityDirector] Predator '" + definition.entityId +
+                    "' sem SFX de batida autorado; a luta continua sem som.");
+            }
+            else if (_scene != null && _scene.Audio != null)
+            {
+                _scene.Audio.PlayEntityOneShot(definition.entityId, anchorId, definition.bangSfxClip,
+                    definition.bangSfxVolume);
             }
 
-            if (!holding)
+            PredatorBanged?.Invoke(new PredatorBangSignal
             {
-                QueueTerminal(entityId, true, "hold de defesa interrompido");
-                return;
-            }
+                entityId = definition.entityId,
+                anchorId = anchorId,
+                shakeIntensity = runtime.entry.predatorBangShakeIntensity,
+                extraPixels = runtime.entry.predatorBangExtraPixels,
+                shoveSeconds = runtime.entry.predatorBangShoveSeconds
+            });
+        }
 
-            runtime.resolveProgress += delta;
-            if (runtime.resolveProgress >= runtime.entry.predatorResolveHoldSeconds)
-                TryTransition(entityId, EntityState.Resolved, null, "hold contínuo concluído");
+        private static PredatorStruggleState ReadStruggle(EntityRuntime runtime)
+        {
+            return new PredatorStruggleState
+            {
+                closedPercent = runtime.closedPercent,
+                holdProgress = runtime.resolveProgress,
+                startWindowRemaining = runtime.resolveStartRemaining,
+                holdStarted = runtime.holdStarted,
+                reachedStruggle = runtime.reachedStruggle,
+                wobblePhase = runtime.wobblePhase,
+                bangCooldown = runtime.bangCooldown,
+                holding = runtime.holding
+            };
+        }
+
+        private static void WriteStruggle(EntityRuntime runtime, PredatorStruggleState state)
+        {
+            runtime.closedPercent = state.closedPercent;
+            runtime.resolveProgress = state.holdProgress;
+            runtime.resolveStartRemaining = state.startWindowRemaining;
+            runtime.holdStarted = state.holdStarted;
+            runtime.resolveStarted = state.holdStarted;
+            runtime.reachedStruggle = state.reachedStruggle;
+            runtime.wobblePhase = state.wobblePhase;
+            runtime.bangCooldown = state.bangCooldown;
+            runtime.holding = state.holding;
+        }
+
+        private static void ResetPredatorStruggle(EntityRuntime runtime)
+        {
+            WriteStruggle(runtime, PredatorStruggleState.Begin(runtime.entry.ToStruggleConfig()));
+            runtime.terminalOpensDoor = false;
+        }
+
+        private bool IsBattleActive()
+        {
+            if (predatorController == null || string.IsNullOrWhiteSpace(predatorController.EntityId)) return false;
+            EntityRuntime runtime;
+            return _entities.TryGetValue(predatorController.EntityId, out runtime) && runtime != null &&
+                   runtime.state == EntityState.Resolving;
         }
 
         private Camera ResolveRegionEventCamera(RectTransform region)
@@ -597,7 +663,7 @@ namespace Whispers
             { error = "Entidade não encontrada no runtime noturno."; return false; }
             if (runtime.state != EntityState.Resolving)
             { error = "A entidade precisa estar em Resolving para simular falha."; return false; }
-            QueueTerminal(entityId, true, "falha de resolução simulada pelo Debug F8");
+            QueueTerminal(entityId, true, "falha de resolução simulada pelo Debug F8", false);
             return true;
         }
 
@@ -649,11 +715,19 @@ namespace Whispers
             EntityState previousState = runtime.state;
             runtime.state = targetState;
             runtime.stateElapsed = 0f;
-            runtime.resolveStarted = false;
-            runtime.resolveProgress = 0f;
-            runtime.resolveStartRemaining = runtime.entry.predatorResolveStartWindowSeconds;
             runtime.criticalRemaining = runtime.entry.criticalToTerminalSeconds;
             runtime.terminalRemaining = runtime.entry.terminalCountdownSeconds;
+            runtime.terminalOpensDoor = false;
+            if (targetState == EntityState.Resolving && runtime.entry.entityDefinition is PredatorDefinition)
+                ResetPredatorStruggle(runtime);
+            else
+            {
+                runtime.resolveStarted = false;
+                runtime.holdStarted = false;
+                runtime.resolveProgress = 0f;
+                runtime.closedPercent = 100f;
+                runtime.resolveStartRemaining = runtime.entry.predatorResolveStartWindowSeconds;
+            }
             PublishEntity(runtime, previousState, previousAnchor, "forçado pelo Debug F8");
             return true;
         }
@@ -678,6 +752,8 @@ namespace Whispers
             EntityState previousState = winner.state;
             winner.state = EntityState.Terminal;
             winner.stateElapsed = 0f;
+            winner.terminalOpensDoor = true;
+            winner.closedPercent = 0f;
             winner.terminalRemaining = immediate ? 0f : winner.entry.terminalCountdownSeconds;
             _terminalActive = true;
             _terminalEntityId = entityId;
@@ -692,15 +768,22 @@ namespace Whispers
             return true;
         }
 
-        private void QueueTerminal(string entityId, bool immediate, string reason)
+        private void QueueTerminal(string entityId, bool immediate, string reason, bool openDoor = true)
         {
             foreach (TerminalRequest request in _terminalRequests)
             {
                 if (request.entityId != entityId) continue;
                 if (immediate) request.immediate = true;
+                if (!openDoor) request.openDoor = false;
                 return;
             }
-            _terminalRequests.Add(new TerminalRequest { entityId = entityId, immediate = immediate, reason = reason });
+            _terminalRequests.Add(new TerminalRequest
+            {
+                entityId = entityId,
+                immediate = immediate,
+                reason = reason,
+                openDoor = openDoor
+            });
         }
 
         private void ResolveTerminalRequests()
@@ -711,6 +794,8 @@ namespace Whispers
 
             EntityRuntime winner;
             if (!_entities.TryGetValue(selected.entityId, out winner)) return;
+            winner.terminalOpensDoor = selected.openDoor;
+            if (selected.openDoor) winner.closedPercent = 0f;
             if (!TryTransition(selected.entityId, EntityState.Terminal, null, selected.reason)) return;
 
             _terminalActive = true;
@@ -849,9 +934,12 @@ namespace Whispers
             if (targetState == EntityState.Critical && !preserveVoyeurLightProgress)
                 runtime.criticalRemaining = runtime.entry.criticalToTerminalSeconds;
             else if (targetState == EntityState.Resolving && runtime.entry.entityDefinition is PredatorDefinition)
-                runtime.resolveStartRemaining = runtime.entry.predatorResolveStartWindowSeconds;
+                ResetPredatorStruggle(runtime);
             else if (targetState == EntityState.Terminal)
                 runtime.terminalRemaining = runtime.entry.terminalCountdownSeconds;
+
+            if (targetState == EntityState.Resolved || targetState == EntityState.Inactive)
+                runtime.closedPercent = 100f;
 
             if (targetState == EntityState.Inactive || targetState == EntityState.Light || targetState == EntityState.Resolved)
             {
@@ -1057,7 +1145,13 @@ namespace Whispers
                     : 0f,
                 terminalRemaining = runtime.terminalRemaining,
                 debugEncounterOverride = runtime.debugEncounterOverride,
-                debugVoyeurCoverageOverride = runtime.debugVoyeurCoverageOverride
+                debugVoyeurCoverageOverride = runtime.debugVoyeurCoverageOverride,
+                navigationLocked = runtime.state == EntityState.Resolving &&
+                                   runtime.entry.entityDefinition is PredatorDefinition,
+                closedPercent = runtime.closedPercent,
+                holdStarted = runtime.holdStarted,
+                holding = runtime.holding,
+                terminalOpensDoor = runtime.terminalOpensDoor
             };
         }
 
@@ -1074,6 +1168,13 @@ namespace Whispers
             public float resolveProgress;
             public float terminalRemaining;
             public bool resolveStarted;
+            public float closedPercent = 100f;
+            public bool holdStarted;
+            public bool reachedStruggle;
+            public float wobblePhase;
+            public float bangCooldown;
+            public bool holding;
+            public bool terminalOpensDoor;
             public bool? debugEncounterOverride;
             public float? debugVoyeurCoverageOverride;
             public EntityRuntime(EntityNightEntry value) { entry = value; state = EntityState.Inactive; }
@@ -1084,6 +1185,7 @@ namespace Whispers
             public string entityId;
             public bool immediate;
             public string reason;
+            public bool openDoor = true;
         }
     }
 
@@ -1104,5 +1206,10 @@ namespace Whispers
         public float terminalRemaining;
         public bool? debugEncounterOverride;
         public float? debugVoyeurCoverageOverride;
+        public bool navigationLocked;
+        public float closedPercent;
+        public bool holdStarted;
+        public bool holding;
+        public bool terminalOpensDoor;
     }
 }
