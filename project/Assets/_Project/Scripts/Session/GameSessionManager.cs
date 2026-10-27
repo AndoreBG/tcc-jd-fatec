@@ -29,6 +29,8 @@ namespace Whispers
         private bool _initialized;
         private bool _failNextSave;
         private string _pendingScene;
+        private GamePeriod? _pendingPeriod;
+        private int _pendingNumber;
 
         public event Action SessionStateChanged;
         public bool IsDevelopmentSession { get; private set; } = true;
@@ -175,14 +177,14 @@ namespace Whispers
         public bool TryNewGame(out string error)
         {
             if (!PrepareNewGameSession(out error)) return false;
-            StartLoading(_cycle.dayScene);
+            StartLoading(_cycle.dayScene, GamePeriod.Day, day);
             return true;
         }
 
         public bool TryContinue(out string error)
         {
             if (!PrepareContinueSession(out error)) return false;
-            StartLoading(_cycle.dayScene);
+            StartLoading(_cycle.dayScene, GamePeriod.Day, day);
             return true;
         }
 
@@ -206,7 +208,7 @@ namespace Whispers
                 PrepareForPeriodChange();
                 period = GamePeriod.Night;
             }
-            StartLoading(_cycle.GetScene(next));
+            StartLoading(_cycle.GetScene(next), next, day);
             return true;
         }
 
@@ -216,7 +218,7 @@ namespace Whispers
             if (!IsDevelopmentSession) return TryContinue(out error);
             if (_developmentCheckpoint == null) { error = "Checkpoint de desenvolvimento ausente."; return false; }
             Apply(_developmentCheckpoint.Copy());
-            StartLoading(_cycle.dayScene);
+            StartLoading(_cycle.dayScene, GamePeriod.Day, day);
             return true;
         }
 
@@ -253,7 +255,7 @@ namespace Whispers
             // Apply restaura período Dia e cópias independentes das coleções. Não há
             // WriteCheckpoint nesta operação, inclusive para sessão de desenvolvimento.
             Apply(checkpoint);
-            StartLoading(_cycle.dayScene);
+            StartLoading(_cycle.dayScene, GamePeriod.Day, day);
             return true;
         }
 
@@ -298,6 +300,8 @@ namespace Whispers
             _initialized = false;
             _developmentCheckpoint = null;
             _pendingScene = null;
+            _pendingPeriod = null;
+            _pendingNumber = 0;
             LoadError = null;
             _failNextSave = false;
             Notice = null;
@@ -364,12 +368,20 @@ namespace Whispers
             }
         }
 
-        private void StartLoading(string scene)
+        /// <summary>
+        /// Inicia o carregamento. O período e o número do Dia/Noite alimentam a tela de
+        /// carregamento do LevelManager (legenda "Dia X"/"Noite X" e áudio do período).
+        /// Cargas sem período (ex.: retorno ao menu) usam nulo.
+        /// </summary>
+        private void StartLoading(string scene, GamePeriod? loadingPeriod = null, int loadingNumber = 0)
         {
             _pendingScene = scene;
+            _pendingPeriod = loadingPeriod;
+            _pendingNumber = loadingNumber;
             LoadError = null;
             IsLoading = true;
-            if (LevelManager.Instance != null) StartCoroutine(LoadWithLevelManagerRoutine(scene));
+            if (LevelManager.Instance != null)
+                StartCoroutine(LoadWithLevelManagerRoutine(scene, loadingPeriod, loadingNumber));
             else StartCoroutine(LoadSceneRoutine());
         }
 
@@ -378,7 +390,7 @@ namespace Whispers
         /// limpo na conclusão (cena nova ativa) ou na falha; em falha, _pendingScene
         /// permanece para TryRetrySceneLoad e a cena atual continua viva.
         /// </summary>
-        private IEnumerator LoadWithLevelManagerRoutine(string scene)
+        private IEnumerator LoadWithLevelManagerRoutine(string scene, GamePeriod? loadingPeriod, int loadingNumber)
         {
             // Sai da pilha da interação e aguarda a revelação anterior terminar, em vez de
             // disparar um carregamento paralelo sem transição.
@@ -402,7 +414,9 @@ namespace Whispers
                 {
                     LoadError = string.IsNullOrEmpty(message) ? "O carregamento não pôde ser iniciado." : message;
                     IsLoading = false;
-                });
+                },
+                loadingPeriod: loadingPeriod,
+                loadingNumber: loadingNumber);
 
             if (!started)
             {
@@ -415,7 +429,7 @@ namespace Whispers
         {
             error = null;
             if (IsLoading || !HasPendingLoad) { error = "Não há carregamento falho para repetir."; return false; }
-            StartLoading(_pendingScene);
+            StartLoading(_pendingScene, _pendingPeriod, _pendingNumber);
             return true;
         }
 

@@ -45,14 +45,24 @@ namespace Whispers
         [SerializeField] private LevelManager levelManager;
         [SerializeField] private string defaultTransitionName = "CrossFade";
 
+        [Header("Animação de Entrada e Decoração")]
+        [Tooltip("Sequência de entrada do menu (um elemento por vez, com flicker). Opcional.")]
+        [SerializeField] private MainMenuIntroSequence introSequence;
+
+        [Tooltip("Loop de cintilação dos sprites decorativos do canto direito. Opcional.")]
+        [SerializeField] private MenuDecorFlickerLoop decorFlickerLoop;
+
         [Header("Feedback de Áudio")]
         [Tooltip("Opcional. Se vazio, um AudioSource 2D é criado neste GameObject em runtime.")]
         [SerializeField] private AudioSource buttonAudioSource;
         [SerializeField] private AudioClip buttonClickClip;
+        [Tooltip("Áudio tocado quando o jogador inicia um novo jogo (Play sem save ou confirmação de sobrescrita).")]
+        [SerializeField] private AudioClip newGameClip;
         [Tooltip("Grupo do mixer usado pelo AudioSource criado em runtime (recomendado: UI).")]
         [SerializeField] private AudioMixerGroup buttonMixerGroup;
 
         private bool _isTransitioning;
+        private bool _isIntroPlaying;
 
         private GameSessionManager Session => GameSessionManager.Instance;
         private LevelManager Loader => levelManager != null ? levelManager : LevelManager.Instance;
@@ -77,16 +87,19 @@ namespace Whispers
 
             SetActiveSafe(optionsPanel, false);
             SetActiveSafe(overwriteModal, false);
+
+            BeginIntroSequence();
         }
 
         private void OnDestroy()
         {
             UnbindButtons();
+            if (introSequence != null) introSequence.Finished -= OnIntroFinished;
         }
 
         private void Update()
         {
-            if (_isTransitioning) return;
+            if (IsInputLocked) return;
 
             // ESC fecha primeiro o modal; depois o painel de opções.
             if (Input.GetKeyDown(KeyCode.Escape))
@@ -166,7 +179,7 @@ namespace Whispers
 
         private void EnsureButtonAudioSource()
         {
-            if (buttonAudioSource != null || buttonClickClip == null) return;
+            if (buttonAudioSource != null || (buttonClickClip == null && newGameClip == null)) return;
 
             buttonAudioSource = GetComponent<AudioSource>();
             if (buttonAudioSource == null)
@@ -236,11 +249,20 @@ namespace Whispers
 
         private void PlayButtonFeedback()
         {
-            if (buttonAudioSource != null && buttonClickClip != null)
+            PlayClip(buttonClickClip);
+        }
+
+        /// <summary>Toca um clipe 2D de interface. Ignora clipes ausentes (autoria manual).</summary>
+        private void PlayClip(AudioClip clip)
+        {
+            if (buttonAudioSource != null && clip != null)
             {
-                buttonAudioSource.PlayOneShot(buttonClickClip);
+                buttonAudioSource.PlayOneShot(clip);
             }
         }
+
+        /// <summary>Verdadeiro enquanto a entrada do menu deve ficar travada (intro ou transição).</summary>
+        private bool IsInputLocked => _isTransitioning || _isIntroPlaying;
 
         /// <summary>Trava todo o menu enquanto a transição/carregamento estiver em curso.</summary>
         private void SetMenuInteractable(bool interactable)
@@ -263,7 +285,7 @@ namespace Whispers
 
         private void OnPlayClicked()
         {
-            if (_isTransitioning) return;
+            if (IsInputLocked) return;
             PlayButtonFeedback();
 
             // Se já existe um save gravado no slot 1, apresenta o modal de confirmação.
@@ -278,7 +300,7 @@ namespace Whispers
 
         private void OnConfirmOverwrite()
         {
-            if (_isTransitioning) return;
+            if (IsInputLocked) return;
             PlayButtonFeedback();
             SetActiveSafe(overwriteModal, false);
             StartNewGame();
@@ -286,14 +308,14 @@ namespace Whispers
 
         private void CloseOverwriteModal()
         {
-            if (_isTransitioning) return;
+            if (IsInputLocked) return;
             PlayButtonFeedback();
             SetActiveSafe(overwriteModal, false);
         }
 
         private void OnContinueClicked()
         {
-            if (_isTransitioning) return;
+            if (IsInputLocked) return;
             PlayButtonFeedback();
 
             if (Session == null || !Session.HasCheckpoint)
@@ -308,21 +330,21 @@ namespace Whispers
 
         private void OnOptionsClicked()
         {
-            if (_isTransitioning) return;
+            if (IsInputLocked) return;
             PlayButtonFeedback();
             SetActiveSafe(optionsPanel, true);
         }
 
         public void CloseOptions()
         {
-            if (_isTransitioning) return;
+            if (IsInputLocked) return;
             PlayButtonFeedback();
             SetActiveSafe(optionsPanel, false);
         }
 
         private void OnExitClicked()
         {
-            if (_isTransitioning) return;
+            if (IsInputLocked) return;
             PlayButtonFeedback();
             Debug.Log("[MainMenuController] Encerrando aplicação...");
 #if UNITY_EDITOR
@@ -337,6 +359,9 @@ namespace Whispers
         private void StartNewGame()
         {
             if (!CanStartFlow()) return;
+
+            // Som de início de novo jogo: dispara no momento da confirmação do jogador.
+            PlayClip(newGameClip);
 
             LevelManager loader = Loader;
             if (loader == null)
@@ -354,7 +379,7 @@ namespace Whispers
                 return;
             }
 
-            BeginTransition(loader, cycleDefinition.dayScene);
+            BeginTransition(loader, cycleDefinition.dayScene, GamePeriod.Day, Session.day);
         }
 
         private void ContinueGame()
@@ -376,12 +401,12 @@ namespace Whispers
                 return;
             }
 
-            BeginTransition(loader, cycleDefinition.dayScene);
+            BeginTransition(loader, cycleDefinition.dayScene, GamePeriod.Day, Session.day);
         }
 
         private bool CanStartFlow()
         {
-            if (_isTransitioning) return false;
+            if (IsInputLocked) return false;
             if (cycleDefinition == null)
             {
                 Debug.LogError("[MainMenuController] cycleDefinition não atribuído no Inspector.", this);
@@ -402,16 +427,20 @@ namespace Whispers
             return true;
         }
 
-        private void BeginTransition(LevelManager loader, string targetScene)
+        private void BeginTransition(LevelManager loader, string targetScene, GamePeriod loadingPeriod, int loadingNumber)
         {
             _isTransitioning = true;
             SetMenuInteractable(false);
+
+            // O loop de decoração para onde está: o sprite aceso segue assim até o preto cobrir a tela.
+            if (decorFlickerLoop != null) decorFlickerLoop.SetOwnerPause(true);
+
             bool started = loader.LoadScene(targetScene, defaultTransitionName, null, null, error =>
             {
                 // A cena do menu continua ativa: devolve o controle ao jogador.
                 Debug.LogError("[MainMenuController] Falha ao carregar '" + targetScene + "': " + error, this);
                 RestoreAfterFailedTransition();
-            });
+            }, loadingPeriod, loadingNumber);
             if (!started) RestoreAfterFailedTransition();
         }
 
@@ -421,6 +450,45 @@ namespace Whispers
             _isTransitioning = false;
             SetMenuInteractable(true);
             UpdateContinueButtonState();
+            if (decorFlickerLoop != null) decorFlickerLoop.SetOwnerPause(false);
+        }
+
+        // ───────────────────────────── Animação de entrada ─────────────────────────────
+
+        /// <summary>
+        /// Inicia a sequência de entrada e trava a interação até o último elemento aparecer.
+        /// O loop de decoração só começa depois que a intro termina, para não competir com ela.
+        /// </summary>
+        private void BeginIntroSequence()
+        {
+            if (decorFlickerLoop != null) decorFlickerLoop.SetOwnerPause(true);
+
+            if (introSequence == null)
+            {
+                // Sem animação de entrada: o menu já nasce utilizável.
+                if (decorFlickerLoop != null) decorFlickerLoop.SetOwnerPause(false);
+                return;
+            }
+
+            _isIntroPlaying = true;
+            SetMenuInteractable(false);
+
+            introSequence.Finished -= OnIntroFinished;
+            introSequence.Finished += OnIntroFinished;
+            introSequence.Play();
+        }
+
+        private void OnIntroFinished()
+        {
+            if (introSequence != null) introSequence.Finished -= OnIntroFinished;
+
+            _isIntroPlaying = false;
+
+            // Durante a transição o menu continua travado; só a decoração volta a rodar se o menu está estável.
+            if (!_isTransitioning) SetMenuInteractable(true);
+            UpdateContinueButtonState();
+
+            if (decorFlickerLoop != null) decorFlickerLoop.SetOwnerPause(false);
         }
     }
 }
