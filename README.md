@@ -1,5 +1,7 @@
 > Repositório com o objetivo de armazenar o projeto prático do TCC (Trabalho de Conclusão de Curso) de Jogos Digitais da FATEC Americana "Ministro Ralph Biasi"
 
+> Baixe o jogo [aqui](https://github.com/AndoreBG/tcc-jd-fatec/releases)
+
 # Whispers Of The Unknown
 ![Unity](https://img.shields.io/badge/Unity-2D-black?style=for-the-badge&logo=unity)
 ![Status](https://img.shields.io/badge/Status-Em%20Desenvolvimento-yellow?style=for-the-badge)
