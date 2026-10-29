@@ -6137,8 +6137,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 293.07758, y: 464}
-  m_SizeDelta: {x: 486.1552, y: 196.3595}
+  m_AnchoredPosition: {x: 323.11633, y: 464}
+  m_SizeDelta: {x: 546.2327, y: 196.3595}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1510213141
 MonoBehaviour:
@@ -6160,7 +6160,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Whispers Of The Unkown
+  m_text: Whispers Of The Unknown
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: fd0d5c1cf83a0184ca9da593f92d8a06, type: 2}
   m_sharedMaterial: {fileID: 4686917121250629500, guid: fd0d5c1cf83a0184ca9da593f92d8a06, type: 2}
