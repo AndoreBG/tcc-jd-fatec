@@ -397,7 +397,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.NavigationHotspot
   enabledForGameplay: 1
-  activationMode: 0
+  activationMode: 2
   repeatPolicy: 1
   conditionPolicy: 0
   conditions: []
@@ -1036,7 +1036,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.NavigationHotspot
   enabledForGameplay: 1
-  activationMode: 0
+  activationMode: 2
   repeatPolicy: 1
   conditionPolicy: 0
   conditions: []
@@ -1583,7 +1583,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.NavigationHotspot
   enabledForGameplay: 1
-  activationMode: 0
+  activationMode: 2
   repeatPolicy: 1
   conditionPolicy: 0
   conditions: []
@@ -1623,7 +1623,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.26415092, g: 0.26415092, b: 0.26415092, a: 0.3137255}
+  m_Color: {r: 0.26415092, g: 0.26415092, b: 0.26415092, a: 0.47058824}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -3254,7 +3254,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.NavigationHotspot
   enabledForGameplay: 1
-  activationMode: 0
+  activationMode: 2
   repeatPolicy: 1
   conditionPolicy: 0
   conditions: []
@@ -3294,7 +3294,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.26415092, g: 0.26415092, b: 0.26415092, a: 0.3137255}
+  m_Color: {r: 0.26415092, g: 0.26415092, b: 0.26415092, a: 0.47058824}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -5041,7 +5041,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.NavigationHotspot
   enabledForGameplay: 1
-  activationMode: 0
+  activationMode: 2
   repeatPolicy: 1
   conditionPolicy: 0
   conditions: []
@@ -5447,7 +5447,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.NavigationHotspot
   enabledForGameplay: 1
-  activationMode: 0
+  activationMode: 2
   repeatPolicy: 1
   conditionPolicy: 0
   conditions: []
@@ -5713,7 +5713,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.NavigationHotspot
   enabledForGameplay: 1
-  activationMode: 0
+  activationMode: 2
   repeatPolicy: 1
   conditionPolicy: 0
   conditions: []
@@ -6516,7 +6516,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.NavigationHotspot
   enabledForGameplay: 1
-  activationMode: 0
+  activationMode: 2
   repeatPolicy: 1
   conditionPolicy: 0
   conditions: []
@@ -6610,7 +6610,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1307167312
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7191,7 +7191,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.NavigationHotspot
   enabledForGameplay: 1
-  activationMode: 0
+  activationMode: 2
   repeatPolicy: 1
   conditionPolicy: 0
   conditions: []
@@ -8289,7 +8289,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.NavigationHotspot
   enabledForGameplay: 1
-  activationMode: 0
+  activationMode: 2
   repeatPolicy: 1
   conditionPolicy: 0
   conditions: []
@@ -8418,7 +8418,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.NavigationHotspot
   enabledForGameplay: 1
-  activationMode: 0
+  activationMode: 2
   repeatPolicy: 1
   conditionPolicy: 0
   conditions: []
@@ -8458,7 +8458,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.26415092, g: 0.26415092, b: 0.26415092, a: 0.3137255}
+  m_Color: {r: 0.26415092, g: 0.26415092, b: 0.26415092, a: 0.47058824}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

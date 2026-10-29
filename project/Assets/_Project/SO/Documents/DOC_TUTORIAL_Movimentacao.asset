@@ -14,5 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.DocumentData
   id: doc_tutorial_movimentacao
   title: "Movimenta\xE7\xE3o"
-  body: "Ao aproximar o mouse dos cantos da tela, voc\xEA realiza um movimento r\xE1pido para outro ponto de vista.\n\nIntera\xE7\xF5es que mudam a apar\xEAncia do mouse precisam de um clique para serem ativadas.\n\nExplore a casa observando os cantos e o cursor: eles indicam para onde voc\xEA pode ir e o que pode investigar."
+  body: "Ao aproximar o mouse dos cantos da tela e clicar, voc\xEA realiza um movimento
+    para outro ponto de vista.\n\nIntera\xE7\xF5es que mudam a apar\xEAncia do mouse
+    precisam de um clique para serem ativadas.\n\nExplore a casa observando os cantos
+    e o cursor: eles indicam para onde voc\xEA pode ir e o que pode investigar."
   image: {fileID: 0}

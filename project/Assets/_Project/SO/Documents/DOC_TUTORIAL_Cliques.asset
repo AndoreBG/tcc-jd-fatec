@@ -14,5 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.DocumentData
   id: doc_tutorial_cliques
   title: Antes de tudo
-  body: "Mova o cursor pela casa e observe a mudança dele: quando vira mão, algo pode ser pego; quando vira seta, você vai se mover.\n\nClique com o botão esquerdo para examinar, pegar ou abrir. Nas portas e nas bordas da tela existem setas que levam a outros pontos de vista: o corredor liga todos os cômodos.\n\nDocumentos abrem sobre a tela e fecham com ESC. Nada acontece se você clicar fora de uma área interativa — se o cursor não mudar, procure outro ponto.\n\nObjetivo do dia: encontre a lanterna antes de anoitecer."
+  body: "Mova o cursor pela casa e observe a mudan\xE7a dele: quando vira m\xE3o,
+    algo pode ser pego; quando vira seta, voc\xEA vai se mover.\n\nClique com o bot\xE3o
+    esquerdo do mouse para examinar, pegar ou abrir. Nas portas e nas bordas da tela
+    existem setas que levam a outros pontos de vista: o corredor liga todos os c\xF4modos.\n\nDocumentos
+    abrem sobre a tela e fecham com ESC.\n\nObjetivo do dia: encontre a lanterna
+    antes de anoitecer."
   image: {fileID: 0}

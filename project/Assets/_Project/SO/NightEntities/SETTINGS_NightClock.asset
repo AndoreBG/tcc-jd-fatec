@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 775a87e4dd77dff61575ee677082b9ca, type: 3}
   m_Name: SETTINGS_NightClock
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.NightClockSettings
-  nightDurationSeconds: 360
+  nightDurationSeconds: 300
   aiTickSeconds: 5
