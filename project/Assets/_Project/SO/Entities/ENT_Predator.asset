@@ -38,7 +38,7 @@ MonoBehaviour:
     fadeInSeconds: 0
     fadeOutSeconds: 0
   - state: 5
-    enterSfxClip: {fileID: 8300000, guid: 40b3ce95fa047d14a94dd49fb6862c58, type: 3}
+    enterSfxClip: {fileID: 8300000, guid: e802030aec051fe4ea8a0cd733eabb74, type: 3}
     enterSfxVolume: 1
     presenceLoopClip: {fileID: 0}
     presenceLoopVolume: 0

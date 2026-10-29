@@ -24,6 +24,10 @@ namespace Whispers
         [Tooltip("Definição de ciclo a ser utilizada pela sessão (ex: CYCLE_Gameplay).")]
         [SerializeField] private GameCycleDefinition cycleDefinition;
 
+        [Header("Cursor")]
+        [Tooltip("Configuração global que fornece o cursor padrão também para o menu principal.")]
+        [SerializeField] private GlobalHotspotSettings cursorSettings;
+
         [Header("Botões Principais")]
         [SerializeField] private Button playButton;
         [SerializeField] private Button continueButton;
@@ -70,6 +74,7 @@ namespace Whispers
         private void Awake()
         {
             EnsureSessionManager();
+            ApplyDefaultCursor();
         }
 
         private void Start()
@@ -150,6 +155,11 @@ namespace Whispers
             if (Loader == null)
             {
                 Debug.LogWarning("[MainMenuController] LevelManager ausente: o carregamento usará o fallback do GameSessionManager (sem transição visual).", this);
+            }
+
+            if (cursorSettings == null || cursorSettings.defaultCursor == null)
+            {
+                Debug.LogWarning("[MainMenuController] Configure GlobalHotspotSettings com um defaultCursor para exibir o estilo do jogo no menu.", this);
             }
 
             WarnIfButtonCannotReceiveRaycast(playButton);
@@ -245,6 +255,12 @@ namespace Whispers
         private static void SetActiveSafe(GameObject target, bool active)
         {
             if (target != null && target.activeSelf != active) target.SetActive(active);
+        }
+
+        private void ApplyDefaultCursor()
+        {
+            if (cursorSettings == null || cursorSettings.defaultCursor == null) return;
+            Cursor.SetCursor(cursorSettings.defaultCursor, cursorSettings.defaultCursorHotspot, CursorMode.Auto);
         }
 
         private void PlayButtonFeedback()
@@ -379,7 +395,7 @@ namespace Whispers
                 return;
             }
 
-            BeginTransition(loader, cycleDefinition.dayScene, GamePeriod.Day, Session.day);
+            BeginTransition(loader, Session.CurrentPeriodScene, Session.period, Session.CurrentLoadingNumber);
         }
 
         private void ContinueGame()
@@ -401,7 +417,7 @@ namespace Whispers
                 return;
             }
 
-            BeginTransition(loader, cycleDefinition.dayScene, GamePeriod.Day, Session.day);
+            BeginTransition(loader, Session.CurrentPeriodScene, Session.period, Session.CurrentLoadingNumber);
         }
 
         private bool CanStartFlow()

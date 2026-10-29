@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Whispers
 {
@@ -31,17 +32,21 @@ namespace Whispers
         [Tooltip("Perfil padrão (obrigatório somente quando period é Night). Usado quando a lista por Dia está vazia ou não cobre o Dia atual. Em cenas de Dia é ignorado e gera apenas diagnóstico de autoria.")]
         public NightEntityProfile nightEntityProfile;
 
-        [Tooltip("Opcional. Perfil por Noite: índice 0 = Noite do Dia 1, índice 1 = Dia 2... Dias além do fim da lista reutilizam o último perfil. Entradas vazias caem no perfil padrão.")]
-        public NightEntityProfile[] nightEntityProfilesByDay;
+        [Tooltip("Opcional. Perfil por Noite do ciclo: índice 0 = Noite 1, índice 1 = Noite 2... Noites além do fim da lista reutilizam o último perfil. Entradas vazias caem no perfil padrão.")]
+        [FormerlySerializedAs("nightEntityProfilesByDay")]
+        public NightEntityProfile[] nightEntityProfilesByNight;
 
-        /// <summary>Perfil efetivo da Noite do Dia informado (1-based).</summary>
-        public NightEntityProfile ResolveNightEntityProfile(int day)
+        /// <summary>
+        /// Perfil efetivo da Noite informada (1-based). A(s) cena(s) de Noite são reutilizadas
+        /// pelo ciclo: a dificuldade de cada Noite vem daqui, não de uma cena diferente.
+        /// </summary>
+        public NightEntityProfile ResolveNightEntityProfile(int night)
         {
-            if (nightEntityProfilesByDay != null && nightEntityProfilesByDay.Length > 0)
+            if (nightEntityProfilesByNight != null && nightEntityProfilesByNight.Length > 0)
             {
-                int index = Mathf.Clamp(day - 1, 0, nightEntityProfilesByDay.Length - 1);
-                NightEntityProfile byDay = nightEntityProfilesByDay[index];
-                if (byDay != null) return byDay;
+                int index = Mathf.Clamp(night - 1, 0, nightEntityProfilesByNight.Length - 1);
+                NightEntityProfile byNight = nightEntityProfilesByNight[index];
+                if (byNight != null) return byNight;
             }
             return nightEntityProfile;
         }
@@ -51,9 +56,9 @@ namespace Whispers
         {
             List<NightEntityProfile> profiles = new List<NightEntityProfile>();
             if (nightEntityProfile != null) profiles.Add(nightEntityProfile);
-            if (nightEntityProfilesByDay != null)
+            if (nightEntityProfilesByNight != null)
             {
-                foreach (NightEntityProfile profile in nightEntityProfilesByDay)
+                foreach (NightEntityProfile profile in nightEntityProfilesByNight)
                     if (profile != null && !profiles.Contains(profile)) profiles.Add(profile);
             }
             return profiles;

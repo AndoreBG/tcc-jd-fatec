@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b624949c54ece214ab888d341056f522, type: 3}
+  m_Name: DOC_TUTORIAL_Voyeur
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.DocumentData
+  id: doc_tutorial_voyeur
+  title: Voyeur
+  body: "A criatura da janela \xE9 sorrateira. Ela se aproxima em sil\xEAncio e faz
+    pouco barulho para entrar pela janela.\n\nEnfrente-a com a lanterna: aponte a
+    luz para a janela e mantenha a luz sobre ela at\xE9 a criatura recuar. Enquanto
+    a luz estiver sobre a janela, ela n\xE3o avan\xE7a.\n\nA lanterna \xE9 de d\xEDnamo
+    e precisa de carga continuamente. Pressione ESPA\xC7O para recarregar a lanterna.
+    A criatura n\xE3o vai recuar se lanterna estiver com carga baixa.\n\nJanelas
+    da casa: a da sala e a do corredor dos fundos."
+  image: {fileID: 0}

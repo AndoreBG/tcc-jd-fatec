@@ -23,18 +23,18 @@ MonoBehaviour:
     criticalToTerminalSeconds: 10
     resolvedCooldownSeconds: 30
     terminalCountdownSeconds: 5
-    predatorResolveStartWindowSeconds: 2
-    predatorResolveHoldSeconds: 4
-    predatorStruggleClosedPercent: 75
+    predatorResolveStartWindowSeconds: 2.5
+    predatorResolveHoldSeconds: 7
+    predatorStruggleClosedPercent: 65
     predatorStruggleVariationPercent: 10
-    predatorRecoverBelowClosedPercent: 65
+    predatorRecoverBelowClosedPercent: 50
     predatorDeathBelowClosedPercent: 25
-    predatorHoldOpenSpeed: 8
+    predatorHoldOpenSpeed: 12
     predatorReleaseOpenSpeed: 22
-    predatorRecoverCloseSpeed: 18
+    predatorRecoverCloseSpeed: 8
     predatorWobbleSpeed: 0.35
-    predatorBangIntervalSeconds: 2.5
-    predatorBangExtraPixels: 80
+    predatorBangIntervalSeconds: 2
+    predatorBangExtraPixels: 150
     predatorBangShoveSeconds: 0.12
     predatorBangShakeIntensity: 0.08
     voyeurLightContactRequiredSeconds: 5
@@ -61,4 +61,4 @@ MonoBehaviour:
     predatorBangExtraPixels: 80
     predatorBangShoveSeconds: 0.12
     predatorBangShakeIntensity: 0.08
-    voyeurLightContactRequiredSeconds: 5
+    voyeurLightContactRequiredSeconds: 3

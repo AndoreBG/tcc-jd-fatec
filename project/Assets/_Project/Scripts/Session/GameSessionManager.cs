@@ -17,6 +17,10 @@ namespace Whispers
         public string stageId = "level_1";
         public int day = 1;
         public GamePeriod period = GamePeriod.Day;
+
+        /// <summary>Noite atual do ciclo (1-based). 0 significa que o ciclo está no Dia.</summary>
+        public int night;
+
         public string selectedTool;
 
         private readonly Dictionary<string, int> _inventory = new Dictionary<string, int>();
@@ -39,6 +43,18 @@ namespace Whispers
         public string Notice { get; private set; }
         public bool HasPendingLoad => !string.IsNullOrEmpty(_pendingScene);
         public bool HasCheckpoint => _save != null && _save.Exists(1);
+
+        /// <summary>Verdadeiro após vencer a última Noite do ciclo: o teste beta foi concluído.</summary>
+        public bool IsCycleComplete { get; private set; }
+
+        /// <summary>Quantidade de Noites do ciclo configurada no GameCycleDefinition.</summary>
+        public int NightCount => _cycle != null ? _cycle.EffectiveNightCount : 1;
+
+        /// <summary>Cena do período atual da sessão (Dia ou a cena compartilhada de Noite).</summary>
+        public string CurrentPeriodScene => _cycle == null ? null : _cycle.GetScene(period);
+
+        /// <summary>Número exibido na tela de carregamento: Dia atual ou Noite atual.</summary>
+        public int CurrentLoadingNumber => period == GamePeriod.Day ? day : Mathf.Max(1, night);
         public string CheckpointPath => _save != null ? _save.GetPath(1) : string.Empty;
 
         private void Awake()
@@ -74,6 +90,8 @@ namespace Whispers
                 GameSaveData initial = GameSaveData.Empty(definition.stageId);
                 Apply(initial);
                 period = definition.period;
+                night = period == GamePeriod.Night ? 1 : 0;
+                IsCycleComplete = false;
                 _developmentCheckpoint = initial.Copy();
                 IsDevelopmentSession = true;
                 _initialized = true;
@@ -132,6 +150,7 @@ namespace Whispers
         {
             GameSaveData data = GameSaveData.Empty(stageId, activeSlot);
             data.day = day;
+            data.night = night;
             foreach (var entry in _inventory)
                 data.inventory.Add(new InventoryEntry { itemId = entry.Key, quantity = entry.Value });
             data.inventory.Sort((a, b) => string.CompareOrdinal(a.itemId, b.itemId));
@@ -158,18 +177,24 @@ namespace Whispers
             IsDevelopmentSession = false;
             _initialized = true;
             Notice = null;
+            IsCycleComplete = false;
             Apply(initial);
             return true;
         }
 
         public bool PrepareContinueSession(out string error)
         {
-            if (!CanLoad(GamePeriod.Day, out error)) return false;
             if (!_save.TryLoad(1, out GameSaveData checkpoint, out bool backup, out error)) return false;
             if (!MatchesCycle(checkpoint, out error)) return false;
+
+            // O checkpoint pode ser do início do Dia (night = 0) ou do início de uma Noite:
+            // a validação de cena precisa olhar para o período que será realmente carregado.
+            GamePeriod targetPeriod = checkpoint.night >= 1 ? GamePeriod.Night : GamePeriod.Day;
+            if (!CanLoad(targetPeriod, out error)) return false;
             IsDevelopmentSession = false;
             _initialized = true;
-            Notice = backup ? "Principal inválido/ausente. Recuperado o último checkpoint válido do backup; ele pode ser de um Dia anterior." : null;
+            Notice = backup ? "Principal inválido/ausente. Recuperado o último checkpoint válido do backup; ele pode ser de um Dia ou de uma Noite anterior." : null;
+            IsCycleComplete = false;
             Apply(checkpoint);
             return true;
         }
@@ -177,48 +202,94 @@ namespace Whispers
         public bool TryNewGame(out string error)
         {
             if (!PrepareNewGameSession(out error)) return false;
-            StartLoading(_cycle.dayScene, GamePeriod.Day, day);
+            StartLoading(CurrentPeriodScene, period, CurrentLoadingNumber);
             return true;
         }
 
+        /// <summary>
+        /// Retoma do checkpoint. O checkpoint pode ser do início do Dia ou do início de uma Noite
+        /// (ciclo com várias Noites), então a cena de destino vem do período restaurado.
+        /// </summary>
         public bool TryContinue(out string error)
         {
             if (!PrepareContinueSession(out error)) return false;
-            StartLoading(_cycle.dayScene, GamePeriod.Day, day);
+            StartLoading(CurrentPeriodScene, period, CurrentLoadingNumber);
             return true;
         }
 
+        /// <summary>
+        /// Encerra o período atual do ciclo (Dia 1 + N Noites consecutivas):
+        /// Dia -> Noite 1, Noite N -> Noite N+1 e, vencida a última Noite, conclusão do teste beta.
+        /// Cada início de Noite grava um checkpoint próprio: falhar na Noite N devolve ao seu início.
+        /// A conclusão não carrega cena, apenas sinaliza <see cref="IsCycleComplete"/>.
+        /// </summary>
         public bool TryEndPeriod(out string error)
         {
+            error = null;
             if (!_initialized) { error = "Sessão não iniciada."; return false; }
-            GamePeriod next = period == GamePeriod.Day ? GamePeriod.Night : GamePeriod.Day;
-            if (!CanLoad(next, out error)) return false;
-            if (period == GamePeriod.Night)
+            if (IsCycleComplete) { error = "O ciclo já foi concluído."; return false; }
+            if (_cycle == null) { error = "GameCycleDefinition ausente."; return false; }
+
+            if (period == GamePeriod.Day)
             {
-                if (day == int.MaxValue) { error = "Limite de dias atingido."; return false; }
-                GameSaveData checkpoint = CaptureWorkingState();
-                checkpoint.day = day + 1;
-                if (!WriteCheckpoint(checkpoint, IsDevelopmentSession, out error)) return false;
-                // Somente após gravar: confirma o Dia e aplica a cópia, sem compartilhar listas.
-                Apply(checkpoint);
-            }
-            else
-            {
-                // Dia -> Noite NÃO chama o SaveSystem.
+                if (!CanLoad(GamePeriod.Night, out error)) return false;
+
+                // Dia -> Noite 1: estado de trabalho vira o checkpoint do início da Noite 1.
                 PrepareForPeriodChange();
                 period = GamePeriod.Night;
+                night = 1;
+                if (!CommitNightCheckpoint(1, out error))
+                {
+                    // Falha de gravação: o Dia continua válido e a Noite não inicia.
+                    period = GamePeriod.Day;
+                    night = 0;
+                    return false;
+                }
+                return true;
             }
-            StartLoading(_cycle.GetScene(next), next, day);
+
+            if (night < NightCount)
+            {
+                if (!CanLoad(GamePeriod.Night, out error)) return false;
+                return CommitNightCheckpoint(night + 1, out error);
+            }
+
+            // Última Noite vencida: conclusão do teste beta, sem carregar cena nova.
+            IsCycleComplete = true;
+            NotifyStateChanged();
+            return true;
+        }
+
+        /// <summary>
+        /// Grava o checkpoint do início da Noite informada e carrega a cena compartilhada de Noite.
+        /// A gravação acontece ANTES do carregamento: falha de save não inicia a Noite.
+        /// </summary>
+        private bool CommitNightCheckpoint(int targetNight, out string error)
+        {
+            error = null;
+            GameSaveData checkpoint = CaptureWorkingState();
+            checkpoint.day = day;
+            checkpoint.night = targetNight;
+            if (!WriteCheckpoint(checkpoint, IsDevelopmentSession, out error)) return false;
+
+            // Somente após gravar: aplica a cópia, sem compartilhar listas.
+            Apply(checkpoint);
+            StartLoading(_cycle.nightScene, GamePeriod.Night, targetNight);
             return true;
         }
 
         public bool TryRestartCheckpoint(out string error)
         {
-            if (!CanLoad(GamePeriod.Day, out error)) return false;
+            GamePeriod target = period;
+            if (!CanLoad(target, out error)) return false;
             if (!IsDevelopmentSession) return TryContinue(out error);
             if (_developmentCheckpoint == null) { error = "Checkpoint de desenvolvimento ausente."; return false; }
+
             Apply(_developmentCheckpoint.Copy());
-            StartLoading(_cycle.dayScene, GamePeriod.Day, day);
+            period = target;
+            night = period == GamePeriod.Night ? Mathf.Max(1, night) : 0;
+            IsCycleComplete = false;
+            StartLoading(CurrentPeriodScene, period, CurrentLoadingNumber);
             return true;
         }
 
@@ -231,7 +302,7 @@ namespace Whispers
             error = null;
             if (!_initialized) { error = "Sessão não iniciada."; return false; }
             if (period != GamePeriod.Night) { error = "TryFailNight exige sessão no período Noite."; return false; }
-            if (!CanLoad(GamePeriod.Day, out error)) return false;
+            if (!CanLoad(GamePeriod.Night, out error)) return false;
 
             GameSaveData checkpoint;
             if (IsDevelopmentSession)
@@ -252,10 +323,18 @@ namespace Whispers
                     Notice = "Checkpoint principal indisponível; a falha noturna restaurou o último backup válido.";
             }
 
-            // Apply restaura período Dia e cópias independentes das coleções. Não há
-            // WriteCheckpoint nesta operação, inclusive para sessão de desenvolvimento.
+            // O checkpoint do início da Noite atual é a fonte da retomada: falhar na Noite 2
+            // devolve ao início da Noite 2, preservando o que foi conquistado na Noite 1.
+            // Não há WriteCheckpoint nesta operação, inclusive para sessão de desenvolvimento.
             Apply(checkpoint);
-            StartLoading(_cycle.dayScene, GamePeriod.Day, day);
+            if (period != GamePeriod.Night)
+            {
+                // Checkpoint antigo (início do Dia) ou de desenvolvimento: assume a Noite atual.
+                period = GamePeriod.Night;
+                night = Mathf.Max(1, night);
+            }
+            IsCycleComplete = false;
+            StartLoading(_cycle.nightScene, GamePeriod.Night, night);
             return true;
         }
 
@@ -298,6 +377,9 @@ namespace Whispers
             _inventory.Clear(); _collected.Clear(); _foundItems.Clear(); _facts.Clear();
             ClearSelectedTool();
             _initialized = false;
+            night = 0;
+            IsCycleComplete = false;
+            period = GamePeriod.Day;
             _developmentCheckpoint = null;
             _pendingScene = null;
             _pendingPeriod = null;
@@ -352,7 +434,8 @@ namespace Whispers
             foreach (string id in data.collectedIds) _collected.Add(id);
             foreach (string id in data.foundItemIds) _foundItems.Add(id);
             foreach (string id in data.facts) _facts.Add(id);
-            activeSlot = data.slot; stageId = data.stageId; day = data.day; period = GamePeriod.Day;
+            activeSlot = data.slot; stageId = data.stageId; day = data.day; night = Mathf.Max(0, data.night);
+            period = night >= 1 ? GamePeriod.Night : GamePeriod.Day;
             ClearSelectedTool();
             NotifyStateChanged();
         }
