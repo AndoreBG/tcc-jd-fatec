@@ -40,7 +40,7 @@ namespace Whispers
         /// de mídia não cria fallback e nunca impede o boot; o aviso torna a pendência
         /// visível para o passe de conteúdo do VS8.
         /// </summary>
-        public void CollectPresentationWarnings(List<string> warnings)
+        public virtual void CollectPresentationWarnings(List<string> warnings)
         {
             if (warnings == null || string.IsNullOrWhiteSpace(entityId)) return;
 

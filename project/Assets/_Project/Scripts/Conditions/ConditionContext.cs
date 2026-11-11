@@ -29,5 +29,20 @@ namespace Whispers
         /// <summary>Verdadeiro se a interação com este ID já foi concluída nesta cena.</summary>
         public bool WasInteractionDone(string interactionId)
             => _scene != null && _scene.Interactions != null && _scene.Interactions.HasDone(interactionId);
+
+        /// <summary>
+        /// Verdadeiro quando a Noite possui lampião e ele já está quebrado (tolerância
+        /// esgotada ou Exhauster em Terminal). Cena sem Exhauster retorna falso.
+        /// </summary>
+        public bool IsLampBroken
+        {
+            get
+            {
+                EntityDirector director = _scene != null ? _scene.Entities : null;
+                if (director == null || !director.HasExhauster) return false;
+                LampRuntimeSnapshot snapshot;
+                return director.TryGetLampSnapshot(out snapshot) && snapshot.broken;
+            }
+        }
     }
 }

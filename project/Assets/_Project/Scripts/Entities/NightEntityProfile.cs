@@ -17,6 +17,13 @@ namespace Whispers
         [Tooltip("Ordem estável de avaliação das entidades em cada tick global.")]
         public EntityNightEntry[] entries = Array.Empty<EntityNightEntry>();
 
+        [Header("Exhauster (opcional — manutenção do lampião)")]
+        [Tooltip("Preenchido somente em Noites com o Exhauster ativo. Fica FORA de 'entries': a entidade não usa anchors, estados nem IA de oportunidades.")]
+        [SerializeField] private ExhausterNightEntry exhauster;
+
+        /// <summary>Entrada do Exhauster nesta Noite. Nulo = a Noite não possui Exhauster.</summary>
+        public ExhausterNightEntry Exhauster => exhauster;
+
         public EntityNightEntry FindEntry(string entityId)
         {
             if (string.IsNullOrWhiteSpace(entityId) || entries == null) return null;
@@ -89,6 +96,20 @@ namespace Whispers
                 errors.Add("NightEntityProfile exige exatamente uma PredatorDefinition no primeiro slice (encontradas: " + predatorCount + ").");
             if (voyeurCount != 1)
                 errors.Add("NightEntityProfile exige exatamente uma VoyeurDefinition no primeiro slice (encontradas: " + voyeurCount + ").");
+
+            if (exhauster != null)
+            {
+                exhauster.CollectValidation(errors, warnings);
+                if (exhauster.definition != null && ids.Contains(exhauster.definition.entityId))
+                {
+                    errors.Add("Exhauster '" + exhauster.definition.entityId +
+                               "' também está em 'entries'; a manutenção do lampião não participa do perfil de IA.");
+                }
+                if (predatorCount == 0 || voyeurCount == 0)
+                {
+                    warnings?.Add("Exhauster está configurado no mesmo perfil de uma Noite sem Predator/Voyeur válidos.");
+                }
+            }
         }
 
         /// <summary>
@@ -287,6 +308,78 @@ namespace Whispers
                 (entityDefinition.jumpscare.fullscreenSprite == null && entityDefinition.jumpscare.jumpscareSfx == null))
             {
                 warnings?.Add("Entidade '" + entityDefinition.entityId + "' ainda não possui mídia de jumpscare autorada.");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Tuning do Exhauster em uma Noite. Manutenção pura: sem anchors, sem AI Levels e
+    /// sem estados — só o relógio do lampião e a contagem do Terminal. Fica FORA de
+    /// <see cref="NightEntityProfile.entries"/> de propósito, porque não participa do
+    /// tick de oportunidades nem da reserva de anchors.
+    /// </summary>
+    [Serializable]
+    public sealed class ExhausterNightEntry
+    {
+        [Tooltip("Identidade e apresentação do Exhauster. Obrigatório quando esta entrada existe.")]
+        public ExhausterDefinition definition;
+
+        [Tooltip("Segundos de chama com o lampião cheio. A queima é FIXA a Noite inteira (não escala com a hora).")]
+        [Min(1f)] public float lampBurnSeconds = 120f;
+
+        [Tooltip("Segundos de escuridão tolerados depois que a chama morre, antes da derrota.")]
+        [Min(0f)] public float darkGraceSeconds = 20f;
+
+        [Tooltip("Contagem do Terminal do Exhauster antes do jumpscare. Só 6 AM cancela.")]
+        [Min(0f)] public float terminalCountdownSeconds = 5f;
+
+        [Tooltip("Se falso, a Noite começa com o lampião apagado e a tolerância já correndo.")]
+        public bool startsLit = true;
+
+        public LampMaintenanceConfig ToConfig()
+        {
+            return new LampMaintenanceConfig
+            {
+                burnSeconds = lampBurnSeconds,
+                darkGraceSeconds = darkGraceSeconds,
+                startsLit = startsLit
+            };
+        }
+
+        /// <summary>Validação pura de dados usada pelo boot, sem alterar o asset.</summary>
+        public void CollectValidation(List<string> errors, List<string> warnings)
+        {
+            if (definition == null)
+            {
+                errors?.Add("Exhauster sem ExhausterDefinition no NightEntityProfile.");
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(definition.entityId))
+            {
+                errors?.Add("ExhausterDefinition sem entityId no NightEntityProfile.");
+                return;
+            }
+            if (definition.allowedAnchorCategory != AudioAnchorCategory.Other)
+            {
+                errors?.Add("ExhausterDefinition '" + definition.entityId +
+                            "' deve fixar a categoria Other; o Exhauster não reserva anchors.");
+            }
+            if (lampBurnSeconds <= 0f)
+            {
+                errors?.Add("Exhauster '" + definition.entityId + "': lampBurnSeconds precisa ser maior que zero.");
+            }
+            if (darkGraceSeconds < 0f)
+            {
+                errors?.Add("Exhauster '" + definition.entityId + "': darkGraceSeconds não pode ser negativo.");
+            }
+            if (terminalCountdownSeconds < 0f)
+            {
+                errors?.Add("Exhauster '" + definition.entityId + "': terminalCountdownSeconds não pode ser negativo.");
+            }
+            if (definition.jumpscare == null ||
+                (definition.jumpscare.fullscreenSprite == null && definition.jumpscare.jumpscareSfx == null))
+            {
+                warnings?.Add("Exhauster '" + definition.entityId + "' ainda não possui mídia de jumpscare autorada.");
             }
         }
     }

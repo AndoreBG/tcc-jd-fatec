@@ -14,51 +14,57 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.NightEntityProfile
   profileId: night_entities_1
   entries:
-  - entityDefinition: {fileID: 11400000, guid: b84bd0b69db5b1f7e67d00a7811c59ce, type: 2}
-    allowedAnchors:
-    - {fileID: 11400000, guid: 23f1397608231551c076ab075559a1d7, type: 2}
-    - {fileID: 11400000, guid: 18c98a1870536ac72f037eb057cd84b6, type: 2}
-    aiLevelByHour: 010000000100000001000000030000000300000003000000
-    nearToCriticalSeconds: 8
-    criticalToTerminalSeconds: 10
-    resolvedCooldownSeconds: 30
-    terminalCountdownSeconds: 5
-    predatorResolveStartWindowSeconds: 2.5
-    predatorResolveHoldSeconds: 7
-    predatorStruggleClosedPercent: 65
-    predatorStruggleVariationPercent: 10
-    predatorRecoverBelowClosedPercent: 50
-    predatorDeathBelowClosedPercent: 25
-    predatorHoldOpenSpeed: 12
-    predatorReleaseOpenSpeed: 22
-    predatorRecoverCloseSpeed: 8
-    predatorWobbleSpeed: 0.35
-    predatorBangIntervalSeconds: 2
-    predatorBangExtraPixels: 150
-    predatorBangShoveSeconds: 0.12
-    predatorBangShakeIntensity: 0.08
-    voyeurLightContactRequiredSeconds: 5
   - entityDefinition: {fileID: 11400000, guid: 8c8f3c7979b83788f9153d34420a531e, type: 2}
     allowedAnchors:
-    - {fileID: 11400000, guid: 51836ea708df5237b41bee5057837225, type: 2}
     - {fileID: 11400000, guid: f32a7a03aa7657f29c786ba0e274a37e, type: 2}
-    aiLevelByHour: 010000000100000001000000030000000300000003000000
-    nearToCriticalSeconds: 10
-    criticalToTerminalSeconds: 12
-    resolvedCooldownSeconds: 25
-    terminalCountdownSeconds: 4
-    predatorResolveStartWindowSeconds: 2
-    predatorResolveHoldSeconds: 4
-    predatorStruggleClosedPercent: 75
-    predatorStruggleVariationPercent: 10
-    predatorRecoverBelowClosedPercent: 65
-    predatorDeathBelowClosedPercent: 25
+    - {fileID: 11400000, guid: 51836ea708df5237b41bee5057837225, type: 2}
+    aiLevelByHour: 080000000800000008000000080000000800000008000000
+    nearToCriticalSeconds: 5
+    criticalToTerminalSeconds: 5
+    resolvedCooldownSeconds: 15
+    terminalCountdownSeconds: 5
+    predatorResolveStartWindowSeconds: 0
+    predatorResolveHoldSeconds: 0
+    predatorStruggleClosedPercent: 0
+    predatorStruggleVariationPercent: 0
+    predatorRecoverBelowClosedPercent: 0
+    predatorDeathBelowClosedPercent: 0
+    predatorHoldOpenSpeed: 0
+    predatorReleaseOpenSpeed: 0
+    predatorRecoverCloseSpeed: 0
+    predatorWobbleSpeed: 0
+    predatorBangIntervalSeconds: 0
+    predatorBangExtraPixels: 0
+    predatorBangShoveSeconds: 0
+    predatorBangShakeIntensity: 0
+    voyeurLightContactRequiredSeconds: 2
+  - entityDefinition: {fileID: 11400000, guid: b84bd0b69db5b1f7e67d00a7811c59ce, type: 2}
+    allowedAnchors:
+    - {fileID: 11400000, guid: 18c98a1870536ac72f037eb057cd84b6, type: 2}
+    - {fileID: 11400000, guid: 23f1397608231551c076ab075559a1d7, type: 2}
+    aiLevelByHour: 000000000000000000000000000000000000000000000000
+    nearToCriticalSeconds: 6
+    criticalToTerminalSeconds: 6
+    resolvedCooldownSeconds: 20
+    terminalCountdownSeconds: 5
+    predatorResolveStartWindowSeconds: 3
+    predatorResolveHoldSeconds: 8
+    predatorStruggleClosedPercent: 60
+    predatorStruggleVariationPercent: 20
+    predatorRecoverBelowClosedPercent: 40
+    predatorDeathBelowClosedPercent: 20
     predatorHoldOpenSpeed: 8
-    predatorReleaseOpenSpeed: 22
-    predatorRecoverCloseSpeed: 18
-    predatorWobbleSpeed: 0.35
-    predatorBangIntervalSeconds: 2.5
-    predatorBangExtraPixels: 80
-    predatorBangShoveSeconds: 0.12
-    predatorBangShakeIntensity: 0.08
-    voyeurLightContactRequiredSeconds: 3
+    predatorReleaseOpenSpeed: 8
+    predatorRecoverCloseSpeed: 12
+    predatorWobbleSpeed: 30
+    predatorBangIntervalSeconds: 2
+    predatorBangExtraPixels: 100
+    predatorBangShoveSeconds: 0.3
+    predatorBangShakeIntensity: 10
+    voyeurLightContactRequiredSeconds: 2
+  exhauster:
+    definition: {fileID: 0}
+    lampBurnSeconds: 30
+    darkGraceSeconds: 5
+    terminalCountdownSeconds: 5
+    startsLit: 1

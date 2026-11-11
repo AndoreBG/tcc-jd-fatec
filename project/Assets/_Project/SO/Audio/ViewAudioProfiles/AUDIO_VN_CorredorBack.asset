@@ -65,4 +65,13 @@ MonoBehaviour:
     occlusion: 0.692
     lowPassFrequency: 12000
     reverbSend: 0.932
+  - anchorId: loft_sotao
+    isAudible: 1
+    direction: 3
+    distance: 0
+    pan: 0
+    volumeMultiplier: 1
+    occlusion: 0.746
+    lowPassFrequency: 8988
+    reverbSend: 0.893
   localLayers: []

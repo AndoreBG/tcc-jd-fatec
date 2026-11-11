@@ -284,6 +284,8 @@ namespace Whispers
                 GUILayout.Label("Reserva: " + reservation.Key + " → " + reservation.Value);
             GUILayout.EndVertical();
 
+            DrawExhausterAndLampPanel(director);
+
             GUILayout.BeginVertical(GUI.skin.box);
             IReadOnlyList<string> authoringWarnings = director.GetAuthoringWarningsForDebug();
             GUILayout.Label("AUTORIA PENDENTE — NÃO BLOQUEANTE");
@@ -435,6 +437,61 @@ namespace Whispers
             }
             GUILayout.EndHorizontal();
             GUILayout.Label("O Jumpscare real usa apenas a autoria configurada. Sem apresentação autorada, o runtime registra diagnóstico seguro; nenhum placeholder é criado.");
+            GUILayout.EndVertical();
+        }
+
+        /// <summary>Aba de debug do Exhauster: manutenção pura do lampião do sótão.</summary>
+        private void DrawExhausterAndLampPanel(EntityDirector director)
+        {
+            if (!director.HasExhauster) return;
+
+            GUILayout.BeginVertical(GUI.skin.box);
+            GUILayout.Label("EXHAUSTER / LAMPIÃO DO SÓTÃO — manutenção pura");
+
+            LampRuntimeSnapshot lamp;
+            if (!director.TryGetLampSnapshot(out lamp))
+            {
+                GUILayout.Label("Snapshot do lampião indisponível.");
+                GUILayout.EndVertical();
+                return;
+            }
+
+            GUILayout.Label("Entidade: " + director.ExhausterEntityId +
+                " | lampião: " + (lamp.broken ? "QUEBRADO (não aceita reabastecimento)" : "operável") +
+                " | chama: " + (lamp.lit ? "ACESA" : "APAGADA") +
+                " | queima: " + lamp.burnRemaining.ToString("0.0") + " s (" + lamp.burnNormalized.ToString("0.00") + ")" +
+                " | tolerância: " + lamp.darkRemaining.ToString("0.0") + " s (" + lamp.darkNormalized.ToString("0.00") + ")");
+            GUILayout.Label("Terminal do Exhauster: " +
+                (director.IsExhausterTerminalActive
+                    ? "ATIVO — jumpscare em " + lamp.terminalRemaining.ToString("0.0") + " s"
+                    : (lamp.terminal ? "tolerância esgotada (irreversível)" : "inativo")) +
+                " | reabastecimentos: " + lamp.relightCount);
+            GUILayout.Label("Reacender por aqui dispensa o óleo. Não altera inventário, save nem ciclo.");
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Apagar lampião"))
+            {
+                string extinguishError;
+                _entityMessage = director.DebugExtinguishLamp(out extinguishError) ? "Lampião apagado." : extinguishError;
+            }
+            if (GUILayout.Button("Reacender lampião"))
+            {
+                string relightError;
+                _entityMessage = director.TryRelightStairLamp(out relightError) ? "Lampião reaceso." : relightError;
+            }
+            if (GUILayout.Button("Forçar Terminal (contagem)"))
+            {
+                string terminalError;
+                _entityMessage = director.DebugForceExhausterTerminal(false, out terminalError)
+                    ? "Terminal do Exhauster iniciado." : terminalError;
+            }
+            if (GUILayout.Button("Forçar derrota imediata"))
+            {
+                string immediateError;
+                _entityMessage = director.DebugForceExhausterTerminal(true, out immediateError)
+                    ? "Derrota imediata do Exhauster disparada." : immediateError;
+            }
+            GUILayout.EndHorizontal();
             GUILayout.EndVertical();
         }
 

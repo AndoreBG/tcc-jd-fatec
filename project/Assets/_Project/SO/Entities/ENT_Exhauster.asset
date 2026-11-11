@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c458bcd0d22d428f8581f0e5bf8ac1ea, type: 3}
+  m_Name: ENT_Exhauster
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.ExhausterDefinition
+  entityId: exhauster
+  displayName: Exhauster
+  allowedAnchorCategory: 6
+  stateAudio: []
+  jumpscare:
+    fullscreenSprite: {fileID: -1600738950, guid: 64f1a17593cdb5345a9cb1ed20c1d676, type: 3}
+    jumpscareSfx: {fileID: 8300000, guid: c5db945ae1ae94245b32c70f60cb7660, type: 3}
+    durationSeconds: 2.5
+  requiredRelightItemId: item_oleo
+  lampOutSfx: {fileID: 8300000, guid: e5e330795c13e3a4aa7fed314efa092f, type: 3}
+  lampOutSfxVolume: 1
+  relightSfx: {fileID: 0}
+  relightSfxVolume: 1
+  lampBrokenSfx: {fileID: 0}
+  lampBrokenSfxVolume: 1

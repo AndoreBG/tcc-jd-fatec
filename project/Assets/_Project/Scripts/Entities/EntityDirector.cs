@@ -19,6 +19,11 @@ namespace Whispers
         [SerializeField] private PredatorController predatorController;
         [SerializeField] private VoyeurController voyeurController;
         [SerializeField] private NightGameOverController gameOverController;
+
+        [Header("Exhauster (opcional — só em Noites com lampião)")]
+        [Tooltip("Obrigatório quando o NightEntityProfile possui ExhausterNightEntry; ignorado nas demais Noites.")]
+        [SerializeField] private ExhausterController exhausterController;
+
         [SerializeField] private int debugInitialSeed;
 
         private readonly Dictionary<string, EntityRuntime> _entities =
@@ -44,6 +49,16 @@ namespace Whispers
         private string _terminalEntityId;
         private Coroutine _sixAmEndRoutine;
         private const float SixAmEndRetryTimeoutSeconds = 10f;
+
+        // Exhauster: manutenção pura. Não entra em _entities, não reserva anchor e não
+        // participa do tick de oportunidades — por isso vive em campos próprios.
+        private ExhausterNightEntry _exhausterEntry;
+        private LampMaintenanceConfig _lampConfig;
+        private LampMaintenanceState _lampState;
+        private bool _exhausterEnabled;
+        private bool _exhausterTerminalActive;
+        private float _exhausterTerminalRemaining;
+        private int _lampRelightCount;
 
         public bool IsInitialized => _initialized;
         public bool IsRunning => _running;
@@ -87,7 +102,14 @@ namespace Whispers
 
         private static void CollectEntityMediaWarnings(NightEntityProfile profile, List<string> warnings)
         {
-            if (profile == null || profile.entries == null || warnings == null) return;
+            if (profile == null || warnings == null) return;
+
+            // O Exhauster fica fora de 'entries' (manutenção pura), mas a mídia do seu
+            // jumpscare precisa aparecer no mesmo diagnóstico não bloqueante.
+            if (profile.Exhauster != null && profile.Exhauster.definition != null)
+                profile.Exhauster.definition.CollectPresentationWarnings(warnings);
+
+            if (profile.entries == null) return;
             HashSet<string> inspected = new HashSet<string>(StringComparer.Ordinal);
             foreach (EntityNightEntry entry in profile.entries)
             {
@@ -119,6 +141,18 @@ namespace Whispers
         public bool IsVoyeurBattleActive => IsVoyeurFightActive();
         public string PredatorEntityId => predatorController != null ? predatorController.EntityId : null;
         public string VoyeurEntityId => voyeurController != null ? voyeurController.EntityId : null;
+
+        /// <summary>Verdadeiro quando a Noite atual possui Exhauster configurado e inicializado.</summary>
+        public bool HasExhauster => _exhausterEnabled;
+        /// <summary>entityId do Exhauster nesta Noite; nulo quando ausente.</summary>
+        public string ExhausterEntityId => _exhausterEnabled && _exhausterEntry != null && _exhausterEntry.definition != null
+            ? _exhausterEntry.definition.entityId
+            : null;
+        /// <summary>Definição usada por apresentação (SFX do lampião e jumpscare). Pode ser nula.</summary>
+        public ExhausterDefinition ExhausterDefinitionForPresentation =>
+            _exhausterEntry != null ? _exhausterEntry.definition : null;
+        /// <summary>Terminal do Exhauster em andamento (contagem antes do jumpscare).</summary>
+        public bool IsExhausterTerminalActive => _exhausterTerminalActive;
         public event Action<PredatorBangSignal> PredatorBanged;
 
         public event Action<EntityRuntimeSnapshot> EntityStateChanged;
@@ -176,6 +210,12 @@ namespace Whispers
                 return false;
             }
 
+            if (!TryEstablishExhauster(out error))
+            {
+                ClearRuntime();
+                return false;
+            }
+
             _seed = debugInitialSeed != 0 ? debugInitialSeed : unchecked(Environment.TickCount ^ (int)(Time.realtimeSinceStartup * 1000f));
             _random = new System.Random(_seed);
             _elapsedSeconds = 0f;
@@ -187,6 +227,7 @@ namespace Whispers
             { ClearRuntime(); return false; }
             predatorController.Initialize(this, presentationCoordinator);
             voyeurController.Initialize(this, presentationCoordinator);
+            if (_exhausterEnabled) exhausterController.Initialize(this, presentationCoordinator);
             gameOverController.Initialize(scene, this);
             scene.Navigation.ViewNodeChanged += OnViewNodeChanged;
             RefreshAuthoringWarnings();
@@ -223,6 +264,7 @@ namespace Whispers
             }
 
             UpdateStateTimers(delta);
+            UpdateExhausterTerminal(delta);
             ResolveTerminalRequests();
             if (!_running || _terminalActive) return;
 
@@ -878,9 +920,15 @@ namespace Whispers
 
         private void StartGameOver(EntityRuntime winner)
         {
+            if (winner == null) return;
+            StartGameOver(winner.entry.entityDefinition);
+        }
+
+        private void StartGameOver(EntityDefinition winner)
+        {
             if (winner == null || gameOverController == null || gameOverController.IsRunning) return;
             _running = false;
-            if (!gameOverController.Begin(winner.entry.entityDefinition))
+            if (!gameOverController.Begin(winner))
             {
                 // Nunca devolve uma cena navegável com o Director desligado. O
                 // bloqueio PeriodEnd e a UI de erro oferecem Retry/saída segura.
@@ -904,6 +952,8 @@ namespace Whispers
             _terminalRequests.Clear();
             _terminalActive = false;
             _terminalEntityId = null;
+            _exhausterTerminalActive = false;
+            _exhausterTerminalRemaining = 0f;
             _elapsedSeconds = clockSettings.ValidNightDurationSeconds;
             _tickAccumulator = 0f;
 
@@ -961,6 +1011,196 @@ namespace Whispers
         {
             if (nightClockHUD != null) nightClockHUD.SetTime(DisplayHourIndex, NormalizedProgress);
             ClockUpdated?.Invoke(DisplayHourIndex, NormalizedProgress);
+        }
+
+        // ---------------------------------------------------------------------
+        // Exhauster — manutenção do lampião do sótão (caminho dedicado)
+        // Não usa anchors, estados, AI Levels nem reserva. A entidade só existe
+        // enquanto o NightEntityProfile da Noite tiver um ExhausterNightEntry.
+        // ---------------------------------------------------------------------
+
+        private bool TryEstablishExhauster(out string error)
+        {
+            error = null;
+            _exhausterEntry = _profile != null ? _profile.Exhauster : null;
+            _exhausterEnabled = _exhausterEntry != null && _exhausterEntry.definition != null;
+            if (!_exhausterEnabled) return true;
+
+            string entityId = _exhausterEntry.definition.entityId;
+            if (string.IsNullOrWhiteSpace(entityId))
+            {
+                error = "ExhausterNightEntry.definition está sem entityId.";
+                return false;
+            }
+            if (_entities.ContainsKey(entityId))
+            {
+                error = "O entityId do Exhauster ('" + entityId + "') colide com uma entidade de IA do perfil.";
+                return false;
+            }
+            if (exhausterController == null)
+            {
+                error = "O NightEntityProfile possui Exhauster, mas EntityDirector.exhausterController não foi atribuído.";
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(exhausterController.EntityId) ||
+                !string.Equals(exhausterController.EntityId, entityId, StringComparison.Ordinal))
+            {
+                error = "ExhausterController.entityId ('" + exhausterController.EntityId +
+                        "') não casa com a ExhausterDefinition do perfil ('" + entityId + "').";
+                return false;
+            }
+            if (_exhausterEntry.lampBurnSeconds <= 0f)
+            {
+                error = "ExhausterNightEntry.lampBurnSeconds precisa ser maior que zero.";
+                return false;
+            }
+
+            _lampConfig = _exhausterEntry.ToConfig();
+            _lampState = LampMaintenanceState.Begin(_lampConfig);
+            _exhausterTerminalActive = false;
+            _exhausterTerminalRemaining = 0f;
+            _lampRelightCount = 0;
+            return true;
+        }
+
+        /// <summary>Chamado exclusivamente pelo ExhausterController, em tempo não escalado.</summary>
+        public void ProcessExhauster(string entityId, float delta)
+        {
+            if (!_initialized || !_running || _sixAmHandled || IsPausedByDebug || delta <= 0f) return;
+            if (!_exhausterEnabled) return;
+            if (!string.Equals(entityId, ExhausterEntityId, StringComparison.Ordinal)) return;
+
+            LampMaintenanceEvent events = LampMaintenanceMath.Step(ref _lampState, _lampConfig, false, delta);
+            HandleLampEvents(events);
+        }
+
+        private void HandleLampEvents(LampMaintenanceEvent events)
+        {
+            if ((events & LampMaintenanceEvent.WentOut) != 0)
+            {
+                Debug.Log("[EntityDirector] Lampião do sótão apagou. Tolerância de " +
+                          _lampConfig.darkGraceSeconds.ToString("0.0") + " s iniciada.", this);
+            }
+
+            if ((events & LampMaintenanceEvent.GraceExpired) == 0) return;
+            if (_terminalActive) return; // outro Terminal já é a autoridade da derrota
+            BeginExhausterTerminal(false);
+        }
+
+        private void BeginExhausterTerminal(bool immediate)
+        {
+            if (!_exhausterEnabled || _terminalActive || _sixAmHandled || !_running) return;
+
+            _terminalActive = true;
+            _terminalEntityId = ExhausterEntityId;
+            _exhausterTerminalActive = true;
+            _exhausterTerminalRemaining = immediate ? 0f : Mathf.Max(0f, _exhausterEntry.terminalCountdownSeconds);
+
+            // O Terminal quebra o lampião de forma irreversível: a chama morre, o sprite
+            // passa para o estado quebrado e o reabastecimento deixa de ser aceito.
+            _lampState.lit = false;
+            _lampState.burnRemaining = 0f;
+            _lampState.darkRemaining = 0f;
+            _lampState.terminal = true;
+
+            // Mesmo contrato do Terminal de IA: as demais entidades são limpas
+            // imediatamente e nenhuma nova rodada de IA acontece.
+            foreach (string id in _orderedEntityIds)
+            {
+                EntityRuntime other;
+                if (_entities.TryGetValue(id, out other))
+                    DeactivateRuntime(other, "Exhauster entrou em Terminal");
+            }
+
+            Debug.Log("[EntityDirector] Exhauster entrou em Terminal (" + (immediate ? "imediato" : "contagem") +
+                      "). Jumpscare em " + _exhausterTerminalRemaining.ToString("0.0") + " s.", this);
+
+            if (immediate) StartGameOver(_exhausterEntry.definition);
+        }
+
+        private void UpdateExhausterTerminal(float delta)
+        {
+            if (!_exhausterTerminalActive || _sixAmHandled || !_running) return;
+            if (IsPausedByDebug) return;
+            _exhausterTerminalRemaining -= delta;
+            if (_exhausterTerminalRemaining > 0f) return;
+            _exhausterTerminalRemaining = 0f;
+            StartGameOver(_exhausterEntry.definition);
+        }
+
+        /// <summary>
+        /// Reabastece/reacende o lampião. Chamado pela interação do sótão; a posse do
+        /// item é validada pelo hotspot e também pelo StairLampController. O item NÃO
+        /// é consumido. Sem tolerância restante, a derrota é irreversível.
+        /// </summary>
+        public bool TryRelightStairLamp(out string error)
+        {
+            error = null;
+            if (!_initialized) { error = "EntityDirector não inicializado."; return false; }
+            if (!_exhausterEnabled) { error = "Esta Noite não possui Exhauster configurado."; return false; }
+            if (_sixAmHandled || !_running) { error = "A Noite não está em andamento."; return false; }
+            if (_lampState.terminal || _exhausterTerminalActive)
+            {
+                error = "O lampião está QUEBRADO: o Exhauster entrou em Terminal e o reabastecimento não é mais aceito.";
+                return false;
+            }
+
+            LampMaintenanceEvent events = LampMaintenanceMath.Step(ref _lampState, _lampConfig, true, 0f);
+            if ((events & LampMaintenanceEvent.Relit) == 0) return true;
+
+            _lampRelightCount++;
+            Debug.Log("[EntityDirector] Lampião do sótão reabastecido; queima renovada em " +
+                      _lampConfig.burnSeconds.ToString("0.0") + " s.", this);
+            return true;
+        }
+
+        /// <summary>Fotografia do lampião para apresentação e F8. Nunca altera estado.</summary>
+        public bool TryGetLampSnapshot(out LampRuntimeSnapshot snapshot)
+        {
+            snapshot = default;
+            if (!_exhausterEnabled) return false;
+
+            snapshot = new LampRuntimeSnapshot
+            {
+                configured = true,
+                lit = _lampState.lit,
+                burnNormalized = LampMaintenanceMath.BurnNormalized(_lampState, _lampConfig),
+                darkNormalized = LampMaintenanceMath.DarkNormalized(_lampState, _lampConfig),
+                burnRemaining = _lampState.burnRemaining,
+                darkRemaining = _lampState.darkRemaining,
+                terminal = _lampState.terminal,
+                broken = _lampState.terminal || _exhausterTerminalActive,
+                terminalRemaining = _exhausterTerminalRemaining,
+                relightCount = _lampRelightCount
+            };
+            return true;
+        }
+
+        /// <summary>F8: apaga a chama agora, iniciando a tolerância. Não grava nada.</summary>
+        public bool DebugExtinguishLamp(out string error)
+        {
+            error = null;
+            if (!_initialized || !_exhausterEnabled) { error = "Esta Noite não possui Exhauster configurado."; return false; }
+            if (!_running || _sixAmHandled) { error = "A Noite não está em andamento."; return false; }
+            if (!_lampState.lit) { error = "O lampião já está apagado."; return false; }
+
+            _lampState.lit = false;
+            _lampState.burnRemaining = 0f;
+            _lampState.darkRemaining = Mathf.Max(0f, _lampConfig.darkGraceSeconds);
+            Debug.Log("[EntityDirector] F8: lampião apagado à força.", this);
+            return true;
+        }
+
+        /// <summary>F8: dispara o Terminal do Exhauster pelo fluxo real de derrota.</summary>
+        public bool DebugForceExhausterTerminal(bool immediate, out string error)
+        {
+            error = null;
+            if (!_initialized || !_exhausterEnabled) { error = "Esta Noite não possui Exhauster configurado."; return false; }
+            if (!_running || _sixAmHandled) { error = "A Noite não está em andamento."; return false; }
+            if (_terminalActive) { error = "Já existe um Terminal ativo nesta Noite."; return false; }
+
+            BeginExhausterTerminal(immediate);
+            return true;
         }
 
         public bool TryTransition(string entityId, EntityState targetState, AudioAnchorDefinition requestedAnchor, string reason)
@@ -1160,6 +1400,7 @@ namespace Whispers
         public void StopForGameOver()
         {
             _running = false;
+            _exhausterTerminalActive = false;
             foreach (string id in _orderedEntityIds)
                 _scene?.Audio?.ClearEntityAudioImmediate(id);
         }
@@ -1205,6 +1446,13 @@ namespace Whispers
             _authoringWarnings = Array.Empty<string>();
             _profile = null;
             _random = null;
+            _exhausterEntry = null;
+            _exhausterEnabled = false;
+            _exhausterTerminalActive = false;
+            _exhausterTerminalRemaining = 0f;
+            _lampRelightCount = 0;
+            _lampState = default;
+            _lampConfig = default;
         }
 
         private void OnDisable() { ClearRuntime(); }
