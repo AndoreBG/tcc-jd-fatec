@@ -34,6 +34,20 @@ namespace Whispers
         /// <summary>Lista somente para diagnóstico e ferramentas de desenvolvimento.</summary>
         public ViewNodeController[] GetViewNodes() => _viewNodes.ToArray();
 
+        /// <summary>
+        /// Nome de gameplay do ViewNode de destino. Usado pela UI (tooltip de navegação).
+        /// Se `gameplayName` estiver vazio, devolve `debugName`. Devolve vazio se o id
+        /// não existir na cena.
+        /// </summary>
+        public string GetGameplayName(string viewNodeId)
+        {
+            ViewNodeController node = FindById(viewNodeId);
+            if (node == null || node.Definition == null) return string.Empty;
+            return string.IsNullOrWhiteSpace(node.Definition.gameplayName)
+                ? (node.Definition.debugName ?? string.Empty)
+                : node.Definition.gameplayName;
+        }
+
         /// <summary>Localiza os ViewNodes da cena e prepara para apresentar o inicial.</summary>
         /// <param name="initialNodeId">ID estável da ViewNodeDefinition do nó inicial.</param>
         public void Initialize(string initialNodeId)

@@ -14,5 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ViewNodeDefinition
   id: vn_quarto
   debugName: VN_Quarto
+  gameplayName: "Quarto"
   cameraProfile: {fileID: 11400000, guid: 0b8dd315335422541a723688e3b04867, type: 2}
   audioProfile: {fileID: 11400000, guid: 4c31ae28651e52b28d5231c149520697, type: 2}

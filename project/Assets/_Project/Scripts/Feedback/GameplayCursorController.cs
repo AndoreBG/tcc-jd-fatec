@@ -21,6 +21,7 @@ namespace Whispers
             new Dictionary<HotspotBase, CursorClaim>();
         private readonly Dictionary<object, CursorClaim> _externalClaims =
             new Dictionary<object, CursorClaim>();
+        private readonly HashSet<object> _hiddenRequests = new HashSet<object>();
 
         private GlobalHotspotSettings _settings;
         private GamePeriod _period = GamePeriod.Day;
@@ -116,8 +117,33 @@ namespace Whispers
             if (_externalClaims.Remove(owner)) RefreshCursor();
         }
 
+        /// <summary>
+        /// Pede o cursor do sistema oculto. Usado quando outro elemento substitui o
+        /// ponteiro (ex.: relógio no cursor). Vários donos podem pedir ao mesmo tempo;
+        /// o cursor só volta quando o último dono liberar.
+        /// </summary>
+        public void RequestHiddenCursor(object owner)
+        {
+            if (owner == null) return;
+            if (_hiddenRequests.Add(owner)) RefreshCursor();
+        }
+
+        /// <summary>Libera o pedido de cursor oculto do dono informado.</summary>
+        public void ReleaseHiddenCursor(object owner)
+        {
+            if (owner == null) return;
+            if (_hiddenRequests.Remove(owner)) RefreshCursor();
+        }
+
         private void RefreshCursor()
         {
+            PruneHiddenRequests();
+            if (_hiddenRequests.Count > 0)
+            {
+                Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+                return;
+            }
+
             CursorClaim selected = null;
             HotspotBase staleOwner = null;
             bool hasStaleOwner = false;
@@ -175,10 +201,31 @@ namespace Whispers
             Cursor.SetCursor(fallback, fallbackHotspot, CursorMode.Auto);
         }
 
+        /// <summary>Descarta pedidos de donos que já foram destruídos.</summary>
+        private void PruneHiddenRequests()
+        {
+            if (_hiddenRequests.Count == 0) return;
+
+            List<object> stale = null;
+            foreach (object owner in _hiddenRequests)
+            {
+                UnityEngine.Object unityOwner = owner as UnityEngine.Object;
+                if (unityOwner == null && owner is UnityEngine.Object)
+                {
+                    if (stale == null) stale = new List<object>();
+                    stale.Add(owner);
+                }
+            }
+
+            if (stale == null) return;
+            foreach (object owner in stale) _hiddenRequests.Remove(owner);
+        }
+
         private void OnDisable()
         {
             _claims.Clear();
             _externalClaims.Clear();
+            _hiddenRequests.Clear();
             Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
         }
     }

@@ -61,6 +61,7 @@ namespace Whispers
         private bool _isAvailable = true;
         private bool _wasBlocked;
         private bool _dwellActive;
+        private bool _hoverUiOpen;
         private bool _sessionSubscribed;
         private float _dwellElapsed;
 
@@ -108,6 +109,28 @@ namespace Whispers
         /// Retorna verdadeiro quando a solicitação foi aceita pelo manager.
         /// </summary>
         protected abstract bool OnActivated();
+
+        /// <summary>Gancho de hover disponível (subclasse usa para UI, ex.: tooltip).</summary>
+        protected virtual void OnHoverEnter() { }
+
+        /// <summary>Gancho de saída do hover. Sempre deve limpar o que OnHoverEnter abriu.</summary>
+        protected virtual void OnHoverExit() { }
+
+        /// <summary>Abre a UI de hover uma única vez (tooltip, relógio).</summary>
+        private void OpenHoverUi()
+        {
+            if (_hoverUiOpen) return;
+            _hoverUiOpen = true;
+            OnHoverEnter();
+        }
+
+        /// <summary>Fecha a UI de hover uma única vez.</summary>
+        private void CloseHoverUi()
+        {
+            if (!_hoverUiOpen) return;
+            _hoverUiOpen = false;
+            OnHoverExit();
+        }
 
         // ---------------- Avaliação de condições ----------------
 
@@ -179,7 +202,7 @@ namespace Whispers
             EvaluateConditions();
         }
 
-        protected void OnDisable()
+        protected virtual void OnDisable()
         {
             if (Scene != null && Scene.RuntimeState != null)
                 Scene.RuntimeState.Changed -= OnRuntimeChanged;
@@ -190,6 +213,7 @@ namespace Whispers
             }
             CancelDwell();
             _cursorOver = false;
+            CloseHoverUi();
             RestoreCursor();
         }
 
@@ -208,6 +232,7 @@ namespace Whispers
             {
                 CancelDwell();
                 _cursorOver = false;
+                CloseHoverUi();
                 RestoreCursor();
                 // Preserva a reentrada pendente dos modos hover ao sair do ViewNode.
                 // Modos de clique ignoram essa marca.
@@ -298,6 +323,9 @@ namespace Whispers
                 return;
             }
 
+            // UI de hover (tooltip). Somente hotspot disponível: §6.3 regra 6.
+            if (_isAvailable) OpenHoverUi();
+
             HotspotFeedbackProfile hoverFeedback = Feedback;
             if (hoverFeedback != null && hoverFeedback.hoverClip != null && Scene != null)
                 Scene.PlayFeedback(hoverFeedback.hoverClip);
@@ -326,6 +354,7 @@ namespace Whispers
             _requiresExit = false; // libera a reentrada pendente dos modos hover
             CancelDwell();
             RestoreCursor();
+            CloseHoverUi();
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -382,7 +411,7 @@ namespace Whispers
 
         // ---------------- Bloqueio / reentrada ----------------
 
-        protected void Update()
+        protected virtual void Update()
         {
             EnsureSessionSubscription(); // sessão pode ser criada após o OnEnable (boot)
 
@@ -405,6 +434,13 @@ namespace Whispers
                 _wasBlocked = blocked;
                 RefreshCursorForHoverState();
             }
+
+            // Rede de segurança da UI de hover. O EventSystem não repete o PointerEnter
+            // quando o ViewNode carrega ou quando o bloqueio termina com o ponteiro parado
+            // sobre o hotspot. Sem isto, o tooltip (e o relógio) só aparecem depois de o
+            // jogador tirar e devolver o mouse.
+            if (_presented && !blocked && _isAvailable && _cursorOver) OpenHoverUi();
+            else CloseHoverUi();
 
             // Dwell em tempo escalado, apenas para HoverWithDwell
             if (_dwellActive && activationMode == HotspotActivationMode.HoverWithDwell && !blocked)

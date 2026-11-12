@@ -15,6 +15,9 @@ namespace Whispers
         [Tooltip("Nome usado para autoria e diagnóstico.")]
         public string debugName;
 
+        [Tooltip("Nome de gameplay usado em textos de interface. Ex.: 'Sala', 'Porta da Cozinha'. Se vazio, a UI usa debugName.")]
+        public string gameplayName;
+
         [Tooltip("Perfil de câmera aplicado enquanto este ViewNode é apresentado.")]
         public ViewCameraProfile cameraProfile;
 

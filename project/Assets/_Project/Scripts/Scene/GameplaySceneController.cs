@@ -36,6 +36,13 @@ namespace Whispers
         [SerializeField] private GlobalHotspotSettings globalSettings;
         [SerializeField] private AudioSource feedbackAudioSource;
 
+        [Header("UI de gameplay")]
+        [Tooltip("Tooltip de hover da navegação. Sem esta referência, o tooltip fica desligado.")]
+        [SerializeField] private HotspotTooltipUI tooltip;
+
+        [Tooltip("Relógio desenhado no lugar do ponteiro. Sem esta referência, a hora não aparece no cursor.")]
+        [SerializeField] private ClockCursorPresenter clockPresenter;
+
         public SceneRuntimeState RuntimeState { get; private set; }
         public GameplaySceneDefinition SceneDefinition => sceneDefinition;
         public InputBlocker Blocker => inputBlocker;
@@ -49,6 +56,8 @@ namespace Whispers
         public EntityDirector Entities => entityDirector;
         public LanternController Lantern => lantern;
         public GlobalHotspotSettings GlobalSettings => globalSettings;
+        public HotspotTooltipUI Tooltip => tooltip;
+        public ClockCursorPresenter ClockPresenter => clockPresenter;
         public string FlowError { get; private set; }
         public bool IsFlowBusy { get; private set; }
         public bool IsAtTestEntry { get; private set; }
@@ -100,6 +109,10 @@ namespace Whispers
 
             if (sceneAudioController == null)
                 sceneAudioController = GetComponentInChildren<SceneAudioController>(true);
+            if (tooltip == null)
+                tooltip = GetComponentInChildren<HotspotTooltipUI>(true);
+            if (clockPresenter == null)
+                clockPresenter = GetComponentInChildren<ClockCursorPresenter>(true);
             if (inputBlocker != null)
             {
                 inputBlocker.AddReason(InputBlockReason.Boot);
@@ -201,8 +214,14 @@ namespace Whispers
             ValidateEventSystem(errors);
             ValidateSceneAndCycle(errors, warnings);
             ValidateCamera(errors);
-            ValidateViewNodes(errors);
+            ValidateViewNodes(errors, warnings);
             ValidateNightEntities(errors, warnings);
+            ValidateClockHotspots(warnings);
+
+            if (tooltip == null)
+                warnings.Add("UI: HotspotTooltipUI não atribuído (o tooltip de navegação fica desligado). Rode Whispers > UI > Aplicar tooltip, relógio e objetivos.");
+            if (clockPresenter == null)
+                warnings.Add("Relógio: ClockCursorPresenter não atribuído (a hora não aparece no cursor). Rode Whispers > UI > Aplicar tooltip, relógio e objetivos.");
 
             if (sceneDefinition != null && sceneDefinition.period == GamePeriod.Day && backpack == null)
                 errors.Add("BackpackController é obrigatório na cena de Dia.");
@@ -319,7 +338,30 @@ namespace Whispers
                 errors.Add("Câmera de gameplay está inativa ou desabilitada.");
         }
 
-        private void ValidateViewNodes(List<string> errors)
+        /// <summary>
+        /// Diagnóstico do relógio de gameplay. Sem ClockHotspot na cena, a hora nunca
+        /// aparece. Sem sprites para o período, o hotspot fica sem apresentação.
+        /// </summary>
+        private void ValidateClockHotspots(List<string> warnings)
+        {
+            ClockHotspot[] clocks = GetComponentsInChildren<ClockHotspot>(true);
+            if (clocks == null || clocks.Length == 0)
+            {
+                warnings.Add("Relógio: nenhum ClockHotspot na cena (a hora não aparece no cursor).");
+                return;
+            }
+            if (sceneDefinition == null) return;
+
+            int missing = 0;
+            foreach (ClockHotspot clock in clocks)
+                if (clock != null && !clock.HasSpritesForPeriod(sceneDefinition.period)) missing++;
+
+            if (missing > 0)
+                warnings.Add("Relógio: " + missing + " ClockHotspot sem sprites para o período " + sceneDefinition.period +
+                             ". Sem arte, o relógio não aparece no cursor.");
+        }
+
+        private void ValidateViewNodes(List<string> errors, List<string> warnings)
         {
             if (navigationManager == null) return;
 
@@ -349,6 +391,8 @@ namespace Whispers
                 }
                 if (!ids.Add(definition.id))
                     errors.Add("ID de ViewNode duplicado: '" + definition.id + "'.");
+                if (string.IsNullOrWhiteSpace(definition.gameplayName) && string.IsNullOrWhiteSpace(definition.debugName))
+                    warnings.Add("ViewNode '" + definition.id + "' sem gameplayName e sem debugName: o tooltip de navegação não aparece.");
                 if (definition.cameraProfile == null)
                     errors.Add("ViewNode '" + definition.id + "' não possui ViewCameraProfile.");
                 if (definition.audioProfile == null)

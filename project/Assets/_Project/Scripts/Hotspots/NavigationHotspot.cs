@@ -31,6 +31,34 @@ namespace Whispers
         public string SpecialAudioId => link != null ? link.specialAudioId : null;
         public bool PointerInside => IsCursorOver;
 
+        /// <summary>
+        /// Nome de gameplay do destino, resolvido pelo NavigationManager. Vazio quando o
+        /// destino não existe na cena.
+        /// </summary>
+        public string DestinationGameplayName
+        {
+            get
+            {
+                NavigationManager nav = Scene != null ? Scene.Navigation : null;
+                return nav != null ? nav.GetGameplayName(DestinationId) : string.Empty;
+            }
+        }
+
+        protected override void OnHoverEnter()
+        {
+            string gameplayName = DestinationGameplayName;
+            if (string.IsNullOrWhiteSpace(gameplayName)) return;
+
+            HotspotTooltipUI tooltip = Scene != null ? Scene.Tooltip : null;
+            if (tooltip != null) tooltip.Show("Ir para " + gameplayName);
+        }
+
+        protected override void OnHoverExit()
+        {
+            HotspotTooltipUI tooltip = Scene != null ? Scene.Tooltip : null;
+            if (tooltip != null) tooltip.Hide();
+        }
+
         protected override bool OnActivated()
         {
             NavigationManager nav = Scene != null ? Scene.Navigation : null;
