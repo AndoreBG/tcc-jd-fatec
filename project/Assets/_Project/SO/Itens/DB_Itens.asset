@@ -13,4 +13,6 @@ MonoBehaviour:
   m_Name: DB_Itens
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ItemDatabase
   entries:
-  - {fileID: 11400000, guid: 96041bad88157774e93406cdbf4feb1d, type: 2}
+  - {fileID: 11400000, guid: a4520a179aef9ed4b852097507f38ec8, type: 2}
+  - {fileID: 11400000, guid: 57859b8afd044fbd8bccbabb5193ba2b, type: 2}
+  - {fileID: 11400000, guid: 83ac078b656ea554ba5b01b8ef29ad77, type: 2}

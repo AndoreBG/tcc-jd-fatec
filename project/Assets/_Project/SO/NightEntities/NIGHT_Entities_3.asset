@@ -12,15 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29481ae0a86d37fe675eb24b3f761f38, type: 3}
   m_Name: NIGHT_Entities_3
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.NightEntityProfile
-  profileId: night_entities_3
+  profileId: night_entities_1
   entries:
-  - active: 1
-    entityDefinition: {fileID: 11400000, guid: 8c8f3c7979b83788f9153d34420a531e, type: 2}
+  - entityDefinition: {fileID: 11400000, guid: 8c8f3c7979b83788f9153d34420a531e, type: 2}
     allowedAnchors:
     - {fileID: 11400000, guid: f32a7a03aa7657f29c786ba0e274a37e, type: 2}
     - {fileID: 11400000, guid: 51836ea708df5237b41bee5057837225, type: 2}
     aiLevelByHour: 0e0000000e0000000e000000080000000800000008000000
-    nearToCriticalSeconds: 10
+    nearToCriticalSeconds: 5
     criticalToTerminalSeconds: 5
     resolvedCooldownSeconds: 15
     terminalCountdownSeconds: 5
@@ -39,8 +38,7 @@ MonoBehaviour:
     predatorBangShoveSeconds: 0
     predatorBangShakeIntensity: 0
     voyeurLightContactRequiredSeconds: 2
-  - active: 1
-    entityDefinition: {fileID: 11400000, guid: b84bd0b69db5b1f7e67d00a7811c59ce, type: 2}
+  - entityDefinition: {fileID: 11400000, guid: b84bd0b69db5b1f7e67d00a7811c59ce, type: 2}
     allowedAnchors:
     - {fileID: 11400000, guid: 18c98a1870536ac72f037eb057cd84b6, type: 2}
     - {fileID: 11400000, guid: 23f1397608231551c076ab075559a1d7, type: 2}
@@ -65,7 +63,6 @@ MonoBehaviour:
     predatorBangShakeIntensity: 10
     voyeurLightContactRequiredSeconds: 2
   exhauster:
-    active: 1
     definition: {fileID: 11400000, guid: 1af521e08cde46b79f35a997b7743352, type: 2}
     lampBurnSeconds: 30
     darkGraceSeconds: 5
