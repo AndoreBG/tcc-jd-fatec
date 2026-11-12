@@ -985,6 +985,7 @@ MonoBehaviour:
   onBlockedHint:
     m_PersistentCalls:
       m_Calls: []
+  clockImage: {fileID: 0}
   daySprite: {fileID: 0}
   nightHourSprites:
   - {fileID: 0}
@@ -995,7 +996,6 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   unavailableSprite: {fileID: 0}
-  hideCursor: 1
 --- !u!114 &170410148
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1320,7 +1320,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &263481227
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1336,7 +1336,6 @@ RectTransform:
   - {fileID: 1206027377}
   - {fileID: 1717760239}
   - {fileID: 500136142}
-  - {fileID: 1594897214}
   m_Father: {fileID: 1775992738}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -1769,6 +1768,7 @@ MonoBehaviour:
   onBlockedHint:
     m_PersistentCalls:
       m_Calls: []
+  clockImage: {fileID: 0}
   daySprite: {fileID: 0}
   nightHourSprites:
   - {fileID: 0}
@@ -1779,7 +1779,6 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   unavailableSprite: {fileID: 0}
-  hideCursor: 1
 --- !u!114 &351836557
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1937,8 +1936,7 @@ MonoBehaviour:
   lantern: {fileID: 1960000003}
   globalSettings: {fileID: 11400000, guid: 981a7ab0623904d47a8b7c957e0e4bd1, type: 2}
   feedbackAudioSource: {fileID: 0}
-  tooltip: {fileID: 0}
-  clockPresenter: {fileID: 555547810}
+  tooltip: {fileID: 629289509}
 --- !u!4 &391696333
 Transform:
   m_ObjectHideFlags: 0
@@ -2374,6 +2372,81 @@ MonoBehaviour:
   localIntensity: 0.3
   maxOffset: {x: 0, y: 0}
   ignoreParallaxAndCameraPan: 1
+--- !u!1 &474226147
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 474226148}
+  - component: {fileID: 474226150}
+  - component: {fileID: 474226149}
+  m_Layer: 0
+  m_Name: Clock
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &474226148
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 474226147}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1594897214}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 1.5, y: 2.5}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &474226149
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 474226147}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: -3876989351773742473, guid: 37ecb6b7fb75c5f46b54c00eea563fd2, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &474226150
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 474226147}
+  m_CullTransparentMesh: 1
 --- !u!1 &477947207
 GameObject:
   m_ObjectHideFlags: 0
@@ -3005,6 +3078,7 @@ MonoBehaviour:
   onBlockedHint:
     m_PersistentCalls:
       m_Calls: []
+  clockImage: {fileID: 0}
   daySprite: {fileID: 0}
   nightHourSprites:
   - {fileID: 0}
@@ -3015,7 +3089,6 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   unavailableSprite: {fileID: 0}
-  hideCursor: 1
 --- !u!114 &551431815
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3252,7 +3325,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0.000030517578}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 200, y: 40}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &629289509
@@ -3270,7 +3343,7 @@ MonoBehaviour:
   group: {fileID: 629289510}
   root: {fileID: 629289508}
   label: {fileID: 1853462406}
-  canvas: {fileID: 0}
+  canvas: {fileID: 1393504266}
   offsetPixels: 18
   edgePaddingPixels: 20
   outlineColor: {r: 0.04, g: 0.04, b: 0.04, a: 1}
@@ -3515,6 +3588,7 @@ MonoBehaviour:
   onBlockedHint:
     m_PersistentCalls:
       m_Calls: []
+  clockImage: {fileID: 0}
   daySprite: {fileID: 0}
   nightHourSprites:
   - {fileID: 0}
@@ -3525,7 +3599,6 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   unavailableSprite: {fileID: 0}
-  hideCursor: 1
 --- !u!114 &688572287
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3635,6 +3708,7 @@ MonoBehaviour:
   onBlockedHint:
     m_PersistentCalls:
       m_Calls: []
+  clockImage: {fileID: 0}
   daySprite: {fileID: 0}
   nightHourSprites:
   - {fileID: 0}
@@ -3645,7 +3719,6 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   unavailableSprite: {fileID: 0}
-  hideCursor: 1
 --- !u!114 &714745244
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4820,6 +4893,7 @@ MonoBehaviour:
   onBlockedHint:
     m_PersistentCalls:
       m_Calls: []
+  clockImage: {fileID: 0}
   daySprite: {fileID: 0}
   nightHourSprites:
   - {fileID: 0}
@@ -4830,7 +4904,6 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   unavailableSprite: {fileID: 0}
-  hideCursor: 1
 --- !u!114 &831215325
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6923,6 +6996,7 @@ MonoBehaviour:
   onBlockedHint:
     m_PersistentCalls:
       m_Calls: []
+  clockImage: {fileID: 0}
   daySprite: {fileID: 0}
   nightHourSprites:
   - {fileID: 0}
@@ -6933,7 +7007,6 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   unavailableSprite: {fileID: 0}
-  hideCursor: 1
 --- !u!114 &1380423235
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7005,8 +7078,8 @@ RectTransform:
   m_Children:
   - {fileID: 892637074}
   - {fileID: 744285986}
-  - {fileID: 555547812}
   - {fileID: 1620088624}
+  - {fileID: 555547812}
   - {fileID: 610999917}
   - {fileID: 1475452563}
   - {fileID: 1960000002}
@@ -7958,6 +8031,7 @@ GameObject:
   - component: {fileID: 1594897217}
   - component: {fileID: 1594897216}
   - component: {fileID: 1594897215}
+  - component: {fileID: 1594897218}
   m_Layer: 0
   m_Name: ClockHotspot
   m_TagString: Untagged
@@ -7972,17 +8046,18 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1594897213}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 263481227}
+  m_Children:
+  - {fileID: 474226148}
+  m_Father: {fileID: 1717760239}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 1}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -40, y: -40}
-  m_SizeDelta: {x: 160, y: 160}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 1, y: 3.81}
+  m_SizeDelta: {x: 2, y: 3}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &1594897215
 MonoBehaviour:
@@ -8003,10 +8078,10 @@ MonoBehaviour:
   conditions: []
   unavailableMode: 0
   dwellDuration: 0.6
-  visualGroup: {fileID: 0}
+  visualGroup: {fileID: 1594897218}
   dwellProgressImage: {fileID: 0}
-  feedbackProfile: {fileID: 0}
-  cursorSkin: {fileID: 0}
+  feedbackProfile: {fileID: 11400000, guid: 41e9e5f4e36268945b58a341c9f413d6, type: 2}
+  cursorSkin: {fileID: 2800000, guid: cebf9e2d8d179684a918bc9aab539f96, type: 3}
   cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
@@ -8017,17 +8092,17 @@ MonoBehaviour:
   onBlockedHint:
     m_PersistentCalls:
       m_Calls: []
-  daySprite: {fileID: 0}
+  clockImage: {fileID: 474226149}
+  daySprite: {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
   nightHourSprites:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: -3876989351773742473, guid: 37ecb6b7fb75c5f46b54c00eea563fd2, type: 3}
+  - {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
+  - {fileID: -733251870095863627, guid: 56c74211dbd2fbf418cb3e054d25ea5e, type: 3}
+  - {fileID: -8930837768952922690, guid: d64f02317d70c7e42a6d09f2955f5f51, type: 3}
+  - {fileID: 2971796879118096225, guid: 63a22fbce61043544a4511988740c4cf, type: 3}
+  - {fileID: 2116226736302543925, guid: 7d31e29c452896b44ba195fa87c867c7, type: 3}
+  - {fileID: 1800686162406392963, guid: 090d53245ca214c48a36ba31293f60be, type: 3}
   unavailableSprite: {fileID: 0}
-  hideCursor: 1
 --- !u!114 &1594897216
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8041,7 +8116,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.08}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -8066,6 +8141,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1594897213}
   m_CullTransparentMesh: 1
+--- !u!225 &1594897218
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1594897213}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1605717965
 GameObject:
   m_ObjectHideFlags: 0
@@ -8287,6 +8374,7 @@ MonoBehaviour:
   onBlockedHint:
     m_PersistentCalls:
       m_Calls: []
+  clockImage: {fileID: 0}
   daySprite: {fileID: 0}
   nightHourSprites:
   - {fileID: 0}
@@ -8297,7 +8385,6 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   unavailableSprite: {fileID: 0}
-  hideCursor: 1
 --- !u!114 &1634711479
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8540,7 +8627,8 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1594897214}
   m_Father: {fileID: 263481227}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -8562,7 +8650,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ParallaxLayer
   multiplier: 1
   scale: 1
-  axisMultiplier: {x: 0, y: 2}
+  axisMultiplier: {x: 1, y: 1}
   useViewNodeProfileIntensity: 1
   localIntensity: 0.3
   maxOffset: {x: 0, y: 0}
@@ -9205,7 +9293,7 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 1
-  m_HorizontalAlignment: 2
+  m_HorizontalAlignment: 1
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0

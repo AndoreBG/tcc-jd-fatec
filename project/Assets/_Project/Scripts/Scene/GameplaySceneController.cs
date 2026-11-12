@@ -40,9 +40,6 @@ namespace Whispers
         [Tooltip("Tooltip de hover da navegação. Sem esta referência, o tooltip fica desligado.")]
         [SerializeField] private HotspotTooltipUI tooltip;
 
-        [Tooltip("Relógio desenhado no lugar do ponteiro. Sem esta referência, a hora não aparece no cursor.")]
-        [SerializeField] private ClockCursorPresenter clockPresenter;
-
         public SceneRuntimeState RuntimeState { get; private set; }
         public GameplaySceneDefinition SceneDefinition => sceneDefinition;
         public InputBlocker Blocker => inputBlocker;
@@ -57,7 +54,6 @@ namespace Whispers
         public LanternController Lantern => lantern;
         public GlobalHotspotSettings GlobalSettings => globalSettings;
         public HotspotTooltipUI Tooltip => tooltip;
-        public ClockCursorPresenter ClockPresenter => clockPresenter;
         public string FlowError { get; private set; }
         public bool IsFlowBusy { get; private set; }
         public bool IsAtTestEntry { get; private set; }
@@ -111,8 +107,6 @@ namespace Whispers
                 sceneAudioController = GetComponentInChildren<SceneAudioController>(true);
             if (tooltip == null)
                 tooltip = GetComponentInChildren<HotspotTooltipUI>(true);
-            if (clockPresenter == null)
-                clockPresenter = GetComponentInChildren<ClockCursorPresenter>(true);
             if (inputBlocker != null)
             {
                 inputBlocker.AddReason(InputBlockReason.Boot);
@@ -220,8 +214,6 @@ namespace Whispers
 
             if (tooltip == null)
                 warnings.Add("UI: HotspotTooltipUI não atribuído (o tooltip de navegação fica desligado). Rode Whispers > UI > Aplicar tooltip, relógio e objetivos.");
-            if (clockPresenter == null)
-                warnings.Add("Relógio: ClockCursorPresenter não atribuído (a hora não aparece no cursor). Rode Whispers > UI > Aplicar tooltip, relógio e objetivos.");
 
             if (sceneDefinition != null && sceneDefinition.period == GamePeriod.Day && backpack == null)
                 errors.Add("BackpackController é obrigatório na cena de Dia.");

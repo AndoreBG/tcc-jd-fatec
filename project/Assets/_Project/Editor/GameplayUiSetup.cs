@@ -29,7 +29,7 @@ namespace Whispers.EditorTools
         private const float FontSize = 30f;
 
         private const string LegacyTimeHudName = "RelogioUI";
-        private const string PresenterName = "ClockCursorPresenter";
+        private const string OldPresenterName = "ClockCursorPresenter";
         private const string ClockHotspotName = "ClockHotspot";
         private const string ModalName = "ModalUI";
         private const float ClockSize = 160f;
@@ -64,11 +64,11 @@ namespace Whispers.EditorTools
             Undo.SetCurrentGroupName("UI de gameplay — tooltip e relógio");
 
             HotspotTooltipUI tooltip = SetupTooltip(canvas, font, report);
-            ClockCursorPresenter presenter = SetupClockPresenter(canvas, report);
+            RemoveOldPresenter(report);
             DisableLegacyTimeHud(report);
             int clockCount = SetupClockHotspots(report);
 
-            AssignControllerReference(controller, tooltip, presenter, report);
+            AssignControllerReference(controller, tooltip, report);
 
             Undo.CollapseUndoOperations(undoGroup);
             EditorSceneManager.MarkSceneDirty(scene);
@@ -77,10 +77,10 @@ namespace Whispers.EditorTools
 
             report.AppendLine();
             report.AppendLine("Resumo: tooltip " + (tooltip != null ? "OK" : "AUSENTE") +
-                              ", apresentador do relógio " + (presenter != null ? "OK" : "AUSENTE") +
                               ", ClockHotspot " + clockCount + ".");
             report.AppendLine("OBJETIVO (M9) entra neste mesmo menu na fase seguinte.");
             report.AppendLine("Arte do relógio é autoria manual: Art/HUD/Clock/Day_01PM.png e Night_12AM..06AM.png.");
+            report.AppendLine("O texto da hora usa o tooltip. O sprite do relógio troca sozinho a cada hora.");
 
             Debug.Log("[GameplayUiSetup]\n" + report);
             EditorUtility.DisplayDialog("UI de gameplay", report.ToString(), "OK");
@@ -97,15 +97,10 @@ namespace Whispers.EditorTools
             {
                 SerializedObject so = new SerializedObject(controller);
                 SerializedProperty tooltipProperty = so.FindProperty("tooltip");
-                SerializedProperty clockProperty = so.FindProperty("clockPresenter");
                 report.AppendLine("• Campo 'tooltip': " +
                     (tooltipProperty != null && tooltipProperty.objectReferenceValue != null
                         ? tooltipProperty.objectReferenceValue.name
-                        : "VAZIO (tooltip desligado)"));
-                report.AppendLine("• Campo 'clockPresenter': " +
-                    (clockProperty != null && clockProperty.objectReferenceValue != null
-                        ? clockProperty.objectReferenceValue.name
-                        : "VAZIO (hora não aparece no cursor)"));
+                        : "VAZIO (tooltip e texto da hora desligados)"));
             }
 
             report.AppendLine("• " + LegacyTimeHudName + ": " + DescribeActive(LegacyTimeHudName));
@@ -146,8 +141,16 @@ namespace Whispers.EditorTools
             {
                 Transform content = node.transform.Find("Content");
                 Transform clock = content != null ? content.Find(ClockHotspotName) : null;
-                report.AppendLine("   " + node.gameObject.name + ": " + (clock != null ? "OK" : "SEM ClockHotspot"));
-                if (clock != null) clockTotal++;
+                if (clock == null)
+                {
+                    report.AppendLine("   " + node.gameObject.name + ": SEM ClockHotspot");
+                    continue;
+                }
+
+                SerializedProperty image = new SerializedObject(clock.GetComponent<ClockHotspot>()).FindProperty("clockImage");
+                bool hasImage = image != null && image.objectReferenceValue != null;
+                report.AppendLine("   " + node.gameObject.name + ": OK | clockImage " + (hasImage ? "atribuído" : "VAZIO"));
+                clockTotal++;
             }
             report.AppendLine("   Total: " + clockTotal);
 
@@ -225,8 +228,10 @@ namespace Whispers.EditorTools
             tooltipSo.FindProperty("label").objectReferenceValue = label;
             tooltipSo.FindProperty("canvas").objectReferenceValue = canvas;
             tooltipSo.ApplyModifiedProperties();
+            tooltipSo.Update();
+            tooltip.ApplyOutline(); // contorno nativo do TMP, pelo material do texto
             EditorUtility.SetDirty(tooltip);
-            report.AppendLine("• HotspotTooltipUI configurado (fonte: " + (font != null ? font.name : "padrão do TMP") + ").");
+            report.AppendLine("• HotspotTooltipUI configurado (fonte: " + (font != null ? font.name : "padrão do TMP") + ", com contorno).");
             return tooltip;
         }
 
@@ -234,59 +239,16 @@ namespace Whispers.EditorTools
         // M6 — relógio
         // =====================================================================
 
-        /// <summary>Cria o apresentador do relógio no canvas, abaixo dos modais.</summary>
-        private static ClockCursorPresenter SetupClockPresenter(Canvas canvas, StringBuilder report)
+        /// <summary>
+        /// Remove o apresentador de relógio no cursor da versão anterior do M6. A hora
+        /// agora é texto e a arte do relógio fica na cena, então o objeto não serve mais.
+        /// </summary>
+        private static void RemoveOldPresenter(StringBuilder report)
         {
-            GameObject root = FindChild(canvas.transform, PresenterName);
-            if (root == null)
-            {
-                root = new GameObject(PresenterName, typeof(RectTransform));
-                Undo.RegisterCreatedObjectUndo(root, "UI de gameplay — relógio");
-                root.transform.SetParent(canvas.transform, false);
-                report.AppendLine("• " + PresenterName + " criado.");
-            }
-            else
-            {
-                report.AppendLine("• " + PresenterName + " já existia (reaproveitado).");
-            }
-
-            RectTransform rootRect = root.GetComponent<RectTransform>();
-            rootRect.anchorMin = new Vector2(0.5f, 0.5f);
-            rootRect.anchorMax = new Vector2(0.5f, 0.5f);
-            rootRect.pivot = new Vector2(0.5f, 0.5f);
-            rootRect.sizeDelta = new Vector2(ClockSize, ClockSize);
-            rootRect.anchoredPosition = Vector2.zero;
-
-            CanvasGroup group = root.GetComponent<CanvasGroup>();
-            if (group == null) group = Undo.AddComponent<CanvasGroup>(root);
-            group.alpha = 0f;
-            group.blocksRaycasts = false;
-            group.interactable = false;
-
-            Image image = root.GetComponent<Image>();
-            if (image == null) image = Undo.AddComponent<Image>(root);
-            image.sprite = null;
-            image.color = Color.white;
-            image.raycastTarget = false;
-            image.preserveAspect = true;
-            EditorUtility.SetDirty(image);
-
-            ClockCursorPresenter presenter = root.GetComponent<ClockCursorPresenter>();
-            if (presenter == null) presenter = Undo.AddComponent<ClockCursorPresenter>(root);
-
-            SerializedObject presenterSo = new SerializedObject(presenter);
-            presenterSo.FindProperty("clockImage").objectReferenceValue = image;
-            presenterSo.FindProperty("root").objectReferenceValue = rootRect;
-            presenterSo.FindProperty("group").objectReferenceValue = group;
-            presenterSo.ApplyModifiedProperties();
-            EditorUtility.SetDirty(presenter);
-
-            // Acima dos hotspots, abaixo dos modais.
-            GameObject modal = FindChild(canvas.transform, ModalName);
-            if (modal != null) root.transform.SetSiblingIndex(modal.transform.GetSiblingIndex());
-
-            report.AppendLine("• " + PresenterName + " configurado e ordenado abaixo de '" + ModalName + "'.");
-            return presenter;
+            GameObject old = FindSceneObject(OldPresenterName);
+            if (old == null) return;
+            Undo.DestroyObjectImmediate(old);
+            report.AppendLine("• " + OldPresenterName + " antigo removido da cena.");
         }
 
         /// <summary>Desativa o HUD de tempo antigo, sem apagar o objeto.</summary>
@@ -341,10 +303,9 @@ namespace Whispers.EditorTools
 
                 Image image = clock.GetComponent<Image>();
                 if (image == null) image = Undo.AddComponent<Image>(clock);
-                image.sprite = null;
-                Color color = image.color;
-                color.a = 0.08f;
-                image.color = color;
+                image.sprite = null;            // arte é autoria manual
+                image.color = Color.white;     // sem sprite, nada aparece na tela
+                image.preserveAspect = true;
                 image.raycastTarget = true;
                 EditorUtility.SetDirty(image);
 
@@ -358,9 +319,9 @@ namespace Whispers.EditorTools
                 hotspotSo.FindProperty("conditionPolicy").enumValueIndex = (int)HotspotConditionPolicy.All;
                 hotspotSo.FindProperty("unavailableMode").enumValueIndex = (int)HotspotUnavailableMode.Hidden;
                 hotspotSo.FindProperty("conditions").arraySize = 0;
-                hotspotSo.FindProperty("hideCursor").boolValue = true;
+                hotspotSo.FindProperty("clockImage").objectReferenceValue = image;
 
-                // Os sprites de hora são autoria manual. Sem arte, o hotspot só reporta.
+                // Os sprites de hora são autoria manual. Sem arte, o relógio só reporta.
                 hotspotSo.ApplyModifiedProperties();
                 EditorUtility.SetDirty(hotspot);
 
@@ -368,7 +329,8 @@ namespace Whispers.EditorTools
             }
 
             report.AppendLine("• ClockHotspot: " + created + " criado(s)/reaproveitado(s).");
-            report.AppendLine("  Posição provisória: canto superior direito (160x160, alpha 0.08). Ajuste sobre o relógio da arte.");
+            report.AppendLine("  Posição provisória: canto superior direito (160x160). Ajuste sobre o relógio da arte.");
+            report.AppendLine("  O texto da hora usa o tooltip. A imagem troca de sprite a cada hora.");
             return created;
         }
 
@@ -377,11 +339,11 @@ namespace Whispers.EditorTools
         // =====================================================================
 
         private static void AssignControllerReference(GameplaySceneController controller, HotspotTooltipUI tooltip,
-            ClockCursorPresenter presenter, StringBuilder report)
+            StringBuilder report)
         {
             if (controller == null)
             {
-                report.AppendLine("• GameplaySceneController NÃO encontrado: atribua os campos 'tooltip' e 'clockPresenter' à mão.");
+                report.AppendLine("• GameplaySceneController NÃO encontrado: atribua o campo 'tooltip' à mão.");
                 return;
             }
 
@@ -391,13 +353,9 @@ namespace Whispers.EditorTools
             if (tooltipProperty != null) tooltipProperty.objectReferenceValue = tooltip;
             else report.AppendLine("• Campo 'tooltip' não existe no GameplaySceneController (recompile primeiro).");
 
-            SerializedProperty clockProperty = controllerSo.FindProperty("clockPresenter");
-            if (clockProperty != null) clockProperty.objectReferenceValue = presenter;
-            else report.AppendLine("• Campo 'clockPresenter' não existe no GameplaySceneController (recompile primeiro).");
-
             controllerSo.ApplyModifiedProperties();
             EditorUtility.SetDirty(controller);
-            report.AppendLine("• GameplaySceneController." + controller.name + ": campos 'tooltip' e 'clockPresenter' atribuídos.");
+            report.AppendLine("• GameplaySceneController." + controller.name + ": campo 'tooltip' atribuído.");
         }
 
         private static Dictionary<string, string> CollectGameplayNames(NavigationManager navigation)

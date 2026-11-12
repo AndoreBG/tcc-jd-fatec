@@ -1,62 +1,64 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Whispers
 {
     /// <summary>
-    /// Relógio do gameplay. Substitui o HUD de tempo: quando o ponteiro está sobre o
-    /// hotspot, o cursor do sistema é escondido e o sprite da hora atual aparece no
-    /// lugar do ponteiro.
+    /// Relógio do gameplay.
     ///
-    /// Regras (plano §7.2):
+    /// Duas funções separadas:
+    ///  1. TEXTO — ao passar o mouse, mostra a hora atual como texto ("01PM" no Dia,
+    ///     "12AM" a "06AM" na Noite). O texto usa o HotspotTooltipUI e acompanha o ponteiro.
+    ///  2. ARTE — o sprite da imagem do relógio troca sozinho a cada hora, sempre, com ou
+    ///     sem mouse em cima. No Dia existe um sprite só (01PM). Na Noite existem 7.
+    ///
+    /// Regras (plano §7.2, com a correção de 2026-11-11):
     ///  1. `activationMode = HoverImmediate` e `repeatPolicy = Repeatable`.
     ///  2. `OnActivated` devolve verdadeiro e não executa ação. O hotspot só apresenta.
-    ///  3. Enquanto `IsCursorOver` e `IsAvailable`, pede o cursor oculto e mostra o sprite.
-    ///  4. Ao sair, ao bloquear, ao navegar ou no GameOver, libera o cursor e esconde o sprite.
-    ///  5. A hora é lida por frame de `EntityDirector.DisplayHourIndex` (faixa 0 a 6).
+    ///  3. A hora vem de `EntityDirector.DisplayHourIndex` (faixa 0 a 6), lida por frame.
+    ///  4. O cursor do sistema não é escondido. O relógio é arte de cena, não cursor.
     /// </summary>
     public class ClockHotspot : HotspotBase
     {
-        [Header("Sprites")]
+        [Header("Arte do relógio")]
+        [Tooltip("Image do relógio. O sprite troca sozinho a cada hora. Sem referência, só o texto da hora funciona.")]
+        [SerializeField] private Image clockImage;
+
         [Tooltip("Relógio do Dia. O Dia tem uma hora só: 01PM.")]
         [SerializeField] private Sprite daySprite;
 
         [Tooltip("Sete sprites da Noite. Índice 0 = 12AM, 1 = 01AM, ..., 6 = 06AM.")]
         [SerializeField] private Sprite[] nightHourSprites = new Sprite[7];
 
-        [Tooltip("Sprite opcional para hora sem arte configurada.")]
+        [Tooltip("Sprite usado quando a hora não tem arte configurada.")]
         [SerializeField] private Sprite unavailableSprite;
 
-        [Tooltip("Esconde o cursor do sistema enquanto o relógio está sob o ponteiro.")]
-        [SerializeField] private bool hideCursor = true;
-
+        private const string DayLabel = "01PM";
         private static readonly string[] HourLabels = { "12AM", "01AM", "02AM", "03AM", "04AM", "05AM", "06AM" };
 
-        private bool _showing;
         private int _shownHourIndex = -1;
         private bool _warnedMissingSprite;
 
-        /// <summary>O hotspot de relógio não executa ação. Ele somente apresenta a hora.</summary>
+        /// <summary>O hotspot de relógio não executa ação. Ele só apresenta a hora.</summary>
         protected override bool OnActivated() => true;
 
-        protected override void OnHoverEnter() => Present(force: true);
+        protected override void OnHoverEnter()
+        {
+            HotspotTooltipUI tooltip = Scene != null ? Scene.Tooltip : null;
+            if (tooltip != null) tooltip.Show(FormatHourLabel());
+        }
 
-        protected override void OnHoverExit() => StopPresentation();
+        protected override void OnHoverExit()
+        {
+            HotspotTooltipUI tooltip = Scene != null ? Scene.Tooltip : null;
+            if (tooltip != null) tooltip.Hide();
+        }
 
         protected override void Update()
         {
             // A base trata bloqueio, reentrada e a abertura/fechamento da UI de hover.
             base.Update();
-
-            if (!_showing) return;
-
-            // Trava os casos que não passam pelo PointerExit: bloqueio, navegação, GameOver.
-            if (!IsPresented || !IsCursorOver || !IsAvailable || IsGameplayBlocked)
-            {
-                StopPresentation();
-                return;
-            }
-
-            Present(force: false);
+            RefreshClockSprite();
         }
 
         /// <summary>Verdadeiro quando existem sprites para o período informado.</summary>
@@ -69,74 +71,33 @@ namespace Whispers
             return true;
         }
 
-        // ---------------- Apresentação ----------------
+        // ---------------- Arte do relógio ----------------
 
-        private void Present(bool force)
+        /// <summary>
+        /// Troca o sprite da imagem só quando a hora muda.
+        /// No Dia o relógio fica parado em 01PM: aplica uma vez e não lê mais a hora.
+        /// </summary>
+        private void RefreshClockSprite()
         {
-            GameplaySceneController scene = Scene;
-            if (scene == null) return;
-
-            ClockCursorPresenter presenter = scene.ClockPresenter;
-            if (presenter == null) return;
+            if (clockImage == null) return;
+            if (IsDayPeriod() && _shownHourIndex >= 0) return;
 
             int hourIndex = CurrentHourIndex();
-            if (!force && _showing && hourIndex == _shownHourIndex) return;
+            if (hourIndex == _shownHourIndex) return;
 
             Sprite sprite = ResolveSprite(hourIndex);
-            if (sprite == null)
-            {
-                StopPresentation();
-                if (!_warnedMissingSprite)
-                {
-                    _warnedMissingSprite = true;
-                    Debug.LogWarning("[ClockHotspot] Sem sprite de relógio para a hora " +
-                                     HourLabels[Mathf.Clamp(hourIndex, 0, 6)] + ".", this);
-                }
-                return;
-            }
-
-            if (hideCursor && scene.Cursor != null) scene.Cursor.RequestHiddenCursor(this);
-            presenter.Show(sprite);
-            _showing = true;
+            clockImage.sprite = sprite;
             _shownHourIndex = hourIndex;
-        }
 
-        private void StopPresentation()
-        {
-            if (!_showing) return;
-            _showing = false;
-            _shownHourIndex = -1;
-
-            GameplaySceneController scene = Scene;
-            if (scene == null) return;
-            if (scene.Cursor != null) scene.Cursor.ReleaseHiddenCursor(this);
-            if (scene.ClockPresenter != null) scene.ClockPresenter.Hide();
-        }
-
-        protected override void OnDisable()
-        {
-            StopPresentation();
-            base.OnDisable();
-        }
-
-        // ---------------- Dados ----------------
-
-        private int CurrentHourIndex()
-        {
-            GameplaySceneController scene = Scene;
-            if (scene == null || scene.SceneDefinition == null) return 0;
-            if (scene.SceneDefinition.period == GamePeriod.Day) return 0;
-
-            EntityDirector entities = scene.Entities;
-            return entities != null ? Mathf.Clamp(entities.DisplayHourIndex, 0, 6) : 0;
+            if (sprite != null || _warnedMissingSprite) return;
+            _warnedMissingSprite = true;
+            Debug.LogWarning("[ClockHotspot] Sem sprite de relógio para a hora " +
+                             FormatHourLabel() + ". A arte do relógio não aparece.", this);
         }
 
         private Sprite ResolveSprite(int hourIndex)
         {
-            GameplaySceneController scene = Scene;
-            bool isDay = scene != null && scene.SceneDefinition != null && scene.SceneDefinition.period == GamePeriod.Day;
-
-            if (isDay)
+            if (IsDayPeriod())
                 return daySprite != null ? daySprite : unavailableSprite;
 
             if (nightHourSprites != null && hourIndex >= 0 && hourIndex < nightHourSprites.Length &&
@@ -144,6 +105,29 @@ namespace Whispers
                 return nightHourSprites[hourIndex];
 
             return unavailableSprite;
+        }
+
+        // ---------------- Texto da hora ----------------
+
+        private string FormatHourLabel()
+        {
+            if (IsDayPeriod()) return DayLabel;
+            return HourLabels[Mathf.Clamp(CurrentHourIndex(), 0, 6)];
+        }
+
+        private bool IsDayPeriod()
+        {
+            GameplaySceneController scene = Scene;
+            return scene == null || scene.SceneDefinition == null || scene.SceneDefinition.period == GamePeriod.Day;
+        }
+
+        private int CurrentHourIndex()
+        {
+            if (IsDayPeriod()) return 0;
+
+            GameplaySceneController scene = Scene;
+            EntityDirector entities = scene != null ? scene.Entities : null;
+            return entities != null ? Mathf.Clamp(entities.DisplayHourIndex, 0, 6) : 0;
         }
     }
 }
