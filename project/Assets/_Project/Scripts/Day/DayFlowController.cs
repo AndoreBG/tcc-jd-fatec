@@ -101,11 +101,15 @@ namespace Whispers
             ViewNodeController current = _navigation.Current;
             string returnNodeId = current != null && current.Definition != null ? current.Definition.id : null;
 
-            // Marca antes de carregar: a cena do Dia recarrega depois e o contador zera.
-            session.MarkDayEventConsumed(definition.eventId);
-
+            // Marca só quando o carregamento foi aceito: se a sessão recusar (cena fora do
+            // Build Profile, carregamento pendente), o evento continua disponível e tenta de novo.
             if (!session.RequestRadioEvent(definition, returnNodeId, definition.returnMode, out string error))
+            {
                 Debug.LogWarning("[DayFlowController] Evento de rádio não iniciou: " + error, this);
+                return;
+            }
+
+            session.MarkDayEventConsumed(definition.eventId);
         }
 
         private RadioEventDefinition GetDefinitionForDay(int day)
