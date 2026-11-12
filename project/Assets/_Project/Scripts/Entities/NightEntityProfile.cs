@@ -50,6 +50,7 @@ namespace Whispers
             Dictionary<string, string> globalAnchorOwners = new Dictionary<string, string>(StringComparer.Ordinal);
             int predatorCount = 0;
             int voyeurCount = 0;
+            int activeThreatCount = 0;
             foreach (EntityNightEntry entry in entries)
             {
                 if (entry == null)
@@ -58,10 +59,14 @@ namespace Whispers
                     continue;
                 }
 
+                // Entrada inativa é ausente desta Noite: não valida, não conta e não
+                // entra no tick de IA nem na apresentação (ver EntityDirector.Initialize).
+                if (!entry.active) continue;
+
                 EntityDefinition definition = entry.entityDefinition;
                 if (definition == null)
                 {
-                    errors.Add("NightEntityProfile possui entrada sem EntityDefinition.");
+                    errors.Add("NightEntityProfile possui entrada ATIVA sem EntityDefinition.");
                     continue;
                 }
                 if (string.IsNullOrWhiteSpace(definition.entityId))
@@ -75,41 +80,47 @@ namespace Whispers
                 if (definition is PredatorDefinition)
                 {
                     predatorCount++;
+                    activeThreatCount++;
                     if (definition.allowedAnchorCategory != AudioAnchorCategory.Door)
                         errors.Add("PredatorDefinition '" + definition.entityId + "' deve fixar a categoria Door.");
                 }
                 else if (definition is VoyeurDefinition)
                 {
                     voyeurCount++;
+                    activeThreatCount++;
                     if (definition.allowedAnchorCategory != AudioAnchorCategory.Window)
                         errors.Add("VoyeurDefinition '" + definition.entityId + "' deve fixar a categoria Window.");
                 }
-                else errors.Add("O primeiro NightEntityProfile aceita somente PredatorDefinition e VoyeurDefinition.");
+                else
+                {
+                    errors.Add("O primeiro NightEntityProfile aceita somente PredatorDefinition e VoyeurDefinition.");
+                }
 
                 entry.CollectValidation(sceneViewNodeIds, errors, warnings);
                 CollectGlobalAnchorIdValidation(entry, definition, globalAnchorOwners, errors);
             }
 
-            // O VS5 tem exatamente as duas entidades aprovadas; expansões futuras
-            // poderão flexibilizar esta regra junto de novos cards de conteúdo.
-            if (predatorCount != 1)
-                errors.Add("NightEntityProfile exige exatamente uma PredatorDefinition no primeiro slice (encontradas: " + predatorCount + ").");
-            if (voyeurCount != 1)
-                errors.Add("NightEntityProfile exige exatamente uma VoyeurDefinition no primeiro slice (encontradas: " + voyeurCount + ").");
+            // Cada entidade é opcional, mas não pode repetir. A progressão do ciclo usa
+            // Noites só com Voyeur (Noite 1) e Noites com as três ameaças.
+            if (predatorCount > 1)
+                errors.Add("NightEntityProfile aceita no máximo uma PredatorDefinition ativa (encontradas: " + predatorCount + ").");
+            if (voyeurCount > 1)
+                errors.Add("NightEntityProfile aceita no máximo uma VoyeurDefinition ativa (encontradas: " + voyeurCount + ").");
 
-            if (exhauster != null)
+            // Exhauster sem definição (ou inativo) simplesmente não é gameplay nesta Noite.
+            if (exhauster != null && exhauster.IsConfigured)
             {
                 exhauster.CollectValidation(errors, warnings);
-                if (exhauster.definition != null && ids.Contains(exhauster.definition.entityId))
+                activeThreatCount++;
+                if (ids.Contains(exhauster.definition.entityId))
                 {
                     errors.Add("Exhauster '" + exhauster.definition.entityId +
                                "' também está em 'entries'; a manutenção do lampião não participa do perfil de IA.");
                 }
-                if (predatorCount == 0 || voyeurCount == 0)
-                {
-                    warnings?.Add("Exhauster está configurado no mesmo perfil de uma Noite sem Predator/Voyeur válidos.");
-                }
             }
+
+            if (activeThreatCount == 0)
+                errors.Add("NightEntityProfile não possui nenhuma ameaça ativa nesta Noite.");
         }
 
         /// <summary>
@@ -142,6 +153,9 @@ namespace Whispers
     [Serializable]
     public sealed class EntityNightEntry
     {
+        [Tooltip("Entidade participa desta Noite. Se falso, a entidade fica fora da validação, da IA, do áudio, dos anchors e da apresentação.")]
+        public bool active = true;
+
         public EntityDefinition entityDefinition;
 
         [Tooltip("Anchors elegíveis para ciclos de ataque desta entidade nesta Noite.")]
@@ -321,8 +335,17 @@ namespace Whispers
     [Serializable]
     public sealed class ExhausterNightEntry
     {
-        [Tooltip("Identidade e apresentação do Exhauster. Obrigatório quando esta entrada existe.")]
+        [Tooltip("Exhauster participa desta Noite. Se falso, o lampião não é gameplay nesta cena.")]
+        public bool active = true;
+
+        [Tooltip("Identidade e apresentação do Exhauster. Vazio significa Exhauster desligado nesta Noite (não é erro).")]
         public ExhausterDefinition definition;
+
+        /// <summary>
+        /// Verdadeiro somente quando o Exhauster deve rodar nesta Noite. Definição nula
+        /// conta como desligado: é o estado normal das Noites sem lampião.
+        /// </summary>
+        public bool IsConfigured => active && definition != null;
 
         [Tooltip("Segundos de chama com o lampião cheio. A queima é FIXA a Noite inteira (não escala com a hora).")]
         [Min(1f)] public float lampBurnSeconds = 120f;
@@ -349,11 +372,9 @@ namespace Whispers
         /// <summary>Validação pura de dados usada pelo boot, sem alterar o asset.</summary>
         public void CollectValidation(List<string> errors, List<string> warnings)
         {
-            if (definition == null)
-            {
-                errors?.Add("Exhauster sem ExhausterDefinition no NightEntityProfile.");
-                return;
-            }
+            // Desligado nesta Noite: nada a validar e nenhum warning de mídia.
+            if (!IsConfigured) return;
+
             if (string.IsNullOrWhiteSpace(definition.entityId))
             {
                 errors?.Add("ExhausterDefinition sem entityId no NightEntityProfile.");

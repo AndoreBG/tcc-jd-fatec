@@ -35,6 +35,7 @@ namespace Whispers
         private string _pendingScene;
         private GamePeriod? _pendingPeriod;
         private int _pendingNumber;
+        private int _registeredNightCount;
 
         public event Action SessionStateChanged;
         public bool IsDevelopmentSession { get; private set; } = true;
@@ -47,8 +48,24 @@ namespace Whispers
         /// <summary>Verdadeiro após vencer a última Noite do ciclo: o teste beta foi concluído.</summary>
         public bool IsCycleComplete { get; private set; }
 
-        /// <summary>Quantidade de Noites do ciclo configurada no GameCycleDefinition.</summary>
-        public int NightCount => _cycle != null ? _cycle.EffectiveNightCount : 1;
+        /// <summary>
+        /// Quantidade de Noites do ciclo. A autoridade é o DEF_Night (quantidade de perfis):
+        /// a cena de Noite registra o valor no boot. O GameCycleDefinition é só o fallback
+        /// usado antes de qualquer cena de Noite carregar.
+        /// </summary>
+        public int NightCount => _registeredNightCount > 0
+            ? _registeredNightCount
+            : (_cycle != null ? _cycle.EffectiveNightCount : 1);
+
+        /// <summary>
+        /// Registra o tamanho do ciclo informado pela cena de Noite (GameplaySceneDefinition.NightCount).
+        /// Não grava save e não altera o estado de trabalho.
+        /// </summary>
+        public void RegisterNightCount(int count)
+        {
+            if (count < 1 || count == _registeredNightCount) return;
+            _registeredNightCount = count;
+        }
 
         /// <summary>Cena do período atual da sessão (Dia ou a cena compartilhada de Noite).</summary>
         public string CurrentPeriodScene => _cycle == null ? null : _cycle.GetScene(period);
@@ -142,6 +159,47 @@ namespace Whispers
             if (!string.IsNullOrWhiteSpace(factId) && _facts.Add(factId)) NotifyStateChanged();
         }
 
+        /// <summary>
+        /// Cheats de debug liberados pela sequência MIKA. Transitório: nunca entra no save
+        /// e reinicia no fechamento do jogo.
+        /// </summary>
+        public bool DebugCheatsUnlocked { get; private set; }
+
+        public void UnlockDebugCheats() => DebugCheatsUnlocked = true;
+
+        /// <summary>
+        /// Salto de desenvolvimento de Dia/Noite: ajusta a sessão e carrega a cena do
+        /// período, SEM gravar checkpoint e SEM consolidar o ciclo. Usado pelos cheats.
+        /// </summary>
+        public bool TryDebugJump(int targetDayNumber, GamePeriod targetPeriod, out string error)
+        {
+            error = null;
+            if (!_initialized) { error = "Sessão não iniciada."; return false; }
+            if (_cycle == null) { error = "GameCycleDefinition ausente."; return false; }
+
+            int targetDay = Mathf.Max(1, targetDayNumber);
+            if (targetDay > NightCount)
+            {
+                error = "O ciclo possui " + NightCount + " Dias e Noites; pedido: " + targetDayNumber + ".";
+                return false;
+            }
+            if (IsLoading || HasPendingLoad) { error = "Há um carregamento em andamento."; return false; }
+            if (!CanLoad(targetPeriod, out error)) return false;
+
+            day = targetDay;
+            night = targetPeriod == GamePeriod.Night ? targetDay : 0;
+            period = targetPeriod;
+            IsCycleComplete = false;
+            ClearSelectedTool();
+
+            // Em sessão de desenvolvimento, o ponto de retomada passa a ser o salto: perder
+            // a Noite depois do cheat devolve ao início daquela Noite, não ao Dia 1.
+            if (IsDevelopmentSession) _developmentCheckpoint = CaptureWorkingState();
+
+            StartLoading(_cycle.GetScene(targetPeriod), targetPeriod, targetDay);
+            return true;
+        }
+
         public void SetSelectedTool(string toolId) => selectedTool = toolId;
         public void ClearSelectedTool() => selectedTool = null;
         public void PrepareForPeriodChange() => ClearSelectedTool();
@@ -207,8 +265,8 @@ namespace Whispers
         }
 
         /// <summary>
-        /// Retoma do checkpoint. O checkpoint pode ser do início do Dia ou do início de uma Noite
-        /// (ciclo com várias Noites), então a cena de destino vem do período restaurado.
+        /// Retoma do checkpoint. O checkpoint pode ser do início de um Dia ou do início de uma
+        /// Noite, então a cena de destino vem do período restaurado pelo próprio checkpoint.
         /// </summary>
         public bool TryContinue(out string error)
         {
@@ -218,10 +276,9 @@ namespace Whispers
         }
 
         /// <summary>
-        /// Encerra o período atual do ciclo (Dia 1 + N Noites consecutivas):
-        /// Dia -> Noite 1, Noite N -> Noite N+1 e, vencida a última Noite, conclusão do teste beta.
-        /// Cada início de Noite grava um checkpoint próprio: falhar na Noite N devolve ao seu início.
-        /// A conclusão não carrega cena, apenas sinaliza <see cref="IsCycleComplete"/>.
+        /// Encerra o período atual do ciclo 1 Dia -> 1 Noite (N pares, N = perfis do DEF_Night).
+        /// Dia N -> Noite N; Noite N -> Dia N+1; última Noite vencida -> conclusão sem carregar cena.
+        /// Cada período grava o checkpoint do seu início: falhar na Noite N devolve ao início dela.
         /// </summary>
         public bool TryEndPeriod(out string error)
         {
@@ -234,50 +291,48 @@ namespace Whispers
             {
                 if (!CanLoad(GamePeriod.Night, out error)) return false;
 
-                // Dia -> Noite 1: estado de trabalho vira o checkpoint do início da Noite 1.
+                // Dia N -> Noite N. O checkpoint do início da Noite é o estado do fim do Dia.
+                int targetNight = Mathf.Clamp(day, 1, NightCount);
                 PrepareForPeriodChange();
-                period = GamePeriod.Night;
-                night = 1;
-                if (!CommitNightCheckpoint(1, out error))
-                {
-                    // Falha de gravação: o Dia continua válido e a Noite não inicia.
-                    period = GamePeriod.Day;
-                    night = 0;
-                    return false;
-                }
+                GameSaveData checkpoint = CaptureWorkingState();
+                checkpoint.day = day;
+                checkpoint.night = targetNight;
+                if (!WriteCheckpoint(checkpoint, IsDevelopmentSession, out error)) return false;
+
+                Apply(checkpoint);
+                StartLoading(_cycle.nightScene, GamePeriod.Night, targetNight);
                 return true;
             }
 
+            // Noite N vencida.
             if (night < NightCount)
             {
-                if (!CanLoad(GamePeriod.Night, out error)) return false;
-                return CommitNightCheckpoint(night + 1, out error);
+                if (!CanLoad(GamePeriod.Day, out error)) return false;
+
+                // Noite N -> Dia N+1. O estado de trabalho noturno consolida o próximo Dia.
+                int targetDay = Mathf.Max(1, night) + 1;
+                PrepareForPeriodChange();
+                GameSaveData checkpoint = CaptureWorkingState();
+                checkpoint.day = targetDay;
+                checkpoint.night = 0;
+                if (!WriteCheckpoint(checkpoint, IsDevelopmentSession, out error)) return false;
+
+                Apply(checkpoint);
+                StartLoading(_cycle.dayScene, GamePeriod.Day, targetDay);
+                return true;
             }
 
-            // Última Noite vencida: conclusão do teste beta, sem carregar cena nova.
+            // Última Noite vencida: conclusão, sem carregar cena nova.
             IsCycleComplete = true;
             NotifyStateChanged();
             return true;
         }
 
         /// <summary>
-        /// Grava o checkpoint do início da Noite informada e carrega a cena compartilhada de Noite.
-        /// A gravação acontece ANTES do carregamento: falha de save não inicia a Noite.
+        /// Reinicia o período atual a partir do checkpoint de retomada do próprio período.
+        /// Em sessão de produção delega para <see cref="TryContinue"/> (o disco é a fonte).
+        /// Em sessão de desenvolvimento usa o snapshot em memória, que o salto de debug atualiza.
         /// </summary>
-        private bool CommitNightCheckpoint(int targetNight, out string error)
-        {
-            error = null;
-            GameSaveData checkpoint = CaptureWorkingState();
-            checkpoint.day = day;
-            checkpoint.night = targetNight;
-            if (!WriteCheckpoint(checkpoint, IsDevelopmentSession, out error)) return false;
-
-            // Somente após gravar: aplica a cópia, sem compartilhar listas.
-            Apply(checkpoint);
-            StartLoading(_cycle.nightScene, GamePeriod.Night, targetNight);
-            return true;
-        }
-
         public bool TryRestartCheckpoint(out string error)
         {
             GamePeriod target = period;
@@ -294,8 +349,8 @@ namespace Whispers
         }
 
         /// <summary>
-        /// Falha da Noite: descarta exclusivamente o estado de trabalho noturno e
-        /// volta ao checkpoint do início do Dia sem salvar ou consolidar o ciclo.
+        /// Falha da Noite: descarta exclusivamente o estado de trabalho noturno e volta ao
+        /// checkpoint do início da Noite atual, sem salvar nem consolidar o ciclo.
         /// </summary>
         public bool TryFailNight(out string error)
         {
@@ -434,7 +489,14 @@ namespace Whispers
             foreach (string id in data.collectedIds) _collected.Add(id);
             foreach (string id in data.foundItemIds) _foundItems.Add(id);
             foreach (string id in data.facts) _facts.Add(id);
-            activeSlot = data.slot; stageId = data.stageId; day = data.day; night = Mathf.Max(0, data.night);
+            activeSlot = data.slot; stageId = data.stageId;
+            day = Mathf.Max(1, data.day);
+            night = Mathf.Max(0, data.night);
+
+            // Ciclo 1 Dia -> 1 Noite: a Noite N pertence ao Dia N. Saves do ciclo antigo
+            // (Dia 1 com várias Noites consecutivas) são normalizados sem perder progresso.
+            if (night > day) day = night;
+
             period = night >= 1 ? GamePeriod.Night : GamePeriod.Day;
             ClearSelectedTool();
             NotifyStateChanged();

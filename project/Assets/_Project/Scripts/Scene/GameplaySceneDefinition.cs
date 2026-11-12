@@ -37,6 +37,15 @@ namespace Whispers
         public NightEntityProfile[] nightEntityProfilesByNight;
 
         /// <summary>
+        /// Quantidade de Noites do ciclo, contada pelos perfis configurados no DEF_Night.
+        /// É a fonte de verdade do tamanho do ciclo: N Noites = N Dias + N Noites.
+        /// </summary>
+        public int NightCount =>
+            nightEntityProfilesByNight != null && nightEntityProfilesByNight.Length > 0
+                ? nightEntityProfilesByNight.Length
+                : 1;
+
+        /// <summary>
         /// Perfil efetivo da Noite informada (1-based). A(s) cena(s) de Noite são reutilizadas
         /// pelo ciclo: a dificuldade de cada Noite vem daqui, não de uma cena diferente.
         /// </summary>

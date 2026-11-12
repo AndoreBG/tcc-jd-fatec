@@ -78,6 +78,8 @@ namespace Whispers
                 }
 
                 EntityNightEntry entry = profile != null ? profile.FindEntry(definition.entityId) : null;
+                // Entidade inativa nesta Noite: o binding não é exigido nem validado.
+                if (entry != null && !entry.active) continue;
                 if (entry == null)
                 {
                     // Um binding de uma entidade fora do perfil não participa desta
@@ -162,7 +164,8 @@ namespace Whispers
             if (profile == null || profile.entries == null) return;
             foreach (EntityNightEntry entry in profile.entries)
             {
-                if (entry == null || entry.entityDefinition == null || entry.allowedAnchors == null) continue;
+                if (entry == null || !entry.active) continue;
+                if (entry.entityDefinition == null || entry.allowedAnchors == null) continue;
                 foreach (AudioAnchorDefinition anchor in entry.allowedAnchors)
                 {
                     if (anchor == null) continue;

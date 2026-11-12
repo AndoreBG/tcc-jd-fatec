@@ -16,8 +16,8 @@ namespace Whispers
         public string nightScene = "playground_night";
 
         [Header("Estrutura do ciclo")]
-        [Tooltip("Quantidade de Noites consecutivas após o Dia. Com 2: Dia 1 -> Noite 1 -> Noite 2 -> conclusão do teste beta.")]
-        [Min(1)] public int nightCount = 2;
+        [Tooltip("FALLBACK do tamanho do ciclo. A autoridade é o DEF_Night (quantidade de perfis). Com 4: Dia 1 -> Noite 1 -> ... -> Dia 4 -> Noite 4 -> conclusão.")]
+        [Min(1)] public int nightCount = 4;
 
         [Header("Retorno sem save")]
         [Tooltip("Nome ou caminho da cena de menu principal incluída no Build Profile. Vazio desabilita o hold de retorno até a cena ser configurada.")]

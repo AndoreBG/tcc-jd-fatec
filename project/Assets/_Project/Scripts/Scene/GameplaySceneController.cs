@@ -93,6 +93,11 @@ namespace Whispers
                 _returnToMenuController = gameObject.AddComponent<ReturnToMainMenuController>();
             _returnToMenuController.Initialize(this);
 
+            // Cheats de debug criados em runtime: nenhuma cena precisa ser editada.
+            if (!TryGetComponent(out DebugCheatController cheats))
+                cheats = gameObject.AddComponent<DebugCheatController>();
+            cheats.Initialize(this);
+
             if (sceneAudioController == null)
                 sceneAudioController = GetComponentInChildren<SceneAudioController>(true);
             if (inputBlocker != null)
@@ -281,10 +286,21 @@ namespace Whispers
             }
 
             if (cycleDefinition.nightCount < 1)
-                errors.Add("GameCycleDefinition.nightCount precisa ser pelo menos 1 (Dia + Noites do ciclo).");
+                errors.Add("GameCycleDefinition.nightCount precisa ser pelo menos 1 (fallback do tamanho do ciclo).");
 
-            if (Session != null && Session.night > cycleDefinition.EffectiveNightCount)
-                warnings.Add("A Noite atual (" + Session.night + ") excede nightCount (" + cycleDefinition.nightCount + ") do GameCycleDefinition.");
+            // O tamanho efetivo vem do DEF_Night (Noite) ou do valor já registrado pela sessão.
+            int effectiveNightCount = Session != null && Session.NightCount > 0
+                ? Session.NightCount
+                : cycleDefinition.EffectiveNightCount;
+
+            if (sceneDefinition.period == GamePeriod.Night && sceneDefinition.NightCount != cycleDefinition.nightCount)
+            {
+                warnings.Add("DEF_Night possui " + sceneDefinition.NightCount + " perfis para " +
+                             cycleDefinition.nightCount + " Noites no GameCycleDefinition. O DEF_Night define o ciclo.");
+            }
+
+            if (Session != null && Session.night > effectiveNightCount)
+                warnings.Add("A Noite atual (" + Session.night + ") excede o tamanho do ciclo (" + effectiveNightCount + ").");
 
             if (cycleDefinition.fadeDuration < 0f)
                 warnings.Add("GameCycleDefinition.fadeDuration negativo será tratado como zero.");
@@ -361,6 +377,11 @@ namespace Whispers
                     warnings.Add("GameplaySceneDefinition de Dia possui nightEntityProfile(s); a referência será ignorada.");
                 return;
             }
+
+            // O tamanho do ciclo vem daqui: N perfis = N Noites = N Dias. A sessão guarda o
+            // número para calcular Dia N+1 e o fim da última Noite.
+            GameSessionManager session = GameSessionManager.Instance;
+            if (session != null) session.RegisterNightCount(sceneDefinition.NightCount);
 
             if (sceneDefinition.nightEntityProfile == null)
             {

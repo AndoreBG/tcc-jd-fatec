@@ -106,14 +106,15 @@ namespace Whispers
 
             // O Exhauster fica fora de 'entries' (manutenção pura), mas a mídia do seu
             // jumpscare precisa aparecer no mesmo diagnóstico não bloqueante.
-            if (profile.Exhauster != null && profile.Exhauster.definition != null)
+            if (profile.Exhauster != null && profile.Exhauster.IsConfigured)
                 profile.Exhauster.definition.CollectPresentationWarnings(warnings);
 
             if (profile.entries == null) return;
             HashSet<string> inspected = new HashSet<string>(StringComparer.Ordinal);
             foreach (EntityNightEntry entry in profile.entries)
             {
-                EntityDefinition definition = entry != null ? entry.entityDefinition : null;
+                if (entry == null || !entry.active) continue;   // entidade ausente desta Noite
+                EntityDefinition definition = entry.entityDefinition;
                 if (definition == null || !inspected.Add(definition.entityId)) continue;
                 definition.CollectPresentationWarnings(warnings);
                 PredatorDefinition predator = definition as PredatorDefinition;
@@ -142,8 +143,21 @@ namespace Whispers
         public string PredatorEntityId => predatorController != null ? predatorController.EntityId : null;
         public string VoyeurEntityId => voyeurController != null ? voyeurController.EntityId : null;
 
+        /// <summary>
+        /// Verdadeiro quando a entidade participa desta Noite (registrada em _entities).
+        /// Usado pelos cheats de debug e pelo F8.
+        /// </summary>
+        public bool IsEntityActive(string entityId)
+            => !string.IsNullOrWhiteSpace(entityId) && _entities.ContainsKey(entityId);
+
         /// <summary>Verdadeiro quando a Noite atual possui Exhauster configurado e inicializado.</summary>
         public bool HasExhauster => _exhausterEnabled;
+
+        private bool HasConfiguredExhauster()
+        {
+            NightEntityProfile profile = _profile;
+            return profile != null && profile.Exhauster != null && profile.Exhauster.IsConfigured;
+        }
         /// <summary>entityId do Exhauster nesta Noite; nulo quando ausente.</summary>
         public string ExhausterEntityId => _exhausterEnabled && _exhausterEntry != null && _exhausterEntry.definition != null
             ? _exhausterEntry.definition.entityId
@@ -186,8 +200,12 @@ namespace Whispers
 
             foreach (EntityNightEntry entry in _profile.entries)
             {
-                if (entry == null || entry.entityDefinition == null || string.IsNullOrWhiteSpace(entry.entityDefinition.entityId))
-                { error = "NightEntityProfile contém uma entrada de entidade inválida."; ClearRuntime(); return false; }
+                if (entry == null) continue;
+                // Entidade inativa é ausente desta Noite: não entra em _entities, não
+                // participa do tick, não reserva anchor e não é apresentada.
+                if (!entry.active) continue;
+                if (entry.entityDefinition == null || string.IsNullOrWhiteSpace(entry.entityDefinition.entityId))
+                { error = "NightEntityProfile contém uma entrada de entidade ATIVA inválida."; ClearRuntime(); return false; }
                 string id = entry.entityDefinition.entityId;
                 if (_entities.ContainsKey(id))
                 { error = "NightEntityProfile contém entityId duplicado: '" + id + "'."; ClearRuntime(); return false; }
@@ -195,15 +213,32 @@ namespace Whispers
                 _orderedEntityIds.Add(id);
             }
 
-            EntityDefinition predator;
-            if (!TryGetDefinition(predatorController.EntityId, out predator) || !(predator is PredatorDefinition))
+            if (_orderedEntityIds.Count == 0 && !HasConfiguredExhauster())
+            { error = "NightEntityProfile não possui nenhuma ameaça ativa nesta Noite."; ClearRuntime(); return false; }
+
+            // Predator e Voyeur são opcionais: a progressão do ciclo usa Noites só com o
+            // Voyeur. O controller de uma entidade inativa permanece inerte, porque todos
+            // os pontos de entrada do diretor exigem o id em _entities.
+            if (!_entities.ContainsKey(predatorController.EntityId))
+            {
+                Debug.Log("[EntityDirector] Predator '" + predatorController.EntityId +
+                          "' inativo nesta Noite; o controller fica inerte.", this);
+            }
+            else if (!TryGetDefinition(predatorController.EntityId, out EntityDefinition predator) ||
+                     !(predator is PredatorDefinition))
             {
                 error = "PredatorController.entityId não resolve uma PredatorDefinition do perfil.";
                 ClearRuntime();
                 return false;
             }
-            EntityDefinition voyeur;
-            if (!TryGetDefinition(voyeurController.EntityId, out voyeur) || !(voyeur is VoyeurDefinition))
+
+            if (!_entities.ContainsKey(voyeurController.EntityId))
+            {
+                Debug.Log("[EntityDirector] Voyeur '" + voyeurController.EntityId +
+                          "' inativo nesta Noite; o controller fica inerte.", this);
+            }
+            else if (!TryGetDefinition(voyeurController.EntityId, out EntityDefinition voyeur) ||
+                     !(voyeur is VoyeurDefinition))
             {
                 error = "VoyeurController.entityId não resolve uma VoyeurDefinition do perfil.";
                 ClearRuntime();
@@ -1023,7 +1058,8 @@ namespace Whispers
         {
             error = null;
             _exhausterEntry = _profile != null ? _profile.Exhauster : null;
-            _exhausterEnabled = _exhausterEntry != null && _exhausterEntry.definition != null;
+            // Definição nula ou 'active = false' significam Exhauster desligado nesta Noite.
+            _exhausterEnabled = _exhausterEntry != null && _exhausterEntry.IsConfigured;
             if (!_exhausterEnabled) return true;
 
             string entityId = _exhausterEntry.definition.entityId;
