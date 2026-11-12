@@ -32,6 +32,10 @@ namespace Whispers
         [FormerlySerializedAs("hotbar")]
         [SerializeField] private LanternController lantern;
 
+        [Header("Fluxo do Dia")]
+        [Tooltip("Dispara o evento de rádio no Dia. Sem referência, o rádio não toca.")]
+        [SerializeField] private DayFlowController dayFlow;
+
         [Header("Configuração e feedback")]
         [SerializeField] private GlobalHotspotSettings globalSettings;
         [SerializeField] private AudioSource feedbackAudioSource;
@@ -107,6 +111,8 @@ namespace Whispers
                 sceneAudioController = GetComponentInChildren<SceneAudioController>(true);
             if (tooltip == null)
                 tooltip = GetComponentInChildren<HotspotTooltipUI>(true);
+            if (dayFlow == null)
+                dayFlow = GetComponentInChildren<DayFlowController>(true);
             if (inputBlocker != null)
             {
                 inputBlocker.AddReason(InputBlockReason.Boot);
@@ -121,11 +127,17 @@ namespace Whispers
                 {
                     transitionController.SetCover(1f);
                     sceneAudioController.Initialize(sceneDefinition);
-                    navigationManager.Initialize(sceneDefinition.initialViewNodeId);
+                    // Retorno de evento (rádio): o ViewNode guardado vence o inicial.
+                    string returnNodeId = null;
+                    if (Session != null && Session.TryConsumeReturnViewNode(out string pendingReturnId))
+                        returnNodeId = pendingReturnId;
+                    navigationManager.Initialize(sceneDefinition.initialViewNodeId, returnNodeId);
                     navigationManager.PresentInitial();
                     if (navigationManager.Current == null) error = "Boot: ViewNode inicial não encontrado após a inicialização.";
                     if (error == null && sceneDefinition.period == GamePeriod.Night &&
                         !entityDirector.Initialize(this, sceneDefinition, out error)) { }
+                    if (error == null && dayFlow != null)
+                        dayFlow.Initialize(navigationManager);
                 }
             }
             catch (Exception exception) { error = "Falha no boot: " + exception.Message; Debug.LogException(exception, this); }
@@ -212,6 +224,8 @@ namespace Whispers
             ValidateNightEntities(errors, warnings);
             ValidateClockHotspots(warnings);
 
+            if (dayFlow == null && sceneDefinition != null && sceneDefinition.period == GamePeriod.Day)
+                warnings.Add("Dia: DayFlowController não atribuído (o evento de rádio não dispara). Rode Whispers > Rádio > Aplicar fluxo do Dia.");
             if (tooltip == null)
                 warnings.Add("UI: HotspotTooltipUI não atribuído (o tooltip de navegação fica desligado). Rode Whispers > UI > Aplicar tooltip, relógio e objetivos.");
 

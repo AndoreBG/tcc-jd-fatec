@@ -74,4 +74,13 @@ MonoBehaviour:
     occlusion: 0.888
     lowPassFrequency: 1832
     reverbSend: 0.964
+  - anchorId: radio_corredorfront
+    isAudible: 1
+    direction: 6
+    distance: 1
+    pan: 0
+    volumeMultiplier: 0.9
+    occlusion: 0.2
+    lowPassFrequency: 1832
+    reverbSend: 0.964
   localLayers: []

@@ -986,15 +986,15 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   clockImage: {fileID: 0}
-  daySprite: {fileID: 0}
+  daySprite: {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
   nightHourSprites:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: -3876989351773742473, guid: 37ecb6b7fb75c5f46b54c00eea563fd2, type: 3}
+  - {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
+  - {fileID: -733251870095863627, guid: 56c74211dbd2fbf418cb3e054d25ea5e, type: 3}
+  - {fileID: -8930837768952922690, guid: d64f02317d70c7e42a6d09f2955f5f51, type: 3}
+  - {fileID: 2971796879118096225, guid: 63a22fbce61043544a4511988740c4cf, type: 3}
+  - {fileID: 2116226736302543925, guid: 7d31e29c452896b44ba195fa87c867c7, type: 3}
+  - {fileID: 1800686162406392963, guid: 090d53245ca214c48a36ba31293f60be, type: 3}
   unavailableSprite: {fileID: 0}
 --- !u!114 &170410148
 MonoBehaviour:
@@ -1769,15 +1769,15 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   clockImage: {fileID: 0}
-  daySprite: {fileID: 0}
+  daySprite: {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
   nightHourSprites:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: -3876989351773742473, guid: 37ecb6b7fb75c5f46b54c00eea563fd2, type: 3}
+  - {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
+  - {fileID: -733251870095863627, guid: 56c74211dbd2fbf418cb3e054d25ea5e, type: 3}
+  - {fileID: -8930837768952922690, guid: d64f02317d70c7e42a6d09f2955f5f51, type: 3}
+  - {fileID: 2971796879118096225, guid: 63a22fbce61043544a4511988740c4cf, type: 3}
+  - {fileID: 2116226736302543925, guid: 7d31e29c452896b44ba195fa87c867c7, type: 3}
+  - {fileID: 1800686162406392963, guid: 090d53245ca214c48a36ba31293f60be, type: 3}
   unavailableSprite: {fileID: 0}
 --- !u!114 &351836557
 MonoBehaviour:
@@ -3079,15 +3079,15 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   clockImage: {fileID: 0}
-  daySprite: {fileID: 0}
+  daySprite: {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
   nightHourSprites:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: -3876989351773742473, guid: 37ecb6b7fb75c5f46b54c00eea563fd2, type: 3}
+  - {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
+  - {fileID: -733251870095863627, guid: 56c74211dbd2fbf418cb3e054d25ea5e, type: 3}
+  - {fileID: -8930837768952922690, guid: d64f02317d70c7e42a6d09f2955f5f51, type: 3}
+  - {fileID: 2971796879118096225, guid: 63a22fbce61043544a4511988740c4cf, type: 3}
+  - {fileID: 2116226736302543925, guid: 7d31e29c452896b44ba195fa87c867c7, type: 3}
+  - {fileID: 1800686162406392963, guid: 090d53245ca214c48a36ba31293f60be, type: 3}
   unavailableSprite: {fileID: 0}
 --- !u!114 &551431815
 MonoBehaviour:
@@ -3589,15 +3589,15 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   clockImage: {fileID: 0}
-  daySprite: {fileID: 0}
+  daySprite: {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
   nightHourSprites:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: -3876989351773742473, guid: 37ecb6b7fb75c5f46b54c00eea563fd2, type: 3}
+  - {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
+  - {fileID: -733251870095863627, guid: 56c74211dbd2fbf418cb3e054d25ea5e, type: 3}
+  - {fileID: -8930837768952922690, guid: d64f02317d70c7e42a6d09f2955f5f51, type: 3}
+  - {fileID: 2971796879118096225, guid: 63a22fbce61043544a4511988740c4cf, type: 3}
+  - {fileID: 2116226736302543925, guid: 7d31e29c452896b44ba195fa87c867c7, type: 3}
+  - {fileID: 1800686162406392963, guid: 090d53245ca214c48a36ba31293f60be, type: 3}
   unavailableSprite: {fileID: 0}
 --- !u!114 &688572287
 MonoBehaviour:
@@ -3709,15 +3709,15 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   clockImage: {fileID: 0}
-  daySprite: {fileID: 0}
+  daySprite: {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
   nightHourSprites:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: -3876989351773742473, guid: 37ecb6b7fb75c5f46b54c00eea563fd2, type: 3}
+  - {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
+  - {fileID: -733251870095863627, guid: 56c74211dbd2fbf418cb3e054d25ea5e, type: 3}
+  - {fileID: -8930837768952922690, guid: d64f02317d70c7e42a6d09f2955f5f51, type: 3}
+  - {fileID: 2971796879118096225, guid: 63a22fbce61043544a4511988740c4cf, type: 3}
+  - {fileID: 2116226736302543925, guid: 7d31e29c452896b44ba195fa87c867c7, type: 3}
+  - {fileID: 1800686162406392963, guid: 090d53245ca214c48a36ba31293f60be, type: 3}
   unavailableSprite: {fileID: 0}
 --- !u!114 &714745244
 MonoBehaviour:
@@ -4894,15 +4894,15 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   clockImage: {fileID: 0}
-  daySprite: {fileID: 0}
+  daySprite: {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
   nightHourSprites:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: -3876989351773742473, guid: 37ecb6b7fb75c5f46b54c00eea563fd2, type: 3}
+  - {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
+  - {fileID: -733251870095863627, guid: 56c74211dbd2fbf418cb3e054d25ea5e, type: 3}
+  - {fileID: -8930837768952922690, guid: d64f02317d70c7e42a6d09f2955f5f51, type: 3}
+  - {fileID: 2971796879118096225, guid: 63a22fbce61043544a4511988740c4cf, type: 3}
+  - {fileID: 2116226736302543925, guid: 7d31e29c452896b44ba195fa87c867c7, type: 3}
+  - {fileID: 1800686162406392963, guid: 090d53245ca214c48a36ba31293f60be, type: 3}
   unavailableSprite: {fileID: 0}
 --- !u!114 &831215325
 MonoBehaviour:
@@ -6997,15 +6997,15 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   clockImage: {fileID: 0}
-  daySprite: {fileID: 0}
+  daySprite: {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
   nightHourSprites:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: -3876989351773742473, guid: 37ecb6b7fb75c5f46b54c00eea563fd2, type: 3}
+  - {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
+  - {fileID: -733251870095863627, guid: 56c74211dbd2fbf418cb3e054d25ea5e, type: 3}
+  - {fileID: -8930837768952922690, guid: d64f02317d70c7e42a6d09f2955f5f51, type: 3}
+  - {fileID: 2971796879118096225, guid: 63a22fbce61043544a4511988740c4cf, type: 3}
+  - {fileID: 2116226736302543925, guid: 7d31e29c452896b44ba195fa87c867c7, type: 3}
+  - {fileID: 1800686162406392963, guid: 090d53245ca214c48a36ba31293f60be, type: 3}
   unavailableSprite: {fileID: 0}
 --- !u!114 &1380423235
 MonoBehaviour:
@@ -8375,15 +8375,15 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   clockImage: {fileID: 0}
-  daySprite: {fileID: 0}
+  daySprite: {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
   nightHourSprites:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: -3876989351773742473, guid: 37ecb6b7fb75c5f46b54c00eea563fd2, type: 3}
+  - {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
+  - {fileID: -733251870095863627, guid: 56c74211dbd2fbf418cb3e054d25ea5e, type: 3}
+  - {fileID: -8930837768952922690, guid: d64f02317d70c7e42a6d09f2955f5f51, type: 3}
+  - {fileID: 2971796879118096225, guid: 63a22fbce61043544a4511988740c4cf, type: 3}
+  - {fileID: 2116226736302543925, guid: 7d31e29c452896b44ba195fa87c867c7, type: 3}
+  - {fileID: 1800686162406392963, guid: 090d53245ca214c48a36ba31293f60be, type: 3}
   unavailableSprite: {fileID: 0}
 --- !u!114 &1634711479
 MonoBehaviour:

@@ -15,6 +15,13 @@ namespace Whispers
         [Tooltip("Cena da Noite, incluída no Build Profile. As Noites do ciclo compartilham esta cena e se diferenciam pelo NightEntityProfile.")]
         public string nightScene = "playground_night";
 
+        [Header("Cenas de evento")]
+        [Tooltip("Cena do evento de rádio, incluída no Build Profile. Vazio desabilita o evento.")]
+        public string radioEventScene = "radio_event";
+
+        [Tooltip("Cena de cutscene exibida antes do Dia 1. Vazio = vai direto ao Dia 1.")]
+        public string worldCutsceneScene;
+
         [Header("Estrutura do ciclo")]
         [Tooltip("FALLBACK do tamanho do ciclo. A autoridade é o DEF_Night (quantidade de perfis). Com 4: Dia 1 -> Noite 1 -> ... -> Dia 4 -> Noite 4 -> conclusão.")]
         [Min(1)] public int nightCount = 4;

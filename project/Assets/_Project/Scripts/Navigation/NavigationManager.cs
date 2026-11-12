@@ -50,7 +50,11 @@ namespace Whispers
 
         /// <summary>Localiza os ViewNodes da cena e prepara para apresentar o inicial.</summary>
         /// <param name="initialNodeId">ID estável da ViewNodeDefinition do nó inicial.</param>
-        public void Initialize(string initialNodeId)
+        /// <param name="preferredNodeId">
+        /// ID preferido (retorno de evento). Se existir na cena, vence o inicial.
+        /// Se não existir, o inicial é usado e um warning é escrito.
+        /// </param>
+        public void Initialize(string initialNodeId, string preferredNodeId = null)
         {
             _viewNodes.Clear();
             _viewNodes.AddRange(GetComponentsInChildren<ViewNodeController>(true));
@@ -58,7 +62,11 @@ namespace Whispers
             foreach (ViewNodeController node in _viewNodes)
                 node.Exit(); // garante que nada começa apresentado (idempotente)
 
-            _initialNode = FindById(initialNodeId);
+            ViewNodeController preferred = FindById(preferredNodeId);
+            if (!string.IsNullOrWhiteSpace(preferredNodeId) && preferred == null)
+                Debug.LogWarning($"[NavigationManager] ViewNode de retorno '{preferredNodeId}' não existe na cena. Usando o inicial.", this);
+
+            _initialNode = preferred ?? FindById(initialNodeId);
             if (_initialNode == null)
                 Debug.LogWarning($"[NavigationManager] ViewNode inicial não encontrado para o id '{initialNodeId}'.", this);
         }
