@@ -16,9 +16,6 @@ namespace Whispers
         public string nightScene = "playground_night";
 
         [Header("Cenas de evento")]
-        [Tooltip("Cena do evento de rádio, incluída no Build Profile. Vazio desabilita o evento.")]
-        public string radioEventScene = "radio_event";
-
         [Tooltip("Cena de cutscene exibida antes do Dia 1. Vazio = vai direto ao Dia 1.")]
         public string worldCutsceneScene;
 

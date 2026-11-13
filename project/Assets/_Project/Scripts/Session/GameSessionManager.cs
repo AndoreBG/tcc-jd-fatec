@@ -94,21 +94,6 @@ namespace Whispers
         // ---- Eventos do Dia (transitório: nunca entra no save) ----
 
         private readonly HashSet<string> _consumedDayEvents = new HashSet<string>();
-        private RadioEventDefinition _pendingRadio;
-        private RadioReturnMode _pendingRadioReturnMode = RadioReturnMode.ReturnToDay;
-        private string _pendingReturnViewNodeId;
-
-        /// <summary>Evento de rádio que a cena do rádio deve apresentar. Nulo fora do evento.</summary>
-        public RadioEventDefinition PendingRadioEvent => _pendingRadio;
-
-        /// <summary>Modo de retorno do evento de rádio pendente.</summary>
-        public RadioReturnMode PendingRadioReturnMode => _pendingRadioReturnMode;
-
-        /// <summary>Verdadeiro quando existe ViewNode de retorno guardado.</summary>
-        public bool HasPendingReturnViewNode => !string.IsNullOrEmpty(_pendingReturnViewNodeId);
-
-        /// <summary>ID do ViewNode para onde o gameplay deve voltar. Vazio quando não há retorno.</summary>
-        public string PendingReturnViewNodeId => _pendingReturnViewNodeId;
 
         /// <summary>Verdadeiro quando o evento do Dia informado já tocou nesta sessão de Dia.</summary>
         public bool IsDayEventConsumed(string eventId)
@@ -119,63 +104,6 @@ namespace Whispers
         {
             if (string.IsNullOrEmpty(eventId)) return;
             _consumedDayEvents.Add(eventId);
-        }
-
-        /// <summary>Lê o ViewNode de retorno e limpa a guarda. Uma única leitura por retorno.</summary>
-        public bool TryConsumeReturnViewNode(out string viewNodeId)
-        {
-            viewNodeId = _pendingReturnViewNodeId;
-            _pendingReturnViewNodeId = null;
-            return !string.IsNullOrEmpty(viewNodeId);
-        }
-
-        /// <summary>
-        /// Solicita o evento de rádio. Guarda a definição e o ViewNode de retorno e carrega
-        /// a cena do rádio sem legenda de carregamento.
-        /// </summary>
-        public bool RequestRadioEvent(RadioEventDefinition definition, string returnViewNodeId,
-            RadioReturnMode returnMode, out string error)
-        {
-            error = null;
-            if (!_initialized) { error = "Sessão não iniciada."; return false; }
-            if (definition == null || !definition.HasLines) { error = "Evento de rádio sem linhas."; return false; }
-            if (_cycle == null || string.IsNullOrWhiteSpace(_cycle.radioEventScene))
-            { error = "Cena do evento de rádio não configurada em GameCycleDefinition."; return false; }
-            if (!Application.CanStreamedLevelBeLoaded(_cycle.radioEventScene))
-            { error = "Cena do rádio fora do Build Profile: " + _cycle.radioEventScene; return false; }
-            if (IsLoading || HasPendingLoad) { error = "Há um carregamento pendente."; return false; }
-
-            _pendingRadio = definition;
-            _pendingRadioReturnMode = returnMode;
-            _pendingReturnViewNodeId = returnViewNodeId;
-            StartLoading(_cycle.radioEventScene, null, 0);
-            return true;
-        }
-
-        /// <summary>
-        /// Encerra o evento de rádio e aplica o modo de retorno:
-        /// ReturnToDay carrega a cena do Dia (o ViewNode guardado é apresentado no boot);
-        /// AdvanceToNight chama <see cref="TryEndPeriod"/>.
-        /// </summary>
-        public bool TryFinishRadioEvent(out string error)
-        {
-            error = null;
-            RadioReturnMode mode = _pendingRadioReturnMode;
-            _pendingRadio = null;
-            _pendingRadioReturnMode = RadioReturnMode.ReturnToDay;
-
-            if (mode == RadioReturnMode.AdvanceToNight)
-            {
-                _pendingReturnViewNodeId = null;
-                return TryEndPeriod(out error);
-            }
-
-            if (!_initialized) { error = "Sessão não iniciada."; return false; }
-            if (_cycle == null) { error = "GameCycleDefinition ausente."; return false; }
-            if (!CanLoad(GamePeriod.Day, out error)) return false;
-
-            StartLoading(_cycle.dayScene, null, 0);
-            return true;
         }
 
         /// <summary>

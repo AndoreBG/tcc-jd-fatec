@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.DocumentData
   id: doc_tutorial_exhauster
   title: Exhauster
-  body: "AVISO DE OPERA\xC7\xC3O \u2014 AMEA\xC7A 03\n\nCLASSIFICA\xC7\xC3O: EXHAUSTER\nNATUREZA: consumidora. N\xE3o persegue, n\xE3o arromba: aguarda.\nA\xC7\xC3O HOSTIL: consome a luz da casa e avan\xE7a pelo escuro.\n\nIDENTIFICA\xC7\xC3O: corpo p\xE1lido e descarnado, olho \xFAnico, sem boca. Espera acocorada, sem pressa.\n\nPROCEDIMENTO\n1. Enquanto houver chama, o per\xEDmetro est\xE1 fechado. O escuro \xE9 o convite.\n2. A chama \xE9 finita: reabaste\xE7a antes que acabe.\n3. Consumida a reserva, n\xE3o h\xE1 recupera\xE7\xE3o nesta noite.\n\nCRIT\xC9RIO DE FALHA: escuro prolongado \xE9 a casa entregue.\n\nORDEM PERMANENTE: mantenha o fogo, e mantenha o combust\xEDvel junto ao fogo."
+  body: "AVISO 03 - O LAMPI\xC3O\n\nEssa n\xE3o for\xE7a nada. Senta no escuro e espera.\n\nO lampi\xE3o aceso \xE9 o que mant\xE9m ela fora. Apagou, ela est\xE1 dentro.\nA chama dura menos do que parece. N\xE3o espere baixar para procurar combust\xEDvel:\nnessa hora j\xE1 \xE9 tarde.\n\nSe a chama morrer e demorar a voltar, o lampi\xE3o quebra e n\xE3o tem conserto\nna mesma noite.\n\nLeve o combust\xEDvel com voc\xEA. N\xE3o conte com voltar para pegar."
   image: {fileID: 0}

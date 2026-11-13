@@ -127,11 +127,7 @@ namespace Whispers
                 {
                     transitionController.SetCover(1f);
                     sceneAudioController.Initialize(sceneDefinition);
-                    // Retorno de evento (rádio): o ViewNode guardado vence o inicial.
-                    string returnNodeId = null;
-                    if (Session != null && Session.TryConsumeReturnViewNode(out string pendingReturnId))
-                        returnNodeId = pendingReturnId;
-                    navigationManager.Initialize(sceneDefinition.initialViewNodeId, returnNodeId);
+                    navigationManager.Initialize(sceneDefinition.initialViewNodeId);
                     navigationManager.PresentInitial();
                     if (navigationManager.Current == null) error = "Boot: ViewNode inicial não encontrado após a inicialização.";
                     if (error == null && sceneDefinition.period == GamePeriod.Night &&

@@ -1934,6 +1934,7 @@ MonoBehaviour:
   cycleDefinition: {fileID: 11400000, guid: 6fd8a18f8d469cc4cb106447ca6dcd56, type: 2}
   backpack: {fileID: 0}
   lantern: {fileID: 1960000003}
+  dayFlow: {fileID: 0}
   globalSettings: {fileID: 11400000, guid: 981a7ab0623904d47a8b7c957e0e4bd1, type: 2}
   feedbackAudioSource: {fileID: 0}
   tooltip: {fileID: 629289509}
@@ -1986,47 +1987,7 @@ MonoBehaviour:
   mediaFocusSnapshot: {fileID: 24500003, guid: 7c8c640b8a6f437092ea97b37d3dca1b, type: 2}
   pausedSnapshot: {fileID: 24500004, guid: 7c8c640b8a6f437092ea97b37d3dca1b, type: 2}
   transitionSnapshot: {fileID: 24500005, guid: 7c8c640b8a6f437092ea97b37d3dca1b, type: 2}
-  continuousLayers:
-  - id: ambient_period
-    clip: {fileID: 0}
-    role: 0
-    loop: 1
-    playOnInitialize: 1
-    isBaseAmbience: 1
-    volume: 1
-    pan: 0
-  - id: ambient_structure
-    clip: {fileID: 0}
-    role: 0
-    loop: 1
-    playOnInitialize: 1
-    isBaseAmbience: 0
-    volume: 0.8
-    pan: 0
-  - id: ambient_exterior
-    clip: {fileID: 0}
-    role: 0
-    loop: 1
-    playOnInitialize: 1
-    isBaseAmbience: 0
-    volume: 0.7
-    pan: 0
-  - id: ambient_electricity
-    clip: {fileID: 0}
-    role: 0
-    loop: 1
-    playOnInitialize: 1
-    isBaseAmbience: 0
-    volume: 0.5
-    pan: 0
-  - id: details_local
-    clip: {fileID: 0}
-    role: 0
-    loop: 1
-    playOnInitialize: 1
-    isBaseAmbience: 0
-    volume: 0.45
-    pan: 0
+  continuousLayers: []
   runtimeRoot: {fileID: 0}
   profileTransitionDuration: 0.2
   oneShotPoolSize: 8

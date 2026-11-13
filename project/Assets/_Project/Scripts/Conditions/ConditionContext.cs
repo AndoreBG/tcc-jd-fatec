@@ -18,6 +18,12 @@ namespace Whispers
             Period = session != null ? session.period : GamePeriod.Day;
         }
 
+        /// <summary>Dia atual da sessão. 1 = primeiro Dia do ciclo.</summary>
+        public int Day => _session != null ? _session.day : 1;
+
+        /// <summary>Noite atual da sessão. 0 = ainda no Dia.</summary>
+        public int Night => _session != null ? _session.night : 0;
+
         public bool GetFlag(string flagId) => _scene != null && _scene.RuntimeState != null && _scene.RuntimeState.GetFlag(flagId);
 
         public bool HasItem(string itemId) => _session != null && _session.HasItem(itemId);

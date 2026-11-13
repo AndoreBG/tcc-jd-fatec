@@ -11,51 +11,72 @@ using UnityEngine.UI;
 namespace Whispers.EditorTools
 {
     /// <summary>
-    /// Autoria do evento de rádio (plano §8).
+    /// Autorias do evento de rádio (plano §8).
     ///
-    /// Menu 1: cria a cena `Scenes/radio_event.unity` com a hierarquia completa e registra
-    ///         a cena no Build Profile.
-    /// Menu 2: cria o `Manager_DayFlow` na cena `day` e aponta o evento do Dia.
+    /// O rádio é uma VN dentro da cena do Dia, não uma cena própria:
+    ///
+    /// Menu 1: cria a camada de VN (`Canvas_Radio`) na cena `day` e liga o
+    ///         `RadioEventController`.
+    /// Menu 2: cria o `Manager_DayFlow`, liga os quatro Dias e o boletim de abertura.
+    /// Menu 3: aplica o anchor do rádio nos nove `ViewAudioProfile`.
     ///
     /// O texto das linhas e o áudio são autoria do usuário: o asset nasce sem linhas.
     /// </summary>
     public static class RadioEventSetup
     {
-        private const string ScenePath = "Assets/_Project/Scenes/radio_event.unity";
         private const string FontPath = "Assets/_Project/Art/Fonts/SpecialElite-Regular SDF.asset";
-        private const string DefinitionPath = "Assets/_Project/SO/Radio/RADIO_EventoDia.asset";
+        private const string DayRadioFolder = "Assets/_Project/SO/Radio";
         private const string DaySceneName = "day";
         private const string DayFlowName = "Manager_DayFlow";
+        private const string RadioCanvasName = "Canvas_Radio";
         private const string AnchorId = "radio_corredorfront";
-        private const string DayRadioFolder = "Assets/_Project/SO/Radio";
+
         private static readonly string[] DayRadioAssetNames = { "RADIO_Dia1", "RADIO_Dia2", "RADIO_Dia3", "RADIO_Dia4" };
 
-        [MenuItem("Whispers/Rádio/Criar cena do rádio", priority = 70)]
-        public static void CreateRadioScene()
+        [MenuItem("Whispers/Rádio/Criar VN na cena day", priority = 70)]
+        public static void CreateRadioView()
         {
+            Scene scene = SceneManager.GetActiveScene();
+            if (!scene.IsValid() || scene.name != DaySceneName)
+            {
+                EditorUtility.DisplayDialog("Cena diferente de 'day'",
+                    "Abra a cena 'day' e rode de novo. Cena atual: '" +
+                    (scene.IsValid() ? scene.name : "nenhuma") + "'.", "OK");
+                return;
+            }
+
+            if (Object.FindFirstObjectByType<RadioEventController>(FindObjectsInactive.Include) != null)
+            {
+                EditorUtility.DisplayDialog("Já existe",
+                    "A cena já tem um RadioEventController. Nada foi criado.\n" +
+                    "Se quiser refazer, apague o Canvas_Radio antes.", "OK");
+                return;
+            }
+
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
 
-            Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            GameplaySceneController gameplay = Object.FindFirstObjectByType<GameplaySceneController>(FindObjectsInactive.Include);
+            if (gameplay == null)
+            {
+                EditorUtility.DisplayDialog("Controller ausente", "GameplaySceneController não encontrado na cena 'day'.", "OK");
+                return;
+            }
 
-            // ---- Câmera + AudioListener (PlayOneShot precisa de listener) ----
-            GameObject cameraObject = new GameObject("Main Camera", typeof(Camera), typeof(AudioListener));
-            cameraObject.tag = "MainCamera";
-            Camera camera = cameraObject.GetComponent<Camera>();
-            camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = Color.black;
-            camera.orthographic = true;
-
-            // ---- Canvas ----
-            GameObject canvasObject = new GameObject("Canvas_Radio",
+            // ---- Canvas da VN, acima de tudo ----
+            GameObject canvasObject = new GameObject(RadioCanvasName,
                 typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            Undo.RegisterCreatedObjectUndo(canvasObject, "Criar VN do rádio");
+
             Canvas canvas = canvasObject.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 200;
+
             CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
             scaler.matchWidthOrHeight = 0.5f;
 
-            // ---- RadioViewRoot (inativo no início) ----
+            // ---- Raiz da arte (inativa fora do evento) ----
             GameObject viewRoot = CreateUiObject(canvasObject.transform, "RadioViewRoot");
             Stretch(viewRoot.GetComponent<RectTransform>());
             viewRoot.SetActive(false);
@@ -73,7 +94,7 @@ namespace Whispers.EditorTools
                 frameObject.SetActive(false);
             }
 
-            // Faixa preta inferior (28% da altura).
+            // Faixa preta inferior do diálogo (28% da altura).
             GameObject dialogueFadeObject = CreateUiObject(viewRoot.transform, "DialogueFade");
             RectTransform dialogueFadeRect = dialogueFadeObject.GetComponent<RectTransform>();
             dialogueFadeRect.anchorMin = new Vector2(0f, 0f);
@@ -126,42 +147,39 @@ namespace Whispers.EditorTools
             faderGroup.alpha = 1f;
             faderGroup.blocksRaycasts = false;
 
-            // ---- Controlador ----
-            GameObject controllerObject = new GameObject("RadioEventController");
-            AudioSource jingleSource = controllerObject.AddComponent<AudioSource>();
+            // ---- Áudio ----
+            AudioSource jingleSource = canvasObject.AddComponent<AudioSource>();
             ConfigureSource(jingleSource);
-            AudioSource typewriterSource = controllerObject.AddComponent<AudioSource>();
+            AudioSource typewriterSource = canvasObject.AddComponent<AudioSource>();
             ConfigureSource(typewriterSource);
 
-            RadioEventController controller = controllerObject.AddComponent<RadioEventController>();
-            SerializedObject so = new SerializedObject(controller);
-            // Fallback serve só para testar a cena do rádio sozinha (Play direto, sem sessão).
-            RadioEventDefinition fallback = AssetDatabase.LoadAssetAtPath<RadioEventDefinition>(
-                DayRadioFolder + "/" + DayRadioAssetNames[0] + ".asset");
-            if (fallback == null)
-                fallback = AssetDatabase.LoadAssetAtPath<RadioEventDefinition>(DefinitionPath);
-            so.FindProperty("fallbackDefinition").objectReferenceValue = fallback;
-            so.FindProperty("viewRoot").objectReferenceValue = viewRoot;
-            SetArray(so.FindProperty("frames"), frames);
-            so.FindProperty("dialogueText").objectReferenceValue = label;
-            so.FindProperty("indicatorGroup").objectReferenceValue = indicatorGroup;
-            so.FindProperty("fader").objectReferenceValue = faderImage;
-            so.FindProperty("faderGroup").objectReferenceValue = faderGroup;
-            so.FindProperty("jingleSource").objectReferenceValue = jingleSource;
-            so.FindProperty("typewriterSource").objectReferenceValue = typewriterSource;
-            so.ApplyModifiedProperties();
+            // ---- Controlador na própria raiz do canvas ----
+            RadioEventController controller = canvasObject.AddComponent<RadioEventController>();
+            SerializedObject serialized = new SerializedObject(controller);
+            serialized.FindProperty("fallbackDefinition").objectReferenceValue = LoadDayDefinitions()[0];
+            serialized.FindProperty("viewRoot").objectReferenceValue = viewRoot;
+            SetArray(serialized.FindProperty("frames"), frames);
+            serialized.FindProperty("dialogueText").objectReferenceValue = label;
+            serialized.FindProperty("indicatorGroup").objectReferenceValue = indicatorGroup;
+            serialized.FindProperty("fader").objectReferenceValue = faderImage;
+            serialized.FindProperty("faderGroup").objectReferenceValue = faderGroup;
+            serialized.FindProperty("jingleSource").objectReferenceValue = jingleSource;
+            serialized.FindProperty("typewriterSource").objectReferenceValue = typewriterSource;
+            serialized.FindProperty("scene").objectReferenceValue = gameplay;
+            serialized.ApplyModifiedProperties();
 
             EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene, ScenePath);
-            EnsureSceneInBuild(ScenePath);
-            AssetDatabase.SaveAssets();
+            EditorSceneManager.SaveScene(scene);
 
-            EditorUtility.DisplayDialog("Cena do rádio",
-                "Criada: " + ScenePath + "\n" +
-                "Registrada no Build Profile: sim\n\n" +
+            EditorUtility.DisplayDialog("VN do rádio",
+                "Camada criada na cena 'day':\n" +
+                "• " + RadioCanvasName + " (sorting order 200)\n" +
+                "• RadioViewRoot com Frame_01..03, DialogueFade, DialogueText, AdvanceIndicator\n" +
+                "• Fader preto por cima\n" +
+                "• AudioSources de jingle e typewriter\n\n" +
                 "Pendências de autoria:\n" +
-                "• Preencher as linhas em RADIO_EventoDia (texto, frame e som).\n" +
-                "• Soltar os sprites nos Frame_01..03.\n" +
+                "• Soltar a arte nos Frame_01..03.\n" +
+                "• Preencher as linhas em RADIO_Dia1..4.\n" +
                 "• Configurar jingle e clips de typewriter.", "OK");
         }
 
@@ -181,6 +199,14 @@ namespace Whispers.EditorTools
             if (controller == null)
             {
                 EditorUtility.DisplayDialog("Controller ausente", "GameplaySceneController não encontrado na cena.", "OK");
+                return;
+            }
+
+            RadioEventController radioView = Object.FindFirstObjectByType<RadioEventController>(FindObjectsInactive.Include);
+            if (radioView == null)
+            {
+                EditorUtility.DisplayDialog("VN ausente",
+                    "Não existe camada de VN na cena. Rode antes: Whispers > Rádio > Criar VN na cena day.", "OK");
                 return;
             }
 
@@ -211,24 +237,27 @@ namespace Whispers.EditorTools
             if (flow == null) flow = Undo.AddComponent<DayFlowController>(flowObject);
 
             SerializedObject flowSo = new SerializedObject(flow);
-            SerializedProperty events = flowSo.FindProperty("dayRadioEvents");
-            int nights = 4;
             SerializedProperty cycleProperty = new SerializedObject(controller).FindProperty("cycleDefinition");
             GameCycleDefinition cycle = cycleProperty != null ? cycleProperty.objectReferenceValue as GameCycleDefinition : null;
-            if (cycle != null) nights = Mathf.Max(1, cycle.EffectiveNightCount);
+            int nights = cycle != null ? Mathf.Max(1, cycle.EffectiveNightCount) : 4;
 
+            SerializedProperty events = flowSo.FindProperty("dayRadioEvents");
             int slots = Mathf.Max(nights, dayDefinitions.Length);
             events.arraySize = slots;
             for (int index = 0; index < slots; index++)
                 events.GetArrayElementAtIndex(index).objectReferenceValue =
                     index < dayDefinitions.Length ? dayDefinitions[index] : null;
+
             flowSo.FindProperty("requiredNavigationsBeforeRadio").intValue = 3;
 
-            // Boletim de abertura: no Dia 1 o rádio não depende de navegação.
             SerializedProperty bootRadio = flowSo.FindProperty("playFirstDayOnBoot");
             if (bootRadio != null) bootRadio.boolValue = true;
             SerializedProperty bootDelay = flowSo.FindProperty("firstDayBootDelaySeconds");
             if (bootDelay != null) bootDelay.floatValue = 1.5f;
+
+            SerializedProperty viewProperty = flowSo.FindProperty("radioView");
+            if (viewProperty != null) viewProperty.objectReferenceValue = radioView;
+
             flowSo.ApplyModifiedProperties();
             EditorUtility.SetDirty(flow);
 
@@ -241,14 +270,14 @@ namespace Whispers.EditorTools
             EditorSceneManager.SaveScene(scene);
 
             StringBuilder report = new StringBuilder();
-            report.AppendLine("• " + DayFlowName + " criado/reaproveitado em " + controller.name + ".");
+            report.AppendLine("• " + DayFlowName + " em " + controller.name + ".");
+            report.AppendLine("• VN do rádio: " + radioView.name + ".");
             report.AppendLine("• Navegações antes do rádio: 3 (Dias 2 a 4).");
             report.AppendLine("• Dia 1: boletim toca sozinho no boot, 1.5s depois da cortina.");
             for (int index = 0; index < slots; index++)
             {
                 RadioEventDefinition candidate = index < dayDefinitions.Length ? dayDefinitions[index] : null;
-                string state = candidate == null ? "vazio (sem rádio)" : candidate.name;
-                report.AppendLine("   Dia " + (index + 1) + ": " + state);
+                report.AppendLine("   Dia " + (index + 1) + ": " + (candidate == null ? "vazio (sem rádio)" : candidate.name));
             }
             report.AppendLine("• Um Dia sem linhas não dispara nada.");
             EditorUtility.DisplayDialog("Fluxo do Dia", report.ToString(), "OK");
@@ -298,9 +327,10 @@ namespace Whispers.EditorTools
             AssetDatabase.SaveAssets();
             EditorUtility.DisplayDialog("Anchor do rádio",
                 "Perfis de áudio atualizados: " + updated + "\n" +
-                "Anchor: " + AnchorId + " (pan 0, Medium, oclusão 0.2).\n\n" +
-                "O anchor não toca nada sozinho: só o evento de rádio usa este ponto.", "OK");
+                "Anchor: " + AnchorId + " (pan 0, Medium, oclusão 0.2).", "OK");
         }
+
+        // ---------------- Helpers ----------------
 
         private static RadioEventDefinition[] LoadDayDefinitions()
         {
@@ -312,8 +342,6 @@ namespace Whispers.EditorTools
             }
             return definitions;
         }
-
-        // ---------------- Helpers ----------------
 
         private static void ConfigureSource(AudioSource source)
         {
@@ -342,16 +370,6 @@ namespace Whispers.EditorTools
             property.arraySize = values.Length;
             for (int index = 0; index < values.Length; index++)
                 property.GetArrayElementAtIndex(index).objectReferenceValue = values[index];
-        }
-
-        private static void EnsureSceneInBuild(string path)
-        {
-            List<EditorBuildSettingsScene> scenes = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
-            foreach (EditorBuildSettingsScene scene in scenes)
-                if (scene.path == path) return;
-
-            scenes.Add(new EditorBuildSettingsScene(path, true));
-            EditorBuildSettings.scenes = scenes.ToArray();
         }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -6,30 +7,37 @@ using UnityEngine.UI;
 namespace Whispers
 {
     /// <summary>
-    /// Evento de rádio. Cena própria, sem ViewNode, sem GameplaySceneController e sem
-    /// HUD. Todo o fluxo usa tempo não escalado.
+    /// Evento de rádio como VN dentro da cena do Dia.
+    ///
+    /// Não carrega cena: é uma camada de UI que cobre o gameplay, roda o evento e devolve
+    /// o controle ao jogador. O ViewNode atual continua exatamente onde estava, porque nada
+    /// é recarregado.
     ///
     /// Sequência (plano §8.2):
-    ///  1. Tela coberta e preta.
-    ///  2. Jingle e espera de `jingleDelaySeconds`.
-    ///  3. Revela o rádio e o Frame_01.
+    ///  1. A sala escurece sob o fader (curto, não é estado permanente).
+    ///  2. Jingle e espera de `jingleDelaySeconds` (sem jingle, sem espera).
+    ///  3. Revela a arte e o Frame_01.
     ///  4. Para cada linha: frame, typewriter com som, indicador em laço até o avanço.
-    ///  5. Fim da última linha: fade para preto.
-    ///  6. Retorno pela sessão (Dia no ViewNode de origem, ou Noite).
+    ///  5. Fim da última linha: fade para preto, esconde a VN.
+    ///  6. Retorno: devolve a sala (ReturnToDay) ou encerra o Dia (AdvanceToNight).
     ///
-    /// O jogador pula o typewriter, nunca o evento.
+    /// O jogador pula o typewriter, nunca o evento. Todo o fluxo usa tempo não escalado.
     /// </summary>
     public class RadioEventController : MonoBehaviour
     {
         [Header("Dados")]
-        [Tooltip("Usado somente quando a sessão não tem evento pendente (Play direto na cena).")]
+        [Tooltip("Usado somente quando Play é chamado sem definição (Play direto na cena, teste).")]
         [SerializeField] private RadioEventDefinition fallbackDefinition;
 
         [Header("Visual")]
+        [Tooltip("Raiz da arte da VN. Fica inativa fora do evento.")]
         [SerializeField] private GameObject viewRoot;
+        [Tooltip("Frames da arte, um por linha. frameIndex 0 = Frame_01.")]
         [SerializeField] private Image[] frames = new Image[3];
         [SerializeField] private TMP_Text dialogueText;
+        [Tooltip("Indicador de avanço. Pulsa em laço quando a linha termina.")]
         [SerializeField] private CanvasGroup indicatorGroup;
+        [Tooltip("Imagem preta que cobre a tela durante as transições.")]
         [SerializeField] private Image fader;
         [SerializeField] private CanvasGroup faderGroup;
 
@@ -37,61 +45,112 @@ namespace Whispers
         [SerializeField] private AudioSource jingleSource;
         [SerializeField] private AudioSource typewriterSource;
 
+        [Header("Transição")]
+        [Tooltip("Escurecimento da sala antes do jingle. Zero gera corte seco.")]
+        [SerializeField] private float blackoutSeconds = 0.4f;
+
+        [Header("Cena")]
+        [Tooltip("Opcional: usado para bloquear a entrada de gameplay durante a VN.")]
+        [SerializeField] private GameplaySceneController scene;
+
+        /// <summary>Disparado quando a VN termina e o controle volta ao jogador.</summary>
+        public event Action Finished;
+
+        /// <summary>Verdadeiro enquanto a VN estiver em execução.</summary>
+        public bool IsPlaying { get; private set; }
+
+        /// <summary>Definição em execução. Nulo fora do evento.</summary>
+        public RadioEventDefinition CurrentDefinition { get; private set; }
+
         private RadioEventDefinition _definition;
         private bool _advanceRequested;
+        private bool _acceptAdvance;
         private bool _running;
+        private bool _inputBlocked;
         private float _indicatorAlpha;
         private bool _indicatorGoingUp = true;
 
         private GameSessionManager Session => GameSessionManager.Instance;
 
-        private IEnumerator Start()
+        private void Awake()
         {
-            _definition = Session != null ? Session.PendingRadioEvent : null;
-            if (_definition == null) _definition = fallbackDefinition;
+            if (scene == null) scene = GetComponentInParent<GameplaySceneController>();
+            if (scene == null) scene = FindFirstObjectByType<GameplaySceneController>(FindObjectsInactive.Include);
+            HideInstant();
+        }
 
-            if (_definition == null || !_definition.HasLines)
+        private void OnDisable()
+        {
+            // Cena descarregada no meio da VN (troca de período): devolve o bloqueio.
+            if (_inputBlocked) SetInputBlocked(false);
+        }
+
+        /// <summary>
+        /// Inicia a VN com a definição informada. Devolve falso quando já existe evento em
+        /// execução ou quando a definição não tem linhas.
+        /// </summary>
+        public bool Play(RadioEventDefinition definition = null)
+        {
+            if (IsPlaying)
             {
-                Debug.LogWarning("[RadioEventController] Evento de rádio sem linhas. Voltando ao Dia.", this);
-                Finish();
-                yield break;
+                Debug.LogWarning("[RadioEventController] Já existe um evento de rádio em execução.", this);
+                return false;
             }
 
-            if (typewriterSource != null && _definition.typewriterMixerGroup != null)
-                typewriterSource.outputAudioMixerGroup = _definition.typewriterMixerGroup;
-            if (!_definition.HasTypewriterAudio)
+            RadioEventDefinition chosen = definition != null ? definition : fallbackDefinition;
+            if (chosen == null || !chosen.HasLines)
+            {
+                Debug.LogWarning("[RadioEventController] Definição ausente ou sem linhas: a VN não inicia.", this);
+                return false;
+            }
+
+            _definition = chosen;
+            CurrentDefinition = chosen;
+            _advanceRequested = false;
+            _acceptAdvance = false;
+            _indicatorGoingUp = true;
+            IsPlaying = true;
+            _running = true;
+
+            if (typewriterSource != null && chosen.typewriterMixerGroup != null)
+                typewriterSource.outputAudioMixerGroup = chosen.typewriterMixerGroup;
+            if (!chosen.HasTypewriterAudio)
                 Debug.LogWarning("[RadioEventController] Evento sem clips de typewriter: o texto aparece sem som.", this);
 
-            yield return Run();
+            SetInputBlocked(true);
+            Debug.Log("[RadioEventController] Play aceito: " + chosen.eventId + ", " +
+                      chosen.lines.Length + " linha(s).", this);
+            StartCoroutine(Run());
+            return true;
         }
 
         private void Update()
         {
-            if (!_running) return;
+            // Cliques durante o preto e o jingle não contam: sem linha na tela, um clique
+            // guardado completaria a primeira linha no mesmo instante em que ela aparecesse.
+            if (!_running || !_acceptAdvance) return;
             if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.Space))
                 _advanceRequested = true;
         }
 
         private IEnumerator Run()
         {
-            _running = true;
-
-            // 1. Tela coberta e preta; o rádio começa escondido.
-            SetFaderAlpha(1f);
+            // 1. A sala escurece e a arte começa escondida.
+            yield return FadeFader(0f, 1f, blackoutSeconds);
             if (viewRoot != null) viewRoot.SetActive(false);
             ShowFrame(-1);
             if (dialogueText != null) dialogueText.text = string.Empty;
             SetIndicator(0f);
 
-            // 2. Jingle antes do rádio aparecer.
-            //    Sem jingle não existe espera: seria silêncio em tela preta.
+            // 2. Jingle antes da arte aparecer. Sem jingle não existe espera: seria silêncio.
             if (_definition.jingle != null && jingleSource != null)
             {
+                Debug.Log("[RadioEventController] Jingle, espera de " + _definition.jingleDelaySeconds + "s.", this);
                 jingleSource.PlayOneShot(_definition.jingle);
                 yield return WaitUnscaled(_definition.jingleDelaySeconds);
             }
 
-            // 3. Rádio e Frame_01.
+            // 3. Arte e Frame_01.
             if (viewRoot != null) viewRoot.SetActive(true);
             ShowFrame(0);
             yield return FadeFader(1f, 0f, _definition.revealSeconds);
@@ -100,13 +159,43 @@ namespace Whispers
             for (int index = 0; index < _definition.lines.Length; index++)
                 yield return PlayLine(index);
 
-            // 5. Preto no fim.
+            // 5. Fecha a VN sob o preto.
             yield return FadeFader(0f, 1f, _definition.endFadeSeconds);
+            if (viewRoot != null) viewRoot.SetActive(false);
+            if (dialogueText != null) dialogueText.text = string.Empty;
+            SetIndicator(0f);
 
             _running = false;
 
             // 6. Retorno.
-            Finish();
+            yield return Finish();
+        }
+
+        private IEnumerator Finish()
+        {
+            RadioReturnMode mode = _definition != null ? _definition.returnMode : RadioReturnMode.ReturnToDay;
+
+            if (mode == RadioReturnMode.AdvanceToNight)
+            {
+                // Troca de período: a cena da Noite entra e esta é descarregada.
+                if (Session == null)
+                {
+                    Debug.LogError("[RadioEventController] Sessão ausente: não há como encerrar o Dia.", this);
+                    yield break;
+                }
+                if (!Session.TryEndPeriod(out string error))
+                    Debug.LogError("[RadioEventController] Falha ao encerrar o Dia: " + error, this);
+                yield break;
+            }
+
+            // ReturnToDay: devolve a sala sob o mesmo preto, sem recarregar nada.
+            float reveal = _definition != null ? _definition.revealSeconds : 0.6f;
+            yield return FadeFader(1f, 0f, reveal);
+
+            IsPlaying = false;
+            CurrentDefinition = null;
+            SetInputBlocked(false);
+            Finished?.Invoke();
         }
 
         private IEnumerator PlayLine(int index)
@@ -116,6 +205,7 @@ namespace Whispers
             ShowFrame(line.frameIndex);
             SetIndicator(0f);
             _advanceRequested = false;
+            _acceptAdvance = true; // a partir daqui o clique avança, não inicia
 
             if (line.sfx != null && typewriterSource != null)
                 typewriterSource.PlayOneShot(line.sfx);
@@ -158,26 +248,54 @@ namespace Whispers
 
             SetIndicator(0f);
             _advanceRequested = false; // impede avançar duas linhas no mesmo frame
+            _acceptAdvance = false;
         }
 
-        private void Finish()
+        // ---------------- Entrada ----------------
+
+        private void SetInputBlocked(bool blocked)
         {
-            if (Session == null)
-            {
-                Debug.LogError("[RadioEventController] Sessão ausente: não há para onde voltar.", this);
-                return;
-            }
-            if (!Session.TryFinishRadioEvent(out string error))
-                Debug.LogError("[RadioEventController] Falha ao retornar do evento: " + error, this);
-        }
+            if (_inputBlocked == blocked) return;
+            if (scene == null || scene.Blocker == null) { _inputBlocked = blocked; return; }
 
-        // ---------------- Avanço / indicador ----------------
+            if (blocked) scene.Blocker.AddReason(InputBlockReason.Cutscene);
+            else scene.Blocker.RemoveReason(InputBlockReason.Cutscene);
+            _inputBlocked = blocked;
+        }
 
         private bool ConsumeAdvance()
         {
             if (!_advanceRequested) return false;
             _advanceRequested = false;
             return true;
+        }
+
+        // ---------------- Apresentação ----------------
+
+        private void HideInstant()
+        {
+            if (viewRoot != null) viewRoot.SetActive(false);
+            // Em repouso o fader é transparente: fora do evento a sala aparece normalmente.
+            SetFaderAlpha(0f);
+            SetIndicator(0f);
+            if (dialogueText != null) dialogueText.text = string.Empty;
+        }
+
+        private void ShowFrame(int index)
+        {
+            if (frames == null) return;
+            for (int frame = 0; frame < frames.Length; frame++)
+            {
+                if (frames[frame] == null) continue;
+                frames[frame].gameObject.SetActive(index >= 0 && frame == index);
+            }
+        }
+
+        private void PlayTypewriterTick()
+        {
+            if (typewriterSource == null || _definition == null || !_definition.HasTypewriterAudio) return;
+            AudioClip[] clips = _definition.typewriterClips;
+            typewriterSource.PlayOneShot(clips[UnityEngine.Random.Range(0, clips.Length)]);
         }
 
         private void UpdateIndicator()
@@ -201,19 +319,10 @@ namespace Whispers
             if (indicatorGroup != null) indicatorGroup.alpha = alpha;
         }
 
-        // ---------------- Visual ----------------
-
-        private void ShowFrame(int index)
-        {
-            if (frames == null) return;
-            for (int i = 0; i < frames.Length; i++)
-                if (frames[i] != null) frames[i].gameObject.SetActive(i == index);
-        }
-
         private void SetFaderAlpha(float alpha)
         {
             if (faderGroup != null) faderGroup.alpha = alpha;
-            if (fader != null)
+            else if (fader != null)
             {
                 Color color = fader.color;
                 color.a = alpha;
@@ -221,34 +330,24 @@ namespace Whispers
             }
         }
 
-        private IEnumerator FadeFader(float from, float to, float duration)
+        private IEnumerator FadeFader(float from, float to, float seconds)
         {
-            if (duration <= 0f) { SetFaderAlpha(to); yield break; }
+            SetFaderAlpha(from);
+            if (seconds <= 0f) { SetFaderAlpha(to); yield break; }
 
             float elapsed = 0f;
-            while (elapsed < duration)
+            while (elapsed < seconds)
             {
                 elapsed += Time.unscaledDeltaTime;
-                SetFaderAlpha(Mathf.Lerp(from, to, Mathf.Clamp01(elapsed / duration)));
+                SetFaderAlpha(Mathf.Lerp(from, to, Mathf.Clamp01(elapsed / seconds)));
                 yield return null;
             }
             SetFaderAlpha(to);
         }
 
-        // ---------------- Áudio ----------------
-
-        private void PlayTypewriterTick()
-        {
-            if (typewriterSource == null) return;
-            AudioClip[] clips = _definition.typewriterClips;
-            if (clips == null || clips.Length == 0) return;
-
-            AudioClip clip = clips[Random.Range(0, clips.Length)];
-            if (clip != null) typewriterSource.PlayOneShot(clip);
-        }
-
         private static IEnumerator WaitUnscaled(float seconds)
         {
+            if (seconds <= 0f) yield break;
             float elapsed = 0f;
             while (elapsed < seconds)
             {
