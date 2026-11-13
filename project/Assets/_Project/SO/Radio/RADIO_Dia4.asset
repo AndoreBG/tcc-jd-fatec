@@ -19,7 +19,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 466b2d572cd102742ba7e270c06c112d, type: 3}
   - {fileID: 8300000, guid: 5b3bbc30ca5b45d4e86568067456b199, type: 3}
   typewriterMixerGroup: {fileID: 24300008, guid: 7c8c640b8a6f437092ea97b37d3dca1b, type: 2}
-  charactersPerSecond: 40
+  charactersPerSecond: 20
   jingleDelaySeconds: 14
   indicatorFadeSeconds: 0.6
   revealSeconds: 0.6

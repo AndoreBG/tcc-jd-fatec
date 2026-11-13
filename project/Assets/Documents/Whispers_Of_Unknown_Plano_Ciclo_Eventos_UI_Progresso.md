@@ -1265,3 +1265,19 @@ O que só o Editor responde: se o `Canvas_Tutorial` em 180 fica acima do banner 
 ## 27. Correção: objetivo após o rádio
 
 O objetivo aguarda o evento `Finished` da VN antes de aparecer; o banner permanece visível até ser ocultado ou a cena ser descarregada. Se não houver rádio com linhas ou componente de rádio, ou se o evento já tiver sido consumido, o objetivo aparece na inicialização. Caso o rádio exija navegações, o objetivo aguarda essas navegações e o término da transmissão. Se o rádio avançar diretamente para a Noite, não há retorno ao Dia e o evento de conclusão não é emitido. Nenhuma execução no Unity foi validada neste ambiente.
+
+
+## Correção dos tutoriais e gatilhos de conclusão
+
+Na cena remota analisada, os dois hotspots dos documentos de cliques e movimentação não possuíam condições, e o `DayFlowController.OpenTutorial` não era chamado pela cena nem pelo fluxo. A lanterna ainda chamava o antigo modal de confirmação; isso poderia bloquear ou antecipar o fim do Dia.
+
+O menu `Whispers > Dia > Configurar tutoriais e conclusão` acrescenta a condição de Dia exatamente 1 aos dois hotspots, sem apagar outras condições; usa modo Oculto e exige CanvasGroup. Verifica e liga o controller do painel; remove somente a chamada persistente `DayEndConfirmationController.Open` da coleta da lanterna, preservando os demais eventos e o outro hotspot de confirmação. Salve a cena. Assets criados não são removidos por Undo.
+
+O fluxo verifica os objetivos após as interações e aguarda fim de bloqueios: Dia 1, lanterna no inventário; Dia 2, primeira entrada em uma das portas; Dia 3, fato `LampPlacedInAttic` e óleo no inventário, em qualquer ordem. Uma vez por Dia; o consumo é marcado somente depois da abertura. Sem conteúdo no asset, painel não abre. Se o pedido de fim de período for recusado, o painel reabre para permitir nova tentativa. Não foram compilados nem testados no Unity ou Play Mode.
+
+
+## Rádio automático no início de cada Dia
+
+A pedido do usuário, a transmissão configurada inicia em cada Dia depois de o gameplay ficar pronto e da espera de abertura em segundos reais. O fluxo aguarda desbloqueio de input e fim de outra transmissão antes de abrir a VN; não depende mais de contagem de navegações. O objetivo permanece aguardando o fim da transmissão. O consumo continua evitando repetição na mesma sessão de Dia.
+
+Os antigos campos de contagem e de habilitação específica do Dia 1 foram preservados e ocultados apenas para compatibilidade serializada, mas não controlam mais a execução. Os menus de criação foram atualizados para não sugerir a regra antiga. Assets existentes não são reescritos. Um rádio ausente, sem linhas ou com VN indisponível é ignorado com aviso, e o objetivo não fica esperando. Na base analisada `RADIO_Dia4` está sem linhas e não tocará até receber conteúdo. Se o rádio tiver retorno `AdvanceToNight`, segue diretamente para a Noite conforme o asset. Não houve compilação nem teste no Unity.

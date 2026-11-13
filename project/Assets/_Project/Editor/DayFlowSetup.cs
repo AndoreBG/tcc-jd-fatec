@@ -88,13 +88,11 @@ namespace Whispers.EditorTools
             for (int index = 0; index < entries.Length; index++)
             {
                 string radioPath = RadioFolder + "/" + radioNames[index] + ".asset";
-                // Dia 4 abre o rádio ao entrar (plano §10.1): zero navegações exigidas.
-                bool lastDay = index + 1 == radioNames.Length;
                 entries[index] = new DayFlowEntry
                 {
                     day = index + 1,
                     objective = objectives[index],
-                    requiredNavigationsBeforeRadio = lastDay ? 0 : 3,
+                    requiredNavigationsBeforeRadio = 0,
                     radioEvent = AssetDatabase.LoadAssetAtPath<RadioEventDefinition>(radioPath),
                 };
             }
@@ -108,7 +106,7 @@ namespace Whispers.EditorTools
             EditorUtility.DisplayDialog("Tabela do Dia",
                 "Criada: " + DayFlowPath + "\n" +
                 "• Quatro entradas, Dia 1 a Dia 4, rádio ligado em cada uma.\n" +
-                "• Navegações exigidas: 3 nos Dias 1 a 3 (o Dia 1 toca no boot), 0 no Dia 4.\n" +
+                "• Rádio no começo de todos os Dias; sem navegações exigidas.\n" +
                 "• Objetivos: " + ObjectivesFolder + "/OBJ_Dia1..4 (título e corpo vazios).\n" +
                 (linked
                     ? "• Ligada no DayFlowController da cena day aberta."

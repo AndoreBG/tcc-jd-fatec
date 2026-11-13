@@ -248,7 +248,7 @@ namespace Whispers.EditorTools
                 events.GetArrayElementAtIndex(index).objectReferenceValue =
                     index < dayDefinitions.Length ? dayDefinitions[index] : null;
 
-            flowSo.FindProperty("requiredNavigationsBeforeRadio").intValue = 3;
+            flowSo.FindProperty("requiredNavigationsBeforeRadio").intValue = 0;
 
             SerializedProperty bootRadio = flowSo.FindProperty("playFirstDayOnBoot");
             if (bootRadio != null) bootRadio.boolValue = true;
@@ -272,8 +272,7 @@ namespace Whispers.EditorTools
             StringBuilder report = new StringBuilder();
             report.AppendLine("• " + DayFlowName + " em " + controller.name + ".");
             report.AppendLine("• VN do rádio: " + radioView.name + ".");
-            report.AppendLine("• Navegações antes do rádio: 3 (Dias 2 a 4).");
-            report.AppendLine("• Dia 1: boletim toca sozinho no boot, 1.5s depois da cortina.");
+            report.AppendLine("• Rádio de cada Dia: início automático após o boot, sem navegações exigidas.");
             for (int index = 0; index < slots; index++)
             {
                 RadioEventDefinition candidate = index < dayDefinitions.Length ? dayDefinitions[index] : null;

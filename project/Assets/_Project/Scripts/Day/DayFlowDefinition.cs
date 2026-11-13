@@ -7,8 +7,7 @@ namespace Whispers
     /// <summary>
     /// Uma linha da tabela de Dias (plano §10.4).
     ///
-    /// O que muda de um Dia para o outro mora aqui, não em código: o texto do objetivo, o
-    /// quantas navegações o rádio espera e qual rádio toca. O `DayFlowController` só lê.
+    /// O que muda de um Dia para o outro mora aqui: objetivo, rádio e tutorial.
     /// </summary>
     [Serializable]
     public sealed class DayFlowEntry
@@ -19,8 +18,8 @@ namespace Whispers
         [Tooltip("Objetivo mostrado no canto da tela no começo do Dia. Vazio = sem banner.")]
         public ObjectiveDefinition objective;
 
-        [Tooltip("Navegações necessárias antes de o rádio tocar. O Dia 1 ignora este valor: o boletim toca no boot.")]
-        [Min(0)] public int requiredNavigationsBeforeRadio = 3;
+        // Legado serializado: o rádio agora inicia no começo de todos os Dias.
+        [HideInInspector] public int requiredNavigationsBeforeRadio = 3;
 
         [Tooltip("Rádio deste Dia. Vazio = nenhum rádio no Dia.")]
         public RadioEventDefinition radioEvent;

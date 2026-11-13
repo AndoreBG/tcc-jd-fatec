@@ -3,15 +3,8 @@ using UnityEngine;
 namespace Whispers
 {
     /// <summary>
-    /// Fluxo do Dia. Nesta entrega faz uma coisa: dispara o evento de rádio depois de
-    /// um número autorado de navegações. A progressão narrativa dos Dias (M9) cresce
-    /// neste mesmo componente.
-    ///
-    /// Regras (plano §8.5):
-    ///  1. O contador reinicia quando o Dia começa (componente novo por cena de Dia).
-    ///  2. A navegação de retorno do evento não conta, porque a cena é recarregada.
-    ///  3. "Já tocou hoje" fica na sessão.
-    ///  4. O ViewNode apresentado no gatilho é o destino do retorno.
+    /// Dispara o rádio configurado na abertura de cada Dia e coordena objetivos e tutoriais.
+    /// A marca de evento consumido evita repetição no mesmo período.
     /// </summary>
     public class DayFlowController : MonoBehaviour
     {
@@ -29,19 +22,19 @@ namespace Whispers
         [Tooltip("Uma entrada por Dia. Índice 0 = Dia 1. Entrada vazia = sem evento naquele Dia.")]
         [SerializeField] private RadioEventDefinition[] dayRadioEvents = System.Array.Empty<RadioEventDefinition>();
 
-        [Tooltip("Navegações necessárias antes de o rádio tocar no Dia.")]
-        [Min(0)] [SerializeField] private int requiredNavigationsBeforeRadio = 3;
+        // Campo serializado legado, mantido para não perder dados das cenas antigas.
+        // A quantidade de navegações não é mais utilizada.
+        [HideInInspector] [SerializeField] private int requiredNavigationsBeforeRadio = 3;
 
         [Header("VN do rádio")]
         [Tooltip("Camada de VN na cena do Dia. Sem referência, o rádio não aparece.")]
         [SerializeField] private RadioEventController radioView;
 
         [Header("Boletim de abertura")]
-        [Tooltip("Quando verdadeiro, o rádio do Dia 1 toca sozinho no boot, sem depender de navegação. " +
-                 "Garante que o jogador recebe as instruções de defesa antes da primeira Noite.")]
-        [SerializeField] private bool playFirstDayOnBoot = true;
+        // Legado: o rádio agora inicia em todos os Dias, independentemente deste campo.
+        [HideInInspector] [SerializeField] private bool playFirstDayOnBoot = true;
 
-        [Tooltip("Espera em segundos reais antes do boletim de abertura, para o jogador ver a sala.")]
+        [Tooltip("Espera em segundos reais após o boot antes do rádio de cada Dia.")]
         [Min(0f)] [SerializeField] private float firstDayBootDelaySeconds = 1.5f;
 
         [Header("Diagnóstico")]
@@ -50,10 +43,11 @@ namespace Whispers
 
         private NavigationManager _navigation;
         private GameplaySceneController _scene;
-        private int _navigationCount;
         private bool _subscribed;
         private RadioEventController _subscribedRadio;
         private int _pendingObjectiveDay;
+        private bool _visitedDay2Door;
+        private bool _awaitingDailyRadioFinish;
 
         private GameSessionManager Session => GameSessionManager.Instance;
 
@@ -63,7 +57,7 @@ namespace Whispers
             Shutdown();
             _navigation = navigation;
             _scene = navigation != null ? navigation.GetComponentInParent<GameplaySceneController>() : null;
-            _navigationCount = 0;
+            _visitedDay2Door = false;
 
             if (radioView == null)
                 radioView = FindFirstObjectByType<RadioEventController>(FindObjectsInactive.Include);
@@ -84,9 +78,8 @@ namespace Whispers
             GameSessionManager session = Session;
             RadioEventDefinition current = session != null ? GetDefinitionForDay(session.day) : null;
             Log("Initialize: Dia " + (session != null ? session.day.ToString() : "?") +
-                ", rádio do Dia = " + (current != null ? current.eventId + " (" + current.lines.Length + " linha(s))" : "vazio") +
-                ", boot = " + playFirstDayOnBoot + ", navegações exigidas = " + requiredNavigationsBeforeRadio +
-                ", VN = " + (radioView != null ? radioView.name : "ausente"));
+                ", rádio do Dia = " + (current != null ? current.eventId + " (" + (current.lines != null ? current.lines.Length : 0) + " linha(s))" : "vazio") +
+                ", início automático, VN = " + (radioView != null ? radioView.name : "ausente"));
 
             // O objetivo espera o rádio configurado para este Dia terminar. Se não há
             // transmissão utilizável (ou ela já terminou em visita anterior), não espera.
@@ -97,49 +90,70 @@ namespace Whispers
                 _subscribedRadio = radioView;
                 _subscribedRadio.Finished += OnRadioFinished;
             }
-            bool radioPending = session != null && session.period == GamePeriod.Day &&
-                current != null && current.HasLines && radioView != null &&
+            bool usableRadio = current != null && current.HasLines && radioView != null && radioView.isActiveAndEnabled;
+            _awaitingDailyRadioFinish = usableRadio && radioView.IsPlaying && radioView.CurrentDefinition == current;
+            bool radioPending = session != null && session.period == GamePeriod.Day && usableRadio &&
                 !session.IsDayEventConsumed(current.eventId);
-            if (!radioPending && (radioView == null || !radioView.IsPlaying))
+            if (!radioPending && !_awaitingDailyRadioFinish)
                 ShowPendingObjective();
 
-            if (playFirstDayOnBoot) StartCoroutine(FirstDayBootRoutine());
+            if (session != null && session.period == GamePeriod.Day)
+                StartCoroutine(DayBootRadioRoutine(session.day));
         }
 
-        /// <summary>
-        /// Boletim de abertura do Dia 1. Sem ele, o jogador pode encerrar o Dia sem navegar
-        /// e entrar na primeira Noite sem saber como defender portas, janelas e o lampião.
-        /// </summary>
-        private System.Collections.IEnumerator FirstDayBootRoutine()
+        /// <summary>Aguarda a cena e apresenta o rádio do Dia sem depender de navegação.</summary>
+        private System.Collections.IEnumerator DayBootRadioRoutine(int day)
         {
-            // Espera a cortina do boot sair: o boletim chega com o jogador já vendo a sala.
-            // A espera é limitada: se IsReady não vier (erro de boot, cortina presa), o
-            // boletim toca assim mesmo em vez de o Dia inteiro ficar sem rádio.
-            const float maxWait = 15f;
-            float waited = 0f;
-            while (_scene != null && !_scene.IsReady && waited < maxWait)
-            {
-                waited += Time.unscaledDeltaTime;
-                yield return null;
-            }
-
-            if (_scene != null && !_scene.IsReady)
-                Debug.LogWarning("[DayFlowController] A cena não ficou pronta em " + maxWait +
-                                 "s: o boletim do Dia 1 vai tocar mesmo assim.", this);
-
-            if (firstDayBootDelaySeconds > 0f)
-                yield return new WaitForSecondsRealtime(firstDayBootDelaySeconds);
-
             GameSessionManager session = Session;
-            if (session == null || session.period != GamePeriod.Day || session.day > 1)
+            RadioEventDefinition radioDefinition = session != null ? GetDefinitionForDay(day) : null;
+            if (session == null || radioDefinition == null || !radioDefinition.HasLines ||
+                radioView == null || !radioView.isActiveAndEnabled)
             {
-                Log("Boot: sem boletim (periodo " + (session != null ? session.period.ToString() : "sem sessão") +
-                    ", dia " + (session != null ? session.day.ToString() : "?") + ").");
+                Debug.LogWarning("[DayFlowController] Rádio do Dia " + day +
+                                 " ausente, sem linhas ou com VN indisponível; transmissão ignorada.", this);
+                ShowPendingObjective();
                 yield break;
             }
 
-            Log("Boot: chamando o rádio do Dia 1.");
-            TryTriggerRadio(session, true);
+            if (_scene == null)
+            {
+                Debug.LogWarning("[DayFlowController] GameplaySceneController ausente: rádio de abertura não pode iniciar.", this);
+                ShowPendingObjective();
+                yield break;
+            }
+
+            // Aguarda o boot efetivamente terminar; não começa por timeout sob a cortina.
+            while (!_scene.IsReady)
+            {
+                if (Session != session || session.period != GamePeriod.Day || session.day != day) yield break;
+                yield return null;
+            }
+            if (firstDayBootDelaySeconds > 0f)
+                yield return new WaitForSecondsRealtime(firstDayBootDelaySeconds);
+
+            while (Session == session && session.period == GamePeriod.Day && session.day == day)
+            {
+                if (session.IsDayEventConsumed(radioDefinition.eventId))
+                {
+                    if (!_awaitingDailyRadioFinish) ShowPendingObjective();
+                    yield break;
+                }
+                // Não abre por cima de outro modal, transição, arraste ou rádio.
+                if (!_scene.IsReady || (_scene.Blocker != null && _scene.Blocker.IsBlocked) || radioView.IsPlaying)
+                {
+                    yield return null;
+                    continue;
+                }
+                _awaitingDailyRadioFinish = true;
+                if (radioView.Play(radioDefinition))
+                {
+                    session.MarkDayEventConsumed(radioDefinition.eventId);
+                    Log("Rádio do Dia " + day + " iniciado na abertura.");
+                    yield break;
+                }
+                _awaitingDailyRadioFinish = false;
+                yield return null;
+            }
         }
 
         private void OnDisable() => Shutdown();
@@ -150,6 +164,7 @@ namespace Whispers
             if (_subscribedRadio != null) _subscribedRadio.Finished -= OnRadioFinished;
             _subscribedRadio = null;
             _pendingObjectiveDay = 0;
+            _awaitingDailyRadioFinish = false;
             if (!_subscribed) return;
             if (_navigation != null) _navigation.ViewNodeChanged -= OnViewNodeChanged;
             _subscribed = false;
@@ -157,6 +172,8 @@ namespace Whispers
 
         private void OnRadioFinished()
         {
+            if (!_awaitingDailyRadioFinish) return;
+            _awaitingDailyRadioFinish = false;
             ShowPendingObjective();
         }
 
@@ -174,50 +191,43 @@ namespace Whispers
             ShowObjective(day);
         }
 
+        // Executa no frame seguinte à interação/ao drop. Isso deixa o InteractionManager
+        // terminar e espera a liberação de transição, arraste, rádio ou outro modal.
+        private void Update()
+        {
+            if (!_subscribed || _scene == null || !_scene.IsReady) return;
+            GameSessionManager session = Session;
+            if (session == null || session.period != GamePeriod.Day) return;
+            if (_scene.Blocker != null && _scene.Blocker.IsBlocked) return;
+            if (radioView != null && radioView.IsPlaying) return;
+            if (_pendingObjectiveDay > 0) return;
+            if (tutorialPanel == null || !tutorialPanel.isActiveAndEnabled || tutorialPanel.IsOpen) return;
+            DayFlowEntry entry = EntryForDay(session.day);
+            if (entry == null || entry.tutorial == null || !entry.tutorial.HasContent) return;
+
+            bool completed = session.day == 1 && session.HasItem("item_lanterna") ||
+                             session.day == 2 && _visitedDay2Door ||
+                             session.day == 3 && session.HasFact("LampPlacedInAttic") && session.HasItem("item_oleo");
+            if (!completed) return;
+            string key = TutorialKey(session.day, entry.tutorial);
+            if (!session.IsDayEventConsumed(key)) OpenTutorial();
+        }
+
+        private static string TutorialKey(int day, TutorialPanelDefinition tutorial)
+        {
+            return "tutorial_" + day + "_" + (string.IsNullOrEmpty(tutorial.tutorialId)
+                ? tutorial.name : tutorial.tutorialId);
+        }
+
         private void OnViewNodeChanged(ViewNodeController from, ViewNodeController to)
         {
             GameSessionManager session = Session;
             if (session == null || session.period != GamePeriod.Day) return;
 
-            _navigationCount++;
-            Log("Navegação " + _navigationCount + ": " +
-                (from != null && from.Definition != null ? from.Definition.id : "?") + " -> " +
-                (to != null && to.Definition != null ? to.Definition.id : "?"));
-            TryTriggerRadio(session);
-        }
+            if (session.day == 2 && to != null && to.Definition != null &&
+                (to.Definition.id == "vn_portasala" || to.Definition.id == "vn_portacozinha"))
+                _visitedDay2Door = true;
 
-        private void TryTriggerRadio(GameSessionManager session, bool ignoreNavigationCount = false)
-        {
-            if (_navigation == null) return;
-
-            // `radioDefinition` e não `definition`: o campo `definition` é a tabela do Dia.
-            RadioEventDefinition radioDefinition = GetDefinitionForDay(session.day);
-            if (radioDefinition == null) { Log("Sem rádio configurado para o Dia " + session.day + "."); return; }
-            if (!radioDefinition.HasLines) { Log("Rádio do Dia " + session.day + " está sem linhas: não toca."); return; }
-            if (session.IsDayEventConsumed(radioDefinition.eventId)) { Log("Rádio do Dia " + session.day + " já tocou."); return; }
-            int required = RequiredNavigationsForDay(session.day);
-            if (!ignoreNavigationCount && _navigationCount < required)
-            {
-                Log("Ainda não: " + _navigationCount + " de " + required + " navegações.");
-                return;
-            }
-
-            if (radioView == null)
-            {
-                Debug.LogWarning("[DayFlowController] VN do rádio não atribuída na cena do Dia. " +
-                                 "Rode Whispers > Rádio > Criar VN na cena day.", this);
-                return;
-            }
-
-            // A VN devolve falso quando já existe evento em execução.
-            if (!radioView.Play(radioDefinition))
-            {
-                Log("A VN recusou o rádio do Dia " + session.day + " (já existe evento em execução).");
-                return;
-            }
-
-            session.MarkDayEventConsumed(radioDefinition.eventId);
-            Log("Rádio do Dia " + session.day + " entregue à VN.");
         }
 
         /// <summary>
@@ -236,9 +246,7 @@ namespace Whispers
             TutorialPanelDefinition tutorial = entry != null ? entry.tutorial : null;
             if (tutorial == null) { Log("Dia " + session.day + " sem painel de tutorial."); return; }
 
-            string key = "tutorial_" + session.day + "_" + (string.IsNullOrEmpty(tutorial.tutorialId)
-                ? tutorial.name
-                : tutorial.tutorialId);
+            string key = TutorialKey(session.day, tutorial);
             if (session.IsDayEventConsumed(key)) { Log("Painel do Dia " + session.day + " já foi mostrado."); return; }
 
             if (tutorialPanel == null)
@@ -254,9 +262,13 @@ namespace Whispers
                 return;
             }
 
+            if (tutorialPanel.IsOpen || !tutorialPanel.isActiveAndEnabled) return;
             tutorialPanel.Open(tutorial);
-            session.MarkDayEventConsumed(key);
-            Log("Painel do Dia " + session.day + " aberto: " + tutorial.name);
+            if (tutorialPanel.IsOpen && tutorialPanel.CurrentDefinition == tutorial)
+            {
+                session.MarkDayEventConsumed(key);
+                Log("Painel do Dia " + session.day + " aberto: " + tutorial.name);
+            }
         }
 
         private void Log(string message)
@@ -286,13 +298,6 @@ namespace Whispers
             if (dayRadioEvents == null) return null;
             int index = day - 1;
             return index >= 0 && index < dayRadioEvents.Length ? dayRadioEvents[index] : null;
-        }
-
-        /// <summary>Navegações exigidas no Dia: a tabela vence, o campo da cena é o fallback.</summary>
-        private int RequiredNavigationsForDay(int day)
-        {
-            DayFlowEntry entry = EntryForDay(day);
-            return entry != null ? entry.requiredNavigationsBeforeRadio : requiredNavigationsBeforeRadio;
         }
 
         /// <summary>

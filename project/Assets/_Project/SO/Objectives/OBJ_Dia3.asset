@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ObjectiveDefinition
   objectiveId: obj_dia_3
   title: "Encontre o lampi\xE3o e o \xF3leo"
-  body: "Devo encontrar o lampi\xE3o e o \xF3leo."
+  body: 

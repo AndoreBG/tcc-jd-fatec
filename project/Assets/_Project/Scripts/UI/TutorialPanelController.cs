@@ -95,6 +95,12 @@ namespace Whispers
         {
             if (_open) return;
 
+            if (panel == null || proceedButton == null || !isActiveAndEnabled)
+            {
+                Debug.LogWarning("[TutorialPanelController] Painel ou botão não configurado, ou componente inativo: não foi possível abrir.", this);
+                return;
+            }
+
             if (definition == null)
             {
                 Log("Open sem definição: nenhum painel para mostrar.");
@@ -170,6 +176,7 @@ namespace Whispers
             {
                 Debug.LogWarning("[TutorialPanelController] GameplaySceneController ausente: " +
                                  "não há como encerrar o Dia.", this);
+                Open(definition);
                 return;
             }
 
@@ -177,6 +184,8 @@ namespace Whispers
             {
                 Debug.LogWarning("[TutorialPanelController] Fim do Dia recusado: " + reason +
                                  (retryable ? " (dá para tentar de novo)" : string.Empty), this);
+                // Não deixa o jogador preso sem conseguir tentar o botão novamente.
+                Open(definition);
             }
         }
 

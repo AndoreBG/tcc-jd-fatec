@@ -1,5 +1,9 @@
 # Whispers from the Unknown — estado da implementação
 
+> Rádio: desde esta atualização, cada transmissão configurada inicia automaticamente após o boot do Dia, sem exigir navegações. A tabela antiga mantém o campo de navegações apenas para compatibilidade; ele é ignorado. O objetivo continua aparecendo depois do rádio.
+
+> Tutoriais: o menu `Whispers > Dia > Configurar tutoriais e conclusão` limita os hotspots básicos ao Dia 1 e remove a chamada legada de confirmação apenas na coleta da lanterna. O fluxo automático apresenta os painéis ao concluir os objetivos dos Dias 1 a 3; requer executar o menu e testar no Unity.
+
 > Atualização: o objetivo aguarda o término do rádio configurado para o Dia e permanece visível até ser ocultado ou a cena terminar. Sem rádio utilizável ou quando já consumido, aparece ao iniciar. As descrições antigas de duração abaixo ficam substituídas por esta regra.
 
 Documento de situação. Diferente do `Progresso.md`, que é cronológico (o que foi feito em

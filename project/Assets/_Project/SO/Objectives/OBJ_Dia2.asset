@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ObjectiveDefinition
   objectiveId: obj_dia_2
   title: "V\xE1 at\xE9 as portas"
-  body: "Devo ir at\xE9 as portas para investigar."
+  body: 

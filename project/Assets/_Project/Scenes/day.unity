@@ -309,126 +309,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 12926121}
   m_CullTransparentMesh: 1
---- !u!1 &19172032
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 19172033}
-  - component: {fileID: 19172036}
-  - component: {fileID: 19172035}
-  - component: {fileID: 19172034}
-  m_Layer: 0
-  m_Name: ClockHotspot
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &19172033
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 19172032}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 415069748}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 1}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -40, y: -40}
-  m_SizeDelta: {x: 160, y: 160}
-  m_Pivot: {x: 1, y: 1}
---- !u!114 &19172034
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 19172032}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: db40ae3aeffd4120a56e8d06439a4b27, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Whispers.ClockHotspot
-  enabledForGameplay: 1
-  activationMode: 0
-  repeatPolicy: 1
-  conditionPolicy: 0
-  conditions: []
-  unavailableMode: 0
-  dwellDuration: 0.6
-  visualGroup: {fileID: 0}
-  dwellProgressImage: {fileID: 0}
-  feedbackProfile: {fileID: 0}
-  cursorSkin: {fileID: 0}
-  cursorSkinHotspot: {x: 16, y: 16}
-  onActivated:
-    m_PersistentCalls:
-      m_Calls: []
-  onUnavailable:
-    m_PersistentCalls:
-      m_Calls: []
-  onBlockedHint:
-    m_PersistentCalls:
-      m_Calls: []
-  clockImage: {fileID: 0}
-  daySprite: {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
-  nightHourSprites:
-  - {fileID: -3876989351773742473, guid: 37ecb6b7fb75c5f46b54c00eea563fd2, type: 3}
-  - {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
-  - {fileID: -733251870095863627, guid: 56c74211dbd2fbf418cb3e054d25ea5e, type: 3}
-  - {fileID: -8930837768952922690, guid: d64f02317d70c7e42a6d09f2955f5f51, type: 3}
-  - {fileID: 2971796879118096225, guid: 63a22fbce61043544a4511988740c4cf, type: 3}
-  - {fileID: 2116226736302543925, guid: 7d31e29c452896b44ba195fa87c867c7, type: 3}
-  - {fileID: 1800686162406392963, guid: 090d53245ca214c48a36ba31293f60be, type: 3}
-  unavailableSprite: {fileID: 0}
---- !u!114 &19172035
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 19172032}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.08}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &19172036
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 19172032}
-  m_CullTransparentMesh: 1
 --- !u!1 &82899644
 GameObject:
   m_ObjectHideFlags: 0
@@ -824,8 +704,8 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 933063567}
   - {fileID: 1531482290}
+  - {fileID: 933063567}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -1068,7 +948,7 @@ RectTransform:
   - {fileID: 658708365}
   - {fileID: 1734292998}
   - {fileID: 620432111}
-  - {fileID: 1589861789}
+  - {fileID: 1010800973}
   m_Father: {fileID: 1212901560}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -1211,6 +1091,42 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 220128322}
   m_CullTransparentMesh: 1
+--- !u!1 &226800681
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 226800682}
+  m_Layer: 0
+  m_Name: Layer_Item
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &226800682
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 226800681}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2077484156}
+  m_Father: {fileID: 415069748}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &242491293
 GameObject:
   m_ObjectHideFlags: 0
@@ -1337,7 +1253,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a0cc26b633eb446888aa1ce5ffd5b520, type: 2}
   - {fileID: 11400000, guid: 9bebd79d44c94f2b83dffecdd8743d69, type: 2}
   - {fileID: 11400000, guid: ba3437c261174b78b764d0d3cf61379c, type: 2}
-  requiredNavigationsBeforeRadio: 3
+  requiredNavigationsBeforeRadio: 0
   radioView: {fileID: 2081336778}
   playFirstDayOnBoot: 1
   firstDayBootDelaySeconds: 0
@@ -1390,7 +1306,6 @@ RectTransform:
   - {fileID: 1649271195}
   - {fileID: 1783184117}
   - {fileID: 82899645}
-  - {fileID: 431349027}
   m_Father: {fileID: 105896755}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -2203,6 +2118,131 @@ MonoBehaviour:
   localIntensity: 0.3
   maxOffset: {x: 0, y: 0}
   ignoreParallaxAndCameraPan: 1
+--- !u!1 &379373243
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 379373244}
+  - component: {fileID: 379373248}
+  - component: {fileID: 379373247}
+  - component: {fileID: 379373246}
+  - component: {fileID: 379373245}
+  m_Layer: 0
+  m_Name: Hotspot_PegarLampiao
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &379373244
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 379373243}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1010800973}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.73, y: 0.47}
+  m_AnchorMax: {x: 0.73, y: 0.47}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 1.2, y: 1.45}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &379373245
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 379373243}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aaaf79ddd4933bf4e93755e191fddef6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.InteractionHotspot
+  enabledForGameplay: 1
+  activationMode: 2
+  repeatPolicy: 1
+  conditionPolicy: 0
+  conditions:
+  - {fileID: 11400000, guid: 2badb9d5f7671eb418210a6495bbdd04, type: 2}
+  - {fileID: 11400000, guid: c560c62cdfa4495ab318c1654192aa2c, type: 2}
+  unavailableMode: 0
+  dwellDuration: 0.6
+  visualGroup: {fileID: 379373246}
+  dwellProgressImage: {fileID: 0}
+  feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
+  onActivated:
+    m_PersistentCalls:
+      m_Calls: []
+  onUnavailable:
+    m_PersistentCalls:
+      m_Calls: []
+  onBlockedHint:
+    m_PersistentCalls:
+      m_Calls: []
+  definition: {fileID: 11400000, guid: 73c2622f026b4df68ec75f4956c4f10d, type: 2}
+--- !u!225 &379373246
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 379373243}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!114 &379373247
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 379373243}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: -137070959, guid: 834cc2bad60638942a605831b4e54078, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 1
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &379373248
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 379373243}
+  m_CullTransparentMesh: 1
 --- !u!1 &391696331
 GameObject:
   m_ObjectHideFlags: 0
@@ -2582,7 +2622,7 @@ RectTransform:
   - {fileID: 1183903797}
   - {fileID: 1307669564}
   - {fileID: 825680511}
-  - {fileID: 19172033}
+  - {fileID: 226800682}
   m_Father: {fileID: 1423389401}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -2674,246 +2714,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 391696333}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &431349026
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 431349027}
-  - component: {fileID: 431349030}
-  - component: {fileID: 431349029}
-  - component: {fileID: 431349028}
-  m_Layer: 0
-  m_Name: ClockHotspot
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &431349027
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 431349026}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 282871323}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 1}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -40, y: -40}
-  m_SizeDelta: {x: 160, y: 160}
-  m_Pivot: {x: 1, y: 1}
---- !u!114 &431349028
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 431349026}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: db40ae3aeffd4120a56e8d06439a4b27, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Whispers.ClockHotspot
-  enabledForGameplay: 1
-  activationMode: 0
-  repeatPolicy: 1
-  conditionPolicy: 0
-  conditions: []
-  unavailableMode: 0
-  dwellDuration: 0.6
-  visualGroup: {fileID: 0}
-  dwellProgressImage: {fileID: 0}
-  feedbackProfile: {fileID: 0}
-  cursorSkin: {fileID: 0}
-  cursorSkinHotspot: {x: 16, y: 16}
-  onActivated:
-    m_PersistentCalls:
-      m_Calls: []
-  onUnavailable:
-    m_PersistentCalls:
-      m_Calls: []
-  onBlockedHint:
-    m_PersistentCalls:
-      m_Calls: []
-  clockImage: {fileID: 0}
-  daySprite: {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
-  nightHourSprites:
-  - {fileID: -3876989351773742473, guid: 37ecb6b7fb75c5f46b54c00eea563fd2, type: 3}
-  - {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
-  - {fileID: -733251870095863627, guid: 56c74211dbd2fbf418cb3e054d25ea5e, type: 3}
-  - {fileID: -8930837768952922690, guid: d64f02317d70c7e42a6d09f2955f5f51, type: 3}
-  - {fileID: 2971796879118096225, guid: 63a22fbce61043544a4511988740c4cf, type: 3}
-  - {fileID: 2116226736302543925, guid: 7d31e29c452896b44ba195fa87c867c7, type: 3}
-  - {fileID: 1800686162406392963, guid: 090d53245ca214c48a36ba31293f60be, type: 3}
-  unavailableSprite: {fileID: 0}
---- !u!114 &431349029
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 431349026}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.08}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &431349030
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 431349026}
-  m_CullTransparentMesh: 1
---- !u!1 &455950570
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 455950571}
-  - component: {fileID: 455950574}
-  - component: {fileID: 455950573}
-  - component: {fileID: 455950572}
-  m_Layer: 0
-  m_Name: ClockHotspot
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &455950571
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 455950570}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1489028359}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 1}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -40, y: -40}
-  m_SizeDelta: {x: 160, y: 160}
-  m_Pivot: {x: 1, y: 1}
---- !u!114 &455950572
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 455950570}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: db40ae3aeffd4120a56e8d06439a4b27, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Whispers.ClockHotspot
-  enabledForGameplay: 1
-  activationMode: 0
-  repeatPolicy: 1
-  conditionPolicy: 0
-  conditions: []
-  unavailableMode: 0
-  dwellDuration: 0.6
-  visualGroup: {fileID: 0}
-  dwellProgressImage: {fileID: 0}
-  feedbackProfile: {fileID: 0}
-  cursorSkin: {fileID: 0}
-  cursorSkinHotspot: {x: 16, y: 16}
-  onActivated:
-    m_PersistentCalls:
-      m_Calls: []
-  onUnavailable:
-    m_PersistentCalls:
-      m_Calls: []
-  onBlockedHint:
-    m_PersistentCalls:
-      m_Calls: []
-  clockImage: {fileID: 0}
-  daySprite: {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
-  nightHourSprites:
-  - {fileID: -3876989351773742473, guid: 37ecb6b7fb75c5f46b54c00eea563fd2, type: 3}
-  - {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
-  - {fileID: -733251870095863627, guid: 56c74211dbd2fbf418cb3e054d25ea5e, type: 3}
-  - {fileID: -8930837768952922690, guid: d64f02317d70c7e42a6d09f2955f5f51, type: 3}
-  - {fileID: 2971796879118096225, guid: 63a22fbce61043544a4511988740c4cf, type: 3}
-  - {fileID: 2116226736302543925, guid: 7d31e29c452896b44ba195fa87c867c7, type: 3}
-  - {fileID: 1800686162406392963, guid: 090d53245ca214c48a36ba31293f60be, type: 3}
-  unavailableSprite: {fileID: 0}
---- !u!114 &455950573
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 455950570}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.08}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &455950574
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 455950570}
-  m_CullTransparentMesh: 1
 --- !u!1 &486776252
 GameObject:
   m_ObjectHideFlags: 0
@@ -2983,7 +2783,6 @@ RectTransform:
   - {fileID: 611287411}
   - {fileID: 615525884}
   - {fileID: 1533946066}
-  - {fileID: 601861227}
   m_Father: {fileID: 197042646}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -3620,126 +3419,6 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
---- !u!1 &601861226
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 601861227}
-  - component: {fileID: 601861230}
-  - component: {fileID: 601861229}
-  - component: {fileID: 601861228}
-  m_Layer: 0
-  m_Name: ClockHotspot
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &601861227
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 601861226}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 501181663}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 1}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -40, y: -40}
-  m_SizeDelta: {x: 160, y: 160}
-  m_Pivot: {x: 1, y: 1}
---- !u!114 &601861228
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 601861226}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: db40ae3aeffd4120a56e8d06439a4b27, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Whispers.ClockHotspot
-  enabledForGameplay: 1
-  activationMode: 0
-  repeatPolicy: 1
-  conditionPolicy: 0
-  conditions: []
-  unavailableMode: 0
-  dwellDuration: 0.6
-  visualGroup: {fileID: 0}
-  dwellProgressImage: {fileID: 0}
-  feedbackProfile: {fileID: 0}
-  cursorSkin: {fileID: 0}
-  cursorSkinHotspot: {x: 16, y: 16}
-  onActivated:
-    m_PersistentCalls:
-      m_Calls: []
-  onUnavailable:
-    m_PersistentCalls:
-      m_Calls: []
-  onBlockedHint:
-    m_PersistentCalls:
-      m_Calls: []
-  clockImage: {fileID: 0}
-  daySprite: {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
-  nightHourSprites:
-  - {fileID: -3876989351773742473, guid: 37ecb6b7fb75c5f46b54c00eea563fd2, type: 3}
-  - {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
-  - {fileID: -733251870095863627, guid: 56c74211dbd2fbf418cb3e054d25ea5e, type: 3}
-  - {fileID: -8930837768952922690, guid: d64f02317d70c7e42a6d09f2955f5f51, type: 3}
-  - {fileID: 2971796879118096225, guid: 63a22fbce61043544a4511988740c4cf, type: 3}
-  - {fileID: 2116226736302543925, guid: 7d31e29c452896b44ba195fa87c867c7, type: 3}
-  - {fileID: 1800686162406392963, guid: 090d53245ca214c48a36ba31293f60be, type: 3}
-  unavailableSprite: {fileID: 0}
---- !u!114 &601861229
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 601861226}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.08}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &601861230
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 601861226}
-  m_CullTransparentMesh: 1
 --- !u!1 &602125288
 GameObject:
   m_ObjectHideFlags: 0
@@ -4303,7 +3982,6 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 2128714315}
   - {fileID: 800003201}
   m_Father: {fileID: 1307167312}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -5023,7 +4701,8 @@ MonoBehaviour:
   activationMode: 2
   repeatPolicy: 0
   conditionPolicy: 0
-  conditions: []
+  conditions:
+  - {fileID: 11400000, guid: f64d3de6f6ffd164aaa6ab87c083b4a7, type: 2}
   unavailableMode: 0
   dwellDuration: 0.6
   visualGroup: {fileID: 800003014}
@@ -5147,7 +4826,8 @@ MonoBehaviour:
   activationMode: 2
   repeatPolicy: 0
   conditionPolicy: 0
-  conditions: []
+  conditions:
+  - {fileID: 11400000, guid: f64d3de6f6ffd164aaa6ab87c083b4a7, type: 2}
   unavailableMode: 0
   dwellDuration: 0.6
   visualGroup: {fileID: 800003044}
@@ -6489,7 +6169,6 @@ RectTransform:
   m_Children:
   - {fileID: 1598197389}
   - {fileID: 367403796}
-  - {fileID: 1593607559}
   m_Father: {fileID: 325687431}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -7267,6 +6946,43 @@ CanvasGroup:
   m_Interactable: 0
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
+--- !u!1 &1010800972
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1010800973}
+  m_Layer: 0
+  m_Name: Layer_Item
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1010800973
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1010800972}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2128714315}
+  - {fileID: 379373244}
+  m_Father: {fileID: 218831984}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1034314529
 GameObject:
   m_ObjectHideFlags: 0
@@ -7653,126 +7369,6 @@ MonoBehaviour:
   OnNodeExit:
     m_PersistentCalls:
       m_Calls: []
---- !u!1 &1220105338
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1220105339}
-  - component: {fileID: 1220105342}
-  - component: {fileID: 1220105341}
-  - component: {fileID: 1220105340}
-  m_Layer: 0
-  m_Name: ClockHotspot
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1220105339
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1220105338}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1307167312}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 1}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -40, y: -40}
-  m_SizeDelta: {x: 160, y: 160}
-  m_Pivot: {x: 1, y: 1}
---- !u!114 &1220105340
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1220105338}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: db40ae3aeffd4120a56e8d06439a4b27, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Whispers.ClockHotspot
-  enabledForGameplay: 1
-  activationMode: 0
-  repeatPolicy: 1
-  conditionPolicy: 0
-  conditions: []
-  unavailableMode: 0
-  dwellDuration: 0.6
-  visualGroup: {fileID: 0}
-  dwellProgressImage: {fileID: 0}
-  feedbackProfile: {fileID: 0}
-  cursorSkin: {fileID: 0}
-  cursorSkinHotspot: {x: 16, y: 16}
-  onActivated:
-    m_PersistentCalls:
-      m_Calls: []
-  onUnavailable:
-    m_PersistentCalls:
-      m_Calls: []
-  onBlockedHint:
-    m_PersistentCalls:
-      m_Calls: []
-  clockImage: {fileID: 0}
-  daySprite: {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
-  nightHourSprites:
-  - {fileID: -3876989351773742473, guid: 37ecb6b7fb75c5f46b54c00eea563fd2, type: 3}
-  - {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
-  - {fileID: -733251870095863627, guid: 56c74211dbd2fbf418cb3e054d25ea5e, type: 3}
-  - {fileID: -8930837768952922690, guid: d64f02317d70c7e42a6d09f2955f5f51, type: 3}
-  - {fileID: 2971796879118096225, guid: 63a22fbce61043544a4511988740c4cf, type: 3}
-  - {fileID: 2116226736302543925, guid: 7d31e29c452896b44ba195fa87c867c7, type: 3}
-  - {fileID: 1800686162406392963, guid: 090d53245ca214c48a36ba31293f60be, type: 3}
-  unavailableSprite: {fileID: 0}
---- !u!114 &1220105341
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1220105338}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.08}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &1220105342
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1220105338}
-  m_CullTransparentMesh: 1
 --- !u!1 &1224007703
 GameObject:
   m_ObjectHideFlags: 0
@@ -8162,7 +7758,6 @@ RectTransform:
   - {fileID: 303811875}
   - {fileID: 2093879752}
   - {fileID: 643792125}
-  - {fileID: 1220105339}
   m_Father: {fileID: 1678364023}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -9225,7 +8820,6 @@ RectTransform:
   - {fileID: 549420296}
   - {fileID: 1079067988}
   - {fileID: 1224007704}
-  - {fileID: 455950571}
   m_Father: {fileID: 1390097737}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -9656,8 +9250,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -490.73782, y: 405.97375}
-  m_SizeDelta: {x: -970.7102, y: -939.9475}
+  m_AnchoredPosition: {x: -674.40137, y: 404.6}
+  m_SizeDelta: {x: -1338.0374, y: -992.29987}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1531482291
 MonoBehaviour:
@@ -9755,246 +9349,6 @@ MonoBehaviour:
   localIntensity: 0.3
   maxOffset: {x: 0, y: 0}
   ignoreParallaxAndCameraPan: 0
---- !u!1 &1589861788
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1589861789}
-  - component: {fileID: 1589861792}
-  - component: {fileID: 1589861791}
-  - component: {fileID: 1589861790}
-  m_Layer: 0
-  m_Name: ClockHotspot
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1589861789
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1589861788}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 218831984}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 1}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -40, y: -40}
-  m_SizeDelta: {x: 160, y: 160}
-  m_Pivot: {x: 1, y: 1}
---- !u!114 &1589861790
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1589861788}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: db40ae3aeffd4120a56e8d06439a4b27, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Whispers.ClockHotspot
-  enabledForGameplay: 1
-  activationMode: 0
-  repeatPolicy: 1
-  conditionPolicy: 0
-  conditions: []
-  unavailableMode: 0
-  dwellDuration: 0.6
-  visualGroup: {fileID: 0}
-  dwellProgressImage: {fileID: 0}
-  feedbackProfile: {fileID: 0}
-  cursorSkin: {fileID: 0}
-  cursorSkinHotspot: {x: 16, y: 16}
-  onActivated:
-    m_PersistentCalls:
-      m_Calls: []
-  onUnavailable:
-    m_PersistentCalls:
-      m_Calls: []
-  onBlockedHint:
-    m_PersistentCalls:
-      m_Calls: []
-  clockImage: {fileID: 0}
-  daySprite: {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
-  nightHourSprites:
-  - {fileID: -3876989351773742473, guid: 37ecb6b7fb75c5f46b54c00eea563fd2, type: 3}
-  - {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
-  - {fileID: -733251870095863627, guid: 56c74211dbd2fbf418cb3e054d25ea5e, type: 3}
-  - {fileID: -8930837768952922690, guid: d64f02317d70c7e42a6d09f2955f5f51, type: 3}
-  - {fileID: 2971796879118096225, guid: 63a22fbce61043544a4511988740c4cf, type: 3}
-  - {fileID: 2116226736302543925, guid: 7d31e29c452896b44ba195fa87c867c7, type: 3}
-  - {fileID: 1800686162406392963, guid: 090d53245ca214c48a36ba31293f60be, type: 3}
-  unavailableSprite: {fileID: 0}
---- !u!114 &1589861791
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1589861788}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.08}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &1589861792
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1589861788}
-  m_CullTransparentMesh: 1
---- !u!1 &1593607558
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1593607559}
-  - component: {fileID: 1593607562}
-  - component: {fileID: 1593607561}
-  - component: {fileID: 1593607560}
-  m_Layer: 0
-  m_Name: ClockHotspot
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1593607559
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1593607558}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 821807125}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 1}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -40, y: -40}
-  m_SizeDelta: {x: 160, y: 160}
-  m_Pivot: {x: 1, y: 1}
---- !u!114 &1593607560
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1593607558}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: db40ae3aeffd4120a56e8d06439a4b27, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Whispers.ClockHotspot
-  enabledForGameplay: 1
-  activationMode: 0
-  repeatPolicy: 1
-  conditionPolicy: 0
-  conditions: []
-  unavailableMode: 0
-  dwellDuration: 0.6
-  visualGroup: {fileID: 0}
-  dwellProgressImage: {fileID: 0}
-  feedbackProfile: {fileID: 0}
-  cursorSkin: {fileID: 0}
-  cursorSkinHotspot: {x: 16, y: 16}
-  onActivated:
-    m_PersistentCalls:
-      m_Calls: []
-  onUnavailable:
-    m_PersistentCalls:
-      m_Calls: []
-  onBlockedHint:
-    m_PersistentCalls:
-      m_Calls: []
-  clockImage: {fileID: 0}
-  daySprite: {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
-  nightHourSprites:
-  - {fileID: -3876989351773742473, guid: 37ecb6b7fb75c5f46b54c00eea563fd2, type: 3}
-  - {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
-  - {fileID: -733251870095863627, guid: 56c74211dbd2fbf418cb3e054d25ea5e, type: 3}
-  - {fileID: -8930837768952922690, guid: d64f02317d70c7e42a6d09f2955f5f51, type: 3}
-  - {fileID: 2971796879118096225, guid: 63a22fbce61043544a4511988740c4cf, type: 3}
-  - {fileID: 2116226736302543925, guid: 7d31e29c452896b44ba195fa87c867c7, type: 3}
-  - {fileID: 1800686162406392963, guid: 090d53245ca214c48a36ba31293f60be, type: 3}
-  unavailableSprite: {fileID: 0}
---- !u!114 &1593607561
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1593607558}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.08}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &1593607562
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1593607558}
-  m_CullTransparentMesh: 1
 --- !u!1 &1598197388
 GameObject:
   m_ObjectHideFlags: 0
@@ -10089,126 +9443,6 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1598197388}
-  m_CullTransparentMesh: 1
---- !u!1 &1606861230
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1606861231}
-  - component: {fileID: 1606861234}
-  - component: {fileID: 1606861233}
-  - component: {fileID: 1606861232}
-  m_Layer: 0
-  m_Name: ClockHotspot
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1606861231
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1606861230}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1973789397}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 1}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -40, y: -40}
-  m_SizeDelta: {x: 160, y: 160}
-  m_Pivot: {x: 1, y: 1}
---- !u!114 &1606861232
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1606861230}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: db40ae3aeffd4120a56e8d06439a4b27, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Whispers.ClockHotspot
-  enabledForGameplay: 1
-  activationMode: 0
-  repeatPolicy: 1
-  conditionPolicy: 0
-  conditions: []
-  unavailableMode: 0
-  dwellDuration: 0.6
-  visualGroup: {fileID: 0}
-  dwellProgressImage: {fileID: 0}
-  feedbackProfile: {fileID: 0}
-  cursorSkin: {fileID: 0}
-  cursorSkinHotspot: {x: 16, y: 16}
-  onActivated:
-    m_PersistentCalls:
-      m_Calls: []
-  onUnavailable:
-    m_PersistentCalls:
-      m_Calls: []
-  onBlockedHint:
-    m_PersistentCalls:
-      m_Calls: []
-  clockImage: {fileID: 0}
-  daySprite: {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
-  nightHourSprites:
-  - {fileID: -3876989351773742473, guid: 37ecb6b7fb75c5f46b54c00eea563fd2, type: 3}
-  - {fileID: -5154208016683795137, guid: c52530e83cb9480488ce5cd23c656ca0, type: 3}
-  - {fileID: -733251870095863627, guid: 56c74211dbd2fbf418cb3e054d25ea5e, type: 3}
-  - {fileID: -8930837768952922690, guid: d64f02317d70c7e42a6d09f2955f5f51, type: 3}
-  - {fileID: 2971796879118096225, guid: 63a22fbce61043544a4511988740c4cf, type: 3}
-  - {fileID: 2116226736302543925, guid: 7d31e29c452896b44ba195fa87c867c7, type: 3}
-  - {fileID: 1800686162406392963, guid: 090d53245ca214c48a36ba31293f60be, type: 3}
-  unavailableSprite: {fileID: 0}
---- !u!114 &1606861233
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1606861230}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.08}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &1606861234
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1606861230}
   m_CullTransparentMesh: 1
 --- !u!1 &1620088623
 GameObject:
@@ -11858,7 +11092,6 @@ RectTransform:
   - {fileID: 650170456}
   - {fileID: 12804774}
   - {fileID: 2136279923}
-  - {fileID: 1606861231}
   m_Father: {fileID: 1034314530}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -12796,6 +12029,131 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2051749571}
   m_CullTransparentMesh: 1
+--- !u!1 &2077484155
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2077484156}
+  - component: {fileID: 2077484160}
+  - component: {fileID: 2077484159}
+  - component: {fileID: 2077484158}
+  - component: {fileID: 2077484157}
+  m_Layer: 0
+  m_Name: Hotspot_PegarOleo
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2077484156
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2077484155}
+  m_LocalRotation: {x: -0, y: -0, z: -0.21005037, w: 0.97769064}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 226800682}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -24.251}
+  m_AnchorMin: {x: 0.39, y: 0.5}
+  m_AnchorMax: {x: 0.39, y: 0.5}
+  m_AnchoredPosition: {x: -1.35, y: -3.05}
+  m_SizeDelta: {x: 1.2, y: 1.3}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2077484157
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2077484155}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aaaf79ddd4933bf4e93755e191fddef6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.InteractionHotspot
+  enabledForGameplay: 1
+  activationMode: 2
+  repeatPolicy: 1
+  conditionPolicy: 0
+  conditions:
+  - {fileID: 11400000, guid: 2badb9d5f7671eb418210a6495bbdd04, type: 2}
+  - {fileID: 11400000, guid: 987b368f671f4f918cc0fa1278aab2dc, type: 2}
+  unavailableMode: 0
+  dwellDuration: 0.6
+  visualGroup: {fileID: 2077484158}
+  dwellProgressImage: {fileID: 0}
+  feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
+  onActivated:
+    m_PersistentCalls:
+      m_Calls: []
+  onUnavailable:
+    m_PersistentCalls:
+      m_Calls: []
+  onBlockedHint:
+    m_PersistentCalls:
+      m_Calls: []
+  definition: {fileID: 11400000, guid: 74010dbaaecf4cf4b4fc6d17d92430ae, type: 2}
+--- !u!225 &2077484158
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2077484155}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!114 &2077484159
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2077484155}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 3959959563155154859, guid: b9f5f4826c37c014aaab95b33ccb46e5, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 1
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &2077484160
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2077484155}
+  m_CullTransparentMesh: 1
 --- !u!1 &2081336777
 GameObject:
   m_ObjectHideFlags: 0
@@ -13286,12 +12644,12 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 643792125}
+  m_Father: {fileID: 1010800973}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 2, y: 2}
+  m_AnchorMin: {x: 0.28, y: 0.35}
+  m_AnchorMax: {x: 0.28, y: 0.35}
+  m_AnchoredPosition: {x: 0, y: -0.46}
+  m_SizeDelta: {x: 1.35, y: 1.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!225 &2128714316
 CanvasGroup:
@@ -13323,6 +12681,8 @@ MonoBehaviour:
   conditionPolicy: 0
   conditions:
   - {fileID: 11400000, guid: 424e42a29141dc342964a2eabd7d7ed1, type: 2}
+  - {fileID: 11400000, guid: f64d3de6f6ffd164aaa6ab87c083b4a7, type: 2}
+  - {fileID: 11400000, guid: 9b6eb21e4248a6d45ae62428d3c9094a, type: 2}
   unavailableMode: 0
   dwellDuration: 0.6
   visualGroup: {fileID: 2128714316}
@@ -13332,19 +12692,7 @@ MonoBehaviour:
   cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 800003102}
-        m_TargetAssemblyTypeName: Whispers.DayEndConfirmationController, Assembly-CSharp
-        m_MethodName: Open
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
   onUnavailable:
     m_PersistentCalls:
       m_Calls: []
@@ -13372,9 +12720,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -2320329584465383960, guid: 7e3ba469c71a8c541abd70acf3d01614, type: 3}
+  m_Sprite: {fileID: -5400509523208916458, guid: 68d45a1c28de34a4f96b0bebbe75ba8a, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
