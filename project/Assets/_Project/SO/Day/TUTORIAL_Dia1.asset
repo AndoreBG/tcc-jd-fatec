@@ -18,5 +18,5 @@ MonoBehaviour:
     enfrenta-lo, voc\xEA deve direcionar a luz da lanterna nele e manter a carga
     no m\xE1ximo."
   proceedLabel: Prosseguir
-  illustration: {fileID: 0}
+  illustration: {fileID: 5070966592286506904, guid: f5b43b9a5545ab743bbf42fff2ffdd70, type: 3}
   endPeriodOnProceed: 1

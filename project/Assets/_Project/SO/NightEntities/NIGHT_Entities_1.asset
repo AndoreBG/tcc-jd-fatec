@@ -50,7 +50,7 @@ MonoBehaviour:
     resolvedCooldownSeconds: 40
     terminalCountdownSeconds: 5
     predatorResolveStartWindowSeconds: 3
-    predatorResolveHoldSeconds: 8
+    predatorResolveHoldSeconds: 7
     predatorStruggleClosedPercent: 60
     predatorStruggleVariationPercent: 20
     predatorRecoverBelowClosedPercent: 40
@@ -58,11 +58,11 @@ MonoBehaviour:
     predatorHoldOpenSpeed: 8
     predatorReleaseOpenSpeed: 8
     predatorRecoverCloseSpeed: 12
-    predatorWobbleSpeed: 30
+    predatorWobbleSpeed: 50
     predatorBangIntervalSeconds: 2
     predatorBangExtraPixels: 100
-    predatorBangShoveSeconds: 0.3
-    predatorBangShakeIntensity: 10
+    predatorBangShoveSeconds: 0.1
+    predatorBangShakeIntensity: 3
     voyeurLightContactRequiredSeconds: 2
   exhauster:
     active: 1

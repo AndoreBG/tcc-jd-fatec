@@ -24,7 +24,9 @@ namespace Whispers
 
         // Campo serializado legado, mantido para não perder dados das cenas antigas.
         // A quantidade de navegações não é mais utilizada.
+#pragma warning disable 0414 // Campo serializado legado sem efeito no fluxo atual.
         [HideInInspector] [SerializeField] private int requiredNavigationsBeforeRadio = 3;
+#pragma warning restore 0414
 
         [Header("VN do rádio")]
         [Tooltip("Camada de VN na cena do Dia. Sem referência, o rádio não aparece.")]
@@ -32,7 +34,9 @@ namespace Whispers
 
         [Header("Boletim de abertura")]
         // Legado: o rádio agora inicia em todos os Dias, independentemente deste campo.
+#pragma warning disable 0414 // Campo serializado legado sem efeito no fluxo atual.
         [HideInInspector] [SerializeField] private bool playFirstDayOnBoot = true;
+#pragma warning restore 0414
 
         [Tooltip("Espera em segundos reais após o boot antes do rádio de cada Dia.")]
         [Min(0f)] [SerializeField] private float firstDayBootDelaySeconds = 1.5f;

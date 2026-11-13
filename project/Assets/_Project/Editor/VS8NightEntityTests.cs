@@ -34,7 +34,9 @@ namespace Whispers.EditorTests
                 NightClockSettings clock = AssetDatabase.LoadAssetAtPath<NightClockSettings>(ClockPath);
                 Check(profile != null, "NightEntityProfile do Playground existe", ref passed);
                 Check(clock != null, "NightClockSettings do Playground existe", ref passed);
-                Check(Mathf.Approximately(clock.ValidNightDurationSeconds, 360f), "Noite configurada para 360 s", ref passed);
+                // A duração é autorada no asset compartilhado; não force um valor histórico do Playground.
+                Check(clock.nightDurationSeconds > 0f && !float.IsInfinity(clock.nightDurationSeconds),
+                    "Duração da noite positiva e finita (" + clock.nightDurationSeconds + " s)", ref passed);
                 Check(Mathf.Approximately(clock.ValidAiTickSeconds, 5f), "Tick global configurado para 5 s", ref passed);
 
                 openedScene = SceneManager.GetSceneByPath(NightScenePath);

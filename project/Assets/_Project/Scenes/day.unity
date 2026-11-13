@@ -2175,12 +2175,13 @@ MonoBehaviour:
   conditionPolicy: 0
   conditions:
   - {fileID: 11400000, guid: c560c62cdfa4495ab318c1654192aa2c, type: 2}
+  - {fileID: 11400000, guid: 2badb9d5f7671eb418210a6495bbdd04, type: 2}
   unavailableMode: 0
   dwellDuration: 0.6
   visualGroup: {fileID: 379373246}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
-  cursorSkin: {fileID: 0}
+  cursorSkin: {fileID: 2800000, guid: 749a03d3ec7ea7f4bb2425aaf9bfdd01, type: 3}
   cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
@@ -2217,14 +2218,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.08}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: -137070959, guid: 834cc2bad60638942a605831b4e54078, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -3547,10 +3548,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 643792125}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.28, y: 0.35}
-  m_AnchorMax: {x: 0.28, y: 0.35}
-  m_AnchoredPosition: {x: 0, y: -0.46}
-  m_SizeDelta: {x: 1.35, y: 1.1}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 5, y: 5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &607594715
 MonoBehaviour:
@@ -4113,7 +4114,6 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 800003201}
   - {fileID: 607594714}
   m_Father: {fileID: 1307167312}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -5781,142 +5781,6 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!1 &800003200
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 800003201}
-  - component: {fileID: 800003202}
-  - component: {fileID: 800003203}
-  - component: {fileID: 800003205}
-  - component: {fileID: 800003204}
-  m_Layer: 5
-  m_Name: Hotspot_EncerrarDia_Lanterna
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &800003201
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 800003200}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 643792125}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 2, y: 2}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &800003202
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 800003200}
-  m_CullTransparentMesh: 1
---- !u!114 &800003203
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 800003200}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: -2320329584465383960, guid: 7e3ba469c71a8c541abd70acf3d01614, type: 3}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!225 &800003204
-CanvasGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 800003200}
-  m_Enabled: 1
-  m_Alpha: 0
-  m_Interactable: 0
-  m_BlocksRaycasts: 0
-  m_IgnoreParentGroups: 0
---- !u!114 &800003205
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 800003200}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aaaf79ddd4933bf4e93755e191fddef6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Whispers.InteractionHotspot
-  enabledForGameplay: 1
-  activationMode: 2
-  repeatPolicy: 1
-  conditionPolicy: 0
-  conditions:
-  - {fileID: 11400000, guid: 424e42a29141dc342964a2eabd7d7ed1, type: 2}
-  unavailableMode: 0
-  dwellDuration: 0.6
-  visualGroup: {fileID: 800003204}
-  dwellProgressImage: {fileID: 0}
-  feedbackProfile: {fileID: 11400000, guid: 41e9e5f4e36268945b58a341c9f413d6, type: 2}
-  cursorSkin: {fileID: 2800000, guid: 749a03d3ec7ea7f4bb2425aaf9bfdd01, type: 3}
-  cursorSkinHotspot: {x: 16, y: 16}
-  onActivated:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 800003102}
-        m_TargetAssemblyTypeName: Whispers.DayEndConfirmationController, Assembly-CSharp
-        m_MethodName: Open
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-  onUnavailable:
-    m_PersistentCalls:
-      m_Calls: []
-  onBlockedHint:
-    m_PersistentCalls:
-      m_Calls: []
-  definition: {fileID: 11400000, guid: 0384c714defb414abebbb4e3c878f801, type: 2}
 --- !u!1 &804661064
 GameObject:
   m_ObjectHideFlags: 0
@@ -12219,12 +12083,13 @@ MonoBehaviour:
   conditionPolicy: 0
   conditions:
   - {fileID: 11400000, guid: 987b368f671f4f918cc0fa1278aab2dc, type: 2}
+  - {fileID: 11400000, guid: 2badb9d5f7671eb418210a6495bbdd04, type: 2}
   unavailableMode: 0
   dwellDuration: 0.6
   visualGroup: {fileID: 2077484158}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
-  cursorSkin: {fileID: 0}
+  cursorSkin: {fileID: 2800000, guid: 749a03d3ec7ea7f4bb2425aaf9bfdd01, type: 3}
   cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
@@ -12261,14 +12126,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.08}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 3959959563155154859, guid: b9f5f4826c37c014aaab95b33ccb46e5, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1

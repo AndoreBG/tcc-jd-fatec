@@ -104,14 +104,14 @@ namespace Whispers
         {
             if (oldLabel == null) return;
             oldLabel.enabled = false;
-            var labelObject = new GameObject("Modo de Exibição", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+            var labelObject = new GameObject("", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
             labelObject.transform.SetParent(oldLabel.transform, false);
             var rect = (RectTransform)labelObject.transform;
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.sizeDelta = new Vector2(270, 70);
             var label = labelObject.GetComponent<TextMeshProUGUI>();
             if (style != null) { label.font = style.font; label.color = style.color; }
-            label.text = "Modo de Exibição";
+            label.text = "";
             label.fontSize = 26;
             label.enableAutoSizing = true;
             label.fontSizeMin = 14;

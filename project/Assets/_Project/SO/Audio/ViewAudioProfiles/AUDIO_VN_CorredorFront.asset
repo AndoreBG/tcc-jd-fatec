@@ -31,9 +31,9 @@ MonoBehaviour:
   pointPerspectives:
   - anchorId: window_sala
     isAudible: 1
-    direction: 2
+    direction: 3
     distance: 1
-    pan: 0.6
+    pan: 0.75
     volumeMultiplier: 1
     occlusion: 0.15
     lowPassFrequency: 9000
@@ -49,7 +49,7 @@ MonoBehaviour:
     reverbSend: 0.953
   - anchorId: door_sala
     isAudible: 1
-    direction: 2
+    direction: 3
     distance: 1
     pan: 0.8
     volumeMultiplier: 0.85
@@ -58,7 +58,7 @@ MonoBehaviour:
     reverbSend: 0
   - anchorId: door_cozinha
     isAudible: 1
-    direction: 1
+    direction: 3
     distance: 1
     pan: -0.8
     volumeMultiplier: 0.85

@@ -23,7 +23,9 @@ namespace Whispers
         [Min(0f)] [SerializeField] private float fadeSeconds = 0.4f;
 
         // Mantido para compatibilidade com cenas já serializadas; não limita a exibição.
+#pragma warning disable 0414 // Campo serializado legado; o objetivo não expira.
         [HideInInspector] [SerializeField] private float holdSeconds = 5f;
+#pragma warning restore 0414
 
         private Coroutine _routine;
 
