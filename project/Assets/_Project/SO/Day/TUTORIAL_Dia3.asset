@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db472038a11e484fbfaa95e3950a7c4f, type: 3}
+  m_Name: TUTORIAL_Dia3
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.TutorialPanelDefinition
+  tutorialId: tutorial_dia_3
+  title: Como enfrentar o Exhauster
+  body: "O Exhauster s\xF3 aparece no s\xF3t\xE3o.\nPara enfrenta-lo, apenas n\xE3o
+    deixe o lampi\xE3o apagar. Ao pressionar com o bot\xE3o esquerdo do mouse sob
+    o lampi\xE3o, voc\xEA recarrega o compartimento de \xF3leo, que \xE9 o que mantem
+    o lampi\xE3o aceso."
+  proceedLabel: Prosseguir
+  illustration: {fileID: 0}
+  endPeriodOnProceed: 1

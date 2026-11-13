@@ -18,15 +18,19 @@ MonoBehaviour:
     objective: {fileID: 11400000, guid: 7cbf153d21b346e478181f062592df53, type: 2}
     requiredNavigationsBeforeRadio: 3
     radioEvent: {fileID: 11400000, guid: 74640a7828bd44a7b57da76245250492, type: 2}
+    tutorial: {fileID: 11400000, guid: 20f85f7fc6d01a84baff1aa439349ada, type: 2}
   - day: 2
     objective: {fileID: 11400000, guid: f1ff42c4d2629694680f7fb36c416929, type: 2}
     requiredNavigationsBeforeRadio: 3
     radioEvent: {fileID: 11400000, guid: a0cc26b633eb446888aa1ce5ffd5b520, type: 2}
+    tutorial: {fileID: 11400000, guid: 6f7df5697e322ca4da80849f58a0a3a7, type: 2}
   - day: 3
     objective: {fileID: 11400000, guid: e5c74c8a2c76aa54ca7c70aa93ee8b9b, type: 2}
     requiredNavigationsBeforeRadio: 3
     radioEvent: {fileID: 11400000, guid: 9bebd79d44c94f2b83dffecdd8743d69, type: 2}
+    tutorial: {fileID: 11400000, guid: 3aa38b6842c8dd948bf7aad1b42cf802, type: 2}
   - day: 4
     objective: {fileID: 11400000, guid: 4c19ca3977321984ebc0caf3f439218f, type: 2}
     requiredNavigationsBeforeRadio: 3
     radioEvent: {fileID: 11400000, guid: ba3437c261174b78b764d0d3cf61379c, type: 2}
+    tutorial: {fileID: 11400000, guid: 3f2fe8cac353c73499f29bf862fe40b3, type: 2}

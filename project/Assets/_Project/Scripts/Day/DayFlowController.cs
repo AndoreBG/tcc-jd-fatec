@@ -22,6 +22,9 @@ namespace Whispers
         [Tooltip("Banner de objetivo no canto da tela. Opcional.")]
         [SerializeField] private ObjectiveBanner objectiveBanner;
 
+        [Tooltip("Painel de tutorial do Dia. Opcional.")]
+        [SerializeField] private TutorialPanelController tutorialPanel;
+
         [Header("Evento de rádio")]
         [Tooltip("Uma entrada por Dia. Índice 0 = Dia 1. Entrada vazia = sem evento naquele Dia.")]
         [SerializeField] private RadioEventDefinition[] dayRadioEvents = System.Array.Empty<RadioEventDefinition>();
@@ -49,6 +52,8 @@ namespace Whispers
         private GameplaySceneController _scene;
         private int _navigationCount;
         private bool _subscribed;
+        private RadioEventController _subscribedRadio;
+        private int _pendingObjectiveDay;
 
         private GameSessionManager Session => GameSessionManager.Instance;
 
@@ -64,6 +69,8 @@ namespace Whispers
                 radioView = FindFirstObjectByType<RadioEventController>(FindObjectsInactive.Include);
             if (objectiveBanner == null)
                 objectiveBanner = FindFirstObjectByType<ObjectiveBanner>(FindObjectsInactive.Include);
+            if (tutorialPanel == null)
+                tutorialPanel = FindFirstObjectByType<TutorialPanelController>(FindObjectsInactive.Include);
 
             if (_navigation == null)
             {
@@ -81,7 +88,20 @@ namespace Whispers
                 ", boot = " + playFirstDayOnBoot + ", navegações exigidas = " + requiredNavigationsBeforeRadio +
                 ", VN = " + (radioView != null ? radioView.name : "ausente"));
 
-            ShowObjective(session != null ? session.day : 1);
+            // O objetivo espera o rádio configurado para este Dia terminar. Se não há
+            // transmissão utilizável (ou ela já terminou em visita anterior), não espera.
+            int day = session != null ? session.day : 1;
+            _pendingObjectiveDay = day;
+            if (radioView != null)
+            {
+                _subscribedRadio = radioView;
+                _subscribedRadio.Finished += OnRadioFinished;
+            }
+            bool radioPending = session != null && session.period == GamePeriod.Day &&
+                current != null && current.HasLines && radioView != null &&
+                !session.IsDayEventConsumed(current.eventId);
+            if (!radioPending && (radioView == null || !radioView.IsPlaying))
+                ShowPendingObjective();
 
             if (playFirstDayOnBoot) StartCoroutine(FirstDayBootRoutine());
         }
@@ -127,9 +147,31 @@ namespace Whispers
         private void Shutdown()
         {
             StopAllCoroutines();
+            if (_subscribedRadio != null) _subscribedRadio.Finished -= OnRadioFinished;
+            _subscribedRadio = null;
+            _pendingObjectiveDay = 0;
             if (!_subscribed) return;
             if (_navigation != null) _navigation.ViewNodeChanged -= OnViewNodeChanged;
             _subscribed = false;
+        }
+
+        private void OnRadioFinished()
+        {
+            ShowPendingObjective();
+        }
+
+        private void ShowPendingObjective()
+        {
+            if (_pendingObjectiveDay <= 0) return;
+            GameSessionManager session = Session;
+            if (session != null && (session.period != GamePeriod.Day || session.day != _pendingObjectiveDay))
+            {
+                _pendingObjectiveDay = 0;
+                return;
+            }
+            int day = _pendingObjectiveDay;
+            _pendingObjectiveDay = 0;
+            ShowObjective(day);
         }
 
         private void OnViewNodeChanged(ViewNodeController from, ViewNodeController to)
@@ -176,6 +218,45 @@ namespace Whispers
 
             session.MarkDayEventConsumed(radioDefinition.eventId);
             Log("Rádio do Dia " + session.day + " entregue à VN.");
+        }
+
+        /// <summary>
+        /// Abre o painel de tutorial do Dia corrente. Pensado para UnityEvent de hotspot,
+        /// então não recebe argumento: quem sabe qual é o Dia é a sessão.
+        ///
+        /// O painel abre uma vez por Dia. A marca vai para a sessão como evento de Dia
+        /// consumido, o mesmo mecanismo que impede o rádio de tocar duas vezes.
+        /// </summary>
+        public void OpenTutorial()
+        {
+            GameSessionManager session = Session;
+            if (session == null) { Log("OpenTutorial sem sessão."); return; }
+
+            DayFlowEntry entry = EntryForDay(session.day);
+            TutorialPanelDefinition tutorial = entry != null ? entry.tutorial : null;
+            if (tutorial == null) { Log("Dia " + session.day + " sem painel de tutorial."); return; }
+
+            string key = "tutorial_" + session.day + "_" + (string.IsNullOrEmpty(tutorial.tutorialId)
+                ? tutorial.name
+                : tutorial.tutorialId);
+            if (session.IsDayEventConsumed(key)) { Log("Painel do Dia " + session.day + " já foi mostrado."); return; }
+
+            if (tutorialPanel == null)
+            {
+                Debug.LogWarning("[DayFlowController] Painel de tutorial não atribuído na cena do Dia. " +
+                                 "Rode Whispers > Dia > Criar painel de tutorial.", this);
+                return;
+            }
+
+            if (!tutorial.HasContent)
+            {
+                Log("Painel do Dia " + session.day + " está sem texto: não abre.");
+                return;
+            }
+
+            tutorialPanel.Open(tutorial);
+            session.MarkDayEventConsumed(key);
+            Log("Painel do Dia " + session.day + " aberto: " + tutorial.name);
         }
 
         private void Log(string message)

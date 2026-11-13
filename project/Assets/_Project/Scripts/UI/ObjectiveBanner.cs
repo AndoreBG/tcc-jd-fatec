@@ -7,8 +7,8 @@ namespace Whispers
     /// <summary>
     /// Objetivo do Dia no canto da tela (plano §10.3).
     ///
-    /// Aparece no começo do Dia com o texto autorado no `DayFlowDefinition`, faz fade in,
-    /// espera e sai. Não bloqueia input e não pausa nada: é lembrete, não interrupção.
+    /// Exibe o objetivo autorado após o rádio e o mantém até Hide ou a saída da cena.
+    /// Não bloqueia input e não pausa nada.
     ///
     /// Usa tempo não escalado para não depender de `timeScale`, como o resto da interface
     /// de cena.
@@ -22,8 +22,8 @@ namespace Whispers
         [Tooltip("Duração do fade de entrada e de saída, em segundos reais.")]
         [Min(0f)] [SerializeField] private float fadeSeconds = 0.4f;
 
-        [Tooltip("Tempo com o objetivo na tela depois do fade de entrada.")]
-        [Min(0f)] [SerializeField] private float holdSeconds = 5f;
+        // Mantido para compatibilidade com cenas já serializadas; não limita a exibição.
+        [HideInInspector] [SerializeField] private float holdSeconds = 5f;
 
         private Coroutine _routine;
 
@@ -67,11 +67,7 @@ namespace Whispers
         private IEnumerator ShowRoutine()
         {
             yield return FadeTo(1f);
-            yield return WaitUnscaled(holdSeconds);
-            yield return FadeTo(0f);
-
-            if (label != null) label.text = string.Empty;
-            if (group != null) group.alpha = 0f;
+            // O objetivo permanece visível durante o Dia, até Hide ou a cena terminar.
             _routine = null;
         }
 

@@ -1203,3 +1203,65 @@ O menu `Criar tabela do Dia` também passou a chamar o mesmo passo, então uma t
 Chaves e parênteses balanceados nos três arquivos C# tocados; `objectiveText` não existe mais em nenhum ponto do projeto; `ObjectiveDefinition` tem `[CreateAssetMenu]` no padrão `Whispers/Day/Objective`; os campos escritos pelo menu (`entries[].objective`) conferem com o `DayFlowEntry`.
 
 O que só o Editor responde: se o `DisplayText` com duas linhas cabe no banner em 880x140 no canto superior esquerdo, e se o texto de duas linhas não colide com o HUD.
+
+---
+
+## 26. M9 parte 2 — painel de tutorial e fechamento de pendências (2026-11-11)
+
+O §24 deixou o painel de tutorial em aberto por dois motivos: o rádio já ensina os verbos e mexer no fechamento do Dia é mexer no caminho mais sensível do ciclo. A saída foi construir o painel **sem trocar nada**: ele existe como peça pronta e desligada, e quem encerra o Dia continua sendo o `DayEndConfirmationController`.
+
+### 26.1 O que entrou
+
+| Arquivo | O que é |
+|---|---|
+| `Scripts/Day/TutorialPanelDefinition.cs` | novo: conteúdo do painel (`tutorialId`, `title`, `body`, `proceedLabel`, `illustration`, `endPeriodOnProceed`) |
+| `Scripts/UI/TutorialPanelController.cs` | novo: painel que bloqueia o cenário, abre por definição e pede o fim do Dia no "Prosseguir" |
+| `Scripts/Day/DayFlowDefinition.cs` | `DayFlowEntry.tutorial` e validação do painel |
+| `Scripts/Day/DayFlowController.cs` | `OpenTutorial()` público, uma vez por Dia |
+| `Editor/DayFlowSetup.cs` | menu `Criar painel de tutorial` (35), `Canvas_Tutorial` e `TUTORIAL_Dia1..4` |
+
+### 26.2 Por que gatilho por UnityEvent e não automático
+
+O plano §10.5 listava gatilhos por Dia: pegar a lanterna, entrar numa porta, posicionar o lampião. Implementar isso em código exigiria assinar eventos de interação, evento que o `InteractionManager` não emite hoje, e amarraria a narrativa a três condições específicas que nem existem como conteúdo ainda.
+
+O projeto já tinha a resposta: o `DayEndConfirmationController` abre por UnityEvent de hotspot. O painel seguiu o mesmo caminho:
+
+```text
+hotspot.onActivated → DayFlowController.OpenTutorial()
+                         └─ resolve o painel do Dia na tabela
+                            respeita "uma vez por Dia"
+                            abre o TutorialPanelController
+```
+
+Assim o gatilho é autorado na cena, como todo o resto, e o código não precisa saber se o Dia 2 começa numa porta, num lampião ou numa nota no chão.
+
+### 26.3 A marca de "já mostrei"
+
+A chave é `tutorial_<dia>_<tutorialId>`, gravada em `MarkDayEventConsumed` — o mesmo mecanismo que impede o rádio de tocar duas vezes. Ele é transitório e limpo na troca de período, então cada Dia tem sua própria memória de painéis.
+
+### 26.4 As duas regras de bloqueio
+
+O painel usa `InputBlockReason.Cutscene`, e não `Modal`: o rádio também usa `Cutscene`, e os dois nunca deveriam estar abertos ao mesmo tempo. Se estiverem, a contagem por motivo evita que o segundo fechamento libere a entrada do primeiro.
+
+O bloqueio é removido **antes** de `TryRequestPeriodEnd`. Isso não é detalhe de estilo: `RequestPeriodEnd` exige a entrada livre, e pedir com bloqueio ativo resulta em recusa silenciosa. O `DayEndConfirmationController` já fazia assim, e a razão está registrada no comentário dele.
+
+### 26.5 O que foi decidido de vez
+
+**Dia 4 sem exploração.** A tabela passa a nascer com `requiredNavigationsBeforeRadio = 0` no Dia 4, e 3 nos outros. Antes o campo nascia em 3 em todos e o Dia 4 dependia de o usuário editar à mão.
+
+**Limpeza de legado.** `RADIO_EventoDia.asset` foi apagado (não referenciado desde os quatro Dias) e `GameCycleDefinition.worldCutsceneScene` foi removido do script e do `CYCLE_Gameplay.asset`, porque ficou inerte depois que a cutscene saiu (§23).
+
+### 26.6 O que continua em aberto
+
+Só o desenho do fim do Dia: **botão do `DayEndConfirmationController` ou painel com "Prosseguir"?** As duas peças funcionam e as duas pedem o fim do período do mesmo jeito. O risco novo, registrado no estado atual, é ligar as duas na mesma cena e o jogador receber dois pedidos.
+
+### 26.7 Validação
+
+Chaves e parênteses balanceados nos cinco arquivos C#, incluindo os 711 linhas do menu de editor. Os campos que o menu escreve (`panel`, `group`, `titleLabel`, `bodyLabel`, `illustrationImage`, `proceedButton`, `proceedLabel`, `fallbackDefinition`, `tutorialPanel`) conferem com as declarações nos componentes. Nenhuma referência a `worldCutsceneScene` ou `RADIO_EventoDia` sobrou no projeto.
+
+O que só o Editor responde: se o `Canvas_Tutorial` em 180 fica acima do banner (150) e abaixo da VN (200), se o `Dim` com alpha 0,88 come o clique do cenário como esperado, e se o botão "Prosseguir" responde ao clique com o painel aberto.
+
+
+## 27. Correção: objetivo após o rádio
+
+O objetivo aguarda o evento `Finished` da VN antes de aparecer; o banner permanece visível até ser ocultado ou a cena ser descarregada. Se não houver rádio com linhas ou componente de rádio, ou se o evento já tiver sido consumido, o objetivo aparece na inicialização. Caso o rádio exija navegações, o objetivo aguarda essas navegações e o término da transmissão. Se o rádio avançar diretamente para a Noite, não há retorno ao Dia e o evento de conclusão não é emitido. Nenhuma execução no Unity foi validada neste ambiente.

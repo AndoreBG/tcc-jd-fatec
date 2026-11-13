@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db472038a11e484fbfaa95e3950a7c4f, type: 3}
+  m_Name: TUTORIAL_Dia2
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.TutorialPanelDefinition
+  tutorialId: tutorial_dia_2
+  title: Como enfrentar o Predator
+  body: "O Predator aparecer\xE1 em ambas as portas: porta da sala e porta da cozinha.\nPara
+    enfrenta-lo, voc\xEA deve identificar em qual porta ele est\xE1 e ir at\xE9 a
+    porta. Ao se aproximar da porta, voc\xEA deve manter o bot\xE3o esquerdo do mouse
+    pressionado na ma\xE7aneta para segurar a porta."
+  proceedLabel: Prosseguir
+  illustration: {fileID: 0}
+  endPeriodOnProceed: 1

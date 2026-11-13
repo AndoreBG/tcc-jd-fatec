@@ -25,6 +25,9 @@ namespace Whispers
         [Tooltip("Rádio deste Dia. Vazio = nenhum rádio no Dia.")]
         public RadioEventDefinition radioEvent;
 
+        [Tooltip("Painel de tutorial deste Dia. Vazio = nenhum painel. Abre pelo dia, uma vez por Dia.")]
+        public TutorialPanelDefinition tutorial;
+
         // Não existe "advanceToNightAfterRadio" aqui: quem decide o fim do Dia é o
         // returnMode do próprio RadioEventDefinition (§13), e duplicar a decisão abriria
         // espaço para os dois discordarem.
@@ -82,6 +85,11 @@ namespace Whispers
 
                 if (entry.day < 1) errors.Add("Dia inválido: " + entry.day + ".");
                 if (!seen.Add(entry.day)) errors.Add("Dia repetido: " + entry.day + ".");
+                if (entry.tutorial == null)
+                    warnings.Add("Dia " + entry.day + " sem painel de tutorial.");
+                else if (!entry.tutorial.HasContent)
+                    warnings.Add("Dia " + entry.day + " com painel de tutorial vazio (" + entry.tutorial.name + ").");
+
                 if (entry.radioEvent == null)
                     warnings.Add("Dia " + entry.day + " sem rádio: o Dia passa sem transmissão.");
                 else if (!entry.radioEvent.HasLines)
