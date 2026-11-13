@@ -241,6 +241,13 @@ namespace Whispers
         {
             GameSessionManager session = Session;
             if (session == null) { Log("OpenTutorial sem sessão."); return; }
+            // Também protege chamadas manuais por UnityEvent, não só o gatilho automático.
+            if (session.period != GamePeriod.Day ||
+                (session.day == 3 && (!session.HasFact("LampPlacedInAttic") || !session.HasItem("item_oleo"))))
+            {
+                Log("Tutorial indisponível: no Dia 3 é necessário posicionar o lampião e ter o óleo.");
+                return;
+            }
 
             DayFlowEntry entry = EntryForDay(session.day);
             TutorialPanelDefinition tutorial = entry != null ? entry.tutorial : null;

@@ -43,7 +43,9 @@ namespace Whispers
             if (icon != null)
             {
                 icon.sprite = item != null ? item.icon : null;
-                icon.color = found ? Color.white : new Color(1f, 1f, 1f, 0.25f);
+                // Item descoberto mas sem quantidade (ex.: lampião já posicionado)
+                // continua reconhecível, porém não parece disponível para arraste.
+                icon.color = quantity > 0 ? Color.white : new Color(1f, 1f, 1f, found ? 0.4f : 0.25f);
             }
             if (quantityText != null)
                 quantityText.text = quantity > 1 ? quantity.ToString() : string.Empty;

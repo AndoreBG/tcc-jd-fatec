@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.UI;
+using TMPro;
 
 namespace Whispers
 {
@@ -39,6 +40,11 @@ namespace Whispers
         [SerializeField] private GameObject optionsPanel;
         [Tooltip("Botão que fecha o painel de opções (Back_Button).")]
         [SerializeField] private Button optionsCloseButton;
+
+        [Header("Exibição")]
+        [SerializeField] private TMP_Dropdown displayModeDropdown;
+        [SerializeField] private TMP_Dropdown resolutionDropdown;
+        [SerializeField] private Image displayModeOldLabel;
 
         [Header("Confirmação de Sobrescrita de Save")]
         [SerializeField] private GameObject overwriteModal;
@@ -84,6 +90,10 @@ namespace Whispers
             {
                 Session.SetCycle(cycleDefinition);
             }
+
+            var audioSettings = optionsPanel != null ? optionsPanel.GetComponent<AudioSettingsController>() : null;
+            if (audioSettings != null) audioSettings.LoadAndApplySettings();
+            gameObject.AddComponent<DisplaySettingsController>().Initialize(displayModeDropdown, resolutionDropdown, displayModeOldLabel);
 
             ValidateReferences();
             EnsureButtonAudioSource();

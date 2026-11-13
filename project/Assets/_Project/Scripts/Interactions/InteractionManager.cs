@@ -46,6 +46,9 @@ namespace Whispers
                 InteractionDefinition definition = hotspot.Definition;
                 ExecuteResults(definition.results);
                 MarkDone(definition);
+                // Reavalia o próprio hotspot depois do registro, mesmo se ele ainda não
+                // estiver inscrito no evento Changed do estado de cena.
+                hotspot.RevalidateConditions();
                 if (definition.sfx != null)
                 {
                     if (Scene != null && Scene.Audio != null) Scene.Audio.PlayInteraction(definition.sfx);

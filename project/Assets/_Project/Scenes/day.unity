@@ -2174,7 +2174,6 @@ MonoBehaviour:
   repeatPolicy: 1
   conditionPolicy: 0
   conditions:
-  - {fileID: 11400000, guid: 2badb9d5f7671eb418210a6495bbdd04, type: 2}
   - {fileID: 11400000, guid: c560c62cdfa4495ab318c1654192aa2c, type: 2}
   unavailableMode: 0
   dwellDuration: 0.6
@@ -2218,14 +2217,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.08}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -137070959, guid: 834cc2bad60638942a605831b4e54078, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -3514,6 +3513,138 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 602125288}
   m_CullTransparentMesh: 1
+--- !u!1 &607594713
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 607594714}
+  - component: {fileID: 607594718}
+  - component: {fileID: 607594717}
+  - component: {fileID: 607594716}
+  - component: {fileID: 607594715}
+  m_Layer: 0
+  m_Name: Hotspot_ToolLampiao_Sotao
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &607594714
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 607594713}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 643792125}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.28, y: 0.35}
+  m_AnchorMax: {x: 0.28, y: 0.35}
+  m_AnchoredPosition: {x: 0, y: -0.46}
+  m_SizeDelta: {x: 1.35, y: 1.1}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &607594715
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 607594713}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aaed81c3e333fc646810168d0d1983bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.ToolHotspot
+  enabledForGameplay: 1
+  activationMode: 2
+  repeatPolicy: 1
+  conditionPolicy: 0
+  conditions:
+  - {fileID: 11400000, guid: 4183641d13114b5e885cc6d721de4a72, type: 2}
+  unavailableMode: 0
+  dwellDuration: 0.6
+  visualGroup: {fileID: 607594716}
+  dwellProgressImage: {fileID: 0}
+  feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
+  onActivated:
+    m_PersistentCalls:
+      m_Calls: []
+  onUnavailable:
+    m_PersistentCalls:
+      m_Calls: []
+  onBlockedHint:
+    m_PersistentCalls:
+      m_Calls: []
+  acceptedTools:
+  - {fileID: 11400000, guid: 57859b8afd044fbd8bccbabb5193ba2b, type: 2}
+  successDefinition: {fileID: 11400000, guid: 03c27906ee3c49e191915558a26dd555, type: 2}
+  onToolSucceeded:
+    m_PersistentCalls:
+      m_Calls: []
+  onToolFailed:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!225 &607594716
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 607594713}
+  m_Enabled: 1
+  m_Alpha: 0
+  m_Interactable: 0
+  m_BlocksRaycasts: 0
+  m_IgnoreParentGroups: 0
+--- !u!114 &607594717
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 607594713}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.08}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 1
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &607594718
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 607594713}
+  m_CullTransparentMesh: 1
 --- !u!1 &608545107
 GameObject:
   m_ObjectHideFlags: 0
@@ -3983,6 +4114,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 800003201}
+  - {fileID: 607594714}
   m_Father: {fileID: 1307167312}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -4703,6 +4835,7 @@ MonoBehaviour:
   conditionPolicy: 0
   conditions:
   - {fileID: 11400000, guid: f64d3de6f6ffd164aaa6ab87c083b4a7, type: 2}
+  - {fileID: 11400000, guid: 8ecac991287820642b2303854daaf102, type: 2}
   unavailableMode: 0
   dwellDuration: 0.6
   visualGroup: {fileID: 800003014}
@@ -4828,6 +4961,7 @@ MonoBehaviour:
   conditionPolicy: 0
   conditions:
   - {fileID: 11400000, guid: f64d3de6f6ffd164aaa6ab87c083b4a7, type: 2}
+  - {fileID: 11400000, guid: 74a9b519ec2b4a14b864a61dd63714d5, type: 2}
   unavailableMode: 0
   dwellDuration: 0.6
   visualGroup: {fileID: 800003044}
@@ -11048,10 +11182,9 @@ MonoBehaviour:
   toggleKey: 98
   closeKey: 27
   slotDefinitions:
-  - {fileID: 11400000, guid: 619a97cf7d678574f9db15e0185f005d, type: 2}
-  - {fileID: 11400000, guid: 9d78f77d96524154090e8b87e03eb69e, type: 2}
-  - {fileID: 11400000, guid: e60016f542eb8c0478c74406089ece24, type: 2}
-  - {fileID: 11400000, guid: 2cf41b99174f28f4b9f8bf6b2d58170b, type: 2}
+  - {fileID: 11400000, guid: fccbf921489b45c29f33dc488eb32584, type: 2}
+  - {fileID: 11400000, guid: 7e8b902e9b8e4cb2838ddf2698d196f5, type: 2}
+  - {fileID: 11400000, guid: b8a184bc9cbe43bbb837d3be0509894f, type: 2}
   slotUIPrefab: {fileID: 2536439944915200308, guid: 2a2aba0eed33bbd428fe606735eb48ae, type: 3}
   slotsRoot: {fileID: 486776253}
   slotSpacing: 16
@@ -12085,7 +12218,6 @@ MonoBehaviour:
   repeatPolicy: 1
   conditionPolicy: 0
   conditions:
-  - {fileID: 11400000, guid: 2badb9d5f7671eb418210a6495bbdd04, type: 2}
   - {fileID: 11400000, guid: 987b368f671f4f918cc0fa1278aab2dc, type: 2}
   unavailableMode: 0
   dwellDuration: 0.6
@@ -12129,14 +12261,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.08}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 3959959563155154859, guid: b9f5f4826c37c014aaab95b33ccb46e5, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1

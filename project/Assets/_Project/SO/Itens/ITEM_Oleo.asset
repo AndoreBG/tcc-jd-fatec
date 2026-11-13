@@ -15,6 +15,6 @@ MonoBehaviour:
   id: item_oleo
   displayName: "Recipiente com \xD3leo"
   description: "\xC9 inflam\xE1vel."
-  icon: {fileID: 0}
+  icon: {fileID: 3959959563155154859, guid: b9f5f4826c37c014aaab95b33ccb46e5, type: 3}
   isTool: 0
   consumesOnUse: 0

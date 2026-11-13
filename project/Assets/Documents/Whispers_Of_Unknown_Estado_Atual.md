@@ -1,5 +1,7 @@
 # Whispers from the Unknown — estado da implementação
 
+> Mochila do Dia: na cena examinada havia quatro slots antigos, ícones de lampião/óleo vazios e nenhum alvo de posicionamento no sótão. O menu `Whispers > Mochila > Configurar mochila e alvo do lampião` prepara os três slots e o alvo; exige execução e validação no Unity. O tutorial do Dia 3 requer óleo e o fato de lampião posicionado.
+
 > Rádio: desde esta atualização, cada transmissão configurada inicia automaticamente após o boot do Dia, sem exigir navegações. A tabela antiga mantém o campo de navegações apenas para compatibilidade; ele é ignorado. O objetivo continua aparecendo depois do rádio.
 
 > Tutoriais: o menu `Whispers > Dia > Configurar tutoriais e conclusão` limita os hotspots básicos ao Dia 1 e remove a chamada legada de confirmação apenas na coleta da lanterna. O fluxo automático apresenta os painéis ao concluir os objetivos dos Dias 1 a 3; requer executar o menu e testar no Unity.

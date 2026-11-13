@@ -14,6 +14,8 @@ namespace Whispers.EditorTools
     {
         private const string ScenePath = "Assets/_Project/Scenes/day.unity";
         private const string ConditionPath = "Assets/_Project/SO/Conditions/COND_SomenteDia1.asset";
+        private const string ClickDonePath = "Assets/_Project/SO/Conditions/COND_TutorialCliquesNaoLido.asset";
+        private const string MovementDonePath = "Assets/_Project/SO/Conditions/COND_TutorialMovimentacaoNaoLido.asset";
         private const string UndoName = "Configurar tutoriais do Dia";
 
         [MenuItem("Whispers/Dia/Configurar tutoriais e conclusão", priority = 38)]
@@ -42,6 +44,10 @@ namespace Whispers.EditorTools
                 var lantern = FindUnique(hotspots, "Hotspot_PegarLanterna", "Assets/_Project/SO/Interactions/INT_PegarLanterna.asset", false);
                 ValidateHotspot(clicks);
                 ValidateHotspot(movement);
+                ValidateTutorialInteraction(clicks, "Assets/_Project/SO/Interactions/INT_TUTORIAL_Cliques.asset");
+                ValidateTutorialInteraction(movement, "Assets/_Project/SO/Interactions/INT_TUTORIAL_Movimentacao.asset");
+                ValidateUnreadCondition(ClickDonePath, clicks.Definition.id);
+                ValidateUnreadCondition(MovementDonePath, movement.Definition.id);
                 if (flows.Count != 1 || panels.Count != 1 || !panels[0].enabled || !panels[0].gameObject.activeInHierarchy)
                     throw new InvalidOperationException("A cena deve ter um DayFlowController e um TutorialPanelController ativo; confira a montagem da cena.");
                 var panelSo = new SerializedObject(panels[0]);
@@ -71,10 +77,14 @@ namespace Whispers.EditorTools
                     AssetDatabase.SaveAssets();
                 }
 
+                InteractionDoneCondition clicksUnread = EnsureUnreadCondition(ClickDonePath, clicks.Definition.id);
+                InteractionDoneCondition movementUnread = EnsureUnreadCondition(MovementDonePath, movement.Definition.id);
+                AssetDatabase.SaveAssets();
+
                 int group = Undo.GetCurrentGroup();
                 Undo.SetCurrentGroupName(UndoName);
-                ConfigureHotspot(clicks, day1);
-                ConfigureHotspot(movement, day1);
+                ConfigureHotspot(clicks, day1, clicksUnread);
+                ConfigureHotspot(movement, day1, movementUnread);
                 Undo.RecordObject(flows[0], UndoName);
                 flowSo.FindProperty("tutorialPanel").objectReferenceValue = panels[0];
                 flowSo.ApplyModifiedProperties();
@@ -82,7 +92,7 @@ namespace Whispers.EditorTools
                 Undo.CollapseUndoOperations(group);
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorUtility.DisplayDialog("Tutoriais configurados",
-                    "Os dois tutoriais básicos ficam visíveis somente no Dia 1.\n" +
+                    "Os dois tutoriais básicos ficam visíveis somente no Dia 1 e somem após a interação.\n" +
                     "O painel de conclusão é acionado pelo fluxo do Dia.\n" +
                     "Chamadas antigas de confirmação removidas da lanterna: " + removed + ".\n\n" +
                     "Salve a cena (Ctrl+S). Confira os textos dos painéis e teste os três Dias em Play Mode.", "OK");
@@ -120,24 +130,53 @@ namespace Whispers.EditorTools
             }
         }
 
-        private static void ConfigureHotspot(InteractionHotspot hotspot, DayAtLeastCondition day1)
+        private static void ValidateTutorialInteraction(InteractionHotspot hotspot, string path)
+        {
+            InteractionDefinition expected = AssetDatabase.LoadAssetAtPath<InteractionDefinition>(path);
+            if (hotspot.Definition != expected || string.IsNullOrWhiteSpace(expected.id))
+                throw new InvalidOperationException(hotspot.name + " não aponta para a interação esperada com ID válido: " + path);
+        }
+
+        private static void ValidateUnreadCondition(string path, string interactionId)
+        {
+            var condition = AssetDatabase.LoadAssetAtPath<InteractionDoneCondition>(path);
+            if (condition == null && AssetDatabase.LoadMainAssetAtPath(path) != null)
+                throw new InvalidOperationException("Outro asset ocupa " + path);
+            if (condition != null && (condition.interactionId != interactionId || condition.expectTrue))
+                throw new InvalidOperationException("Condição de interação existente divergente: " + path);
+        }
+
+        private static InteractionDoneCondition EnsureUnreadCondition(string path, string interactionId)
+        {
+            var condition = AssetDatabase.LoadAssetAtPath<InteractionDoneCondition>(path);
+            if (condition != null) return condition;
+            condition = ScriptableObject.CreateInstance<InteractionDoneCondition>();
+            condition.interactionId = interactionId;
+            condition.expectTrue = false;
+            AssetDatabase.CreateAsset(condition, path);
+            return condition;
+        }
+
+        private static void ConfigureHotspot(InteractionHotspot hotspot, DayAtLeastCondition day1, InteractionDoneCondition unread)
         {
             Undo.RecordObject(hotspot, UndoName);
             var so = new SerializedObject(hotspot);
             so.FindProperty("conditionPolicy").enumValueIndex = (int)HotspotConditionPolicy.All;
             so.FindProperty("unavailableMode").enumValueIndex = (int)HotspotUnavailableMode.Hidden;
             var conditions = so.FindProperty("conditions");
-            bool exists = false;
-            for (int i = 0; i < conditions.arraySize; i++)
-                if (conditions.GetArrayElementAtIndex(i).objectReferenceValue == day1) exists = true;
-            if (!exists)
-            {
-                int index = conditions.arraySize;
-                conditions.InsertArrayElementAtIndex(index);
-                conditions.GetArrayElementAtIndex(index).objectReferenceValue = day1;
-            }
+            AddCondition(conditions, day1);
+            AddCondition(conditions, unread);
             so.ApplyModifiedProperties();
             EditorUtility.SetDirty(hotspot);
+        }
+
+        private static void AddCondition(SerializedProperty conditions, HotspotConditionSO condition)
+        {
+            for (int i = 0; i < conditions.arraySize; i++)
+                if (conditions.GetArrayElementAtIndex(i).objectReferenceValue == condition) return;
+            int index = conditions.arraySize;
+            conditions.InsertArrayElementAtIndex(index);
+            conditions.GetArrayElementAtIndex(index).objectReferenceValue = condition;
         }
 
         private static int RemoveLanternLegacyConfirmation(InteractionHotspot lantern)

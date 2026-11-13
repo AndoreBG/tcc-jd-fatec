@@ -257,13 +257,11 @@ namespace Whispers
             Canvas host = HostCanvas;
             if (host == null) return false;
 
-            Vector3[] corners = new Vector3[4];
-            panel.GetWorldCorners(corners);
-            float topY = corners[1].y; // topo do painel (world space do canvas)
-
-            RectTransformUtility.ScreenPointToWorldPointInRectangle(
-                (RectTransform)host.transform, Input.mousePosition, host.worldCamera, out Vector3 world);
-            return world.y > topY + _dragSlot.exitThreshold;
+            // O limiar é autorado em unidades locais de UI, não em unidades de mundo.
+            Camera camera = host.renderMode == RenderMode.ScreenSpaceOverlay ? null : host.worldCamera;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(panel, Input.mousePosition, camera, out Vector2 local))
+                return false;
+            return local.y > panel.rect.yMax + _dragSlot.exitThreshold;
         }
 
         /// <summary>Ferramenta saiu da mochila: modal desce animado; o arraste continua.</summary>
@@ -287,6 +285,14 @@ namespace Whispers
                 CancelDrag();
                 return;
             }
+
+            // Se o jogador soltou antes de terminar a animação, o bloqueio Modal da
+            // mochila ainda estaria ativo e o InteractionManager recusaria o drop.
+            // Fechamos a mochila primeiro, removendo apenas o bloqueio que ela própria criou.
+            if (_animRoutine != null) { StopCoroutine(_animRoutine); _animRoutine = null; }
+            if (panel != null) panel.anchoredPosition = new Vector2(panel.anchoredPosition.x, closedY);
+            RemoveModalReason();
+            RestoreMixAfterModal();
 
             ToolHotspot target = FindToolHotspotUnderMouse();
             if (target != null)

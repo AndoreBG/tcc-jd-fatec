@@ -15,6 +15,6 @@ MonoBehaviour:
   id: item_lampiao
   displayName: "Lampi\xE3o"
   description: "Lampi\xE3o a querosene. Deve ser posicionado no s\xF3t\xE3o."
-  icon: {fileID: 0}
+  icon: {fileID: -137070959, guid: 834cc2bad60638942a605831b4e54078, type: 3}
   isTool: 1
   consumesOnUse: 0
