@@ -2976,6 +2976,7 @@ GameObject:
   - component: {fileID: 679983717}
   - component: {fileID: 679983722}
   - component: {fileID: 679983723}
+  - component: {fileID: 679983724}
   m_Layer: 0
   m_Name: Manager_Entities
   m_TagString: Untagged
@@ -3105,8 +3106,7 @@ MonoBehaviour:
   litSprite: {fileID: -137070959, guid: 834cc2bad60638942a605831b4e54078, type: 3}
   outSprite: {fileID: -137070959, guid: 834cc2bad60638942a605831b4e54078, type: 3}
   brokenSprite: {fileID: -137070959, guid: 834cc2bad60638942a605831b4e54078, type: 3}
-  dimTargets:
-  - {fileID: 321398329}
+  dimTargets: []
   dimColor: {r: 0.02, g: 0.02, b: 0.03, a: 1}
   dimMaxAlpha: 0.85
   dimPower: 1.6
@@ -3116,6 +3116,21 @@ MonoBehaviour:
   lampAudioSource: {fileID: 1434832009}
   burnLoopClip: {fileID: 0}
   burnLoopVolume: 1
+--- !u!114 &679983724
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 679983715}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf370a020c12477db0e4662c130f70ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.NightAtticVisibility
+  lamp: {fileID: 766002262}
+  refillHotspot: {fileID: 1085713413}
+  exhausterVisual: {fileID: 1745199583}
 --- !u!1 &744285985
 GameObject:
   m_ObjectHideFlags: 0
@@ -4815,6 +4830,7 @@ GameObject:
   - component: {fileID: 1085713416}
   - component: {fileID: 1085713415}
   - component: {fileID: 1085713414}
+  - component: {fileID: 1085713419}
   m_Layer: 0
   m_Name: Hotspot_ReabastecerLampiao
   m_TagString: Untagged
@@ -4850,19 +4866,7 @@ MonoBehaviour:
   cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 679983723}
-        m_TargetAssemblyTypeName: Whispers.StairLampController, Assembly-CSharp
-        m_MethodName: RelightFromInteraction
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
   onUnavailable:
     m_PersistentCalls:
       m_Calls: []
@@ -4939,6 +4943,21 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -0.4}
   m_SizeDelta: {x: 5, y: 6}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1085713419
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1085713413}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f61dbf9090d4b469c487fdf51c1f39e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.LampRefillHold
+  hotspot: {fileID: 1085713414}
+  lamp: {fileID: 679983723}
+  secondsToFill: 5
 --- !u!1 &1095692868
 GameObject:
   m_ObjectHideFlags: 0
@@ -7884,6 +7903,81 @@ MonoBehaviour:
   m_FirstSelected: {fileID: 0}
   m_sendNavigationEvents: 1
   m_DragThreshold: 10
+--- !u!1 &1745199583
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1745199584}
+  - component: {fileID: 1745199586}
+  - component: {fileID: 1745199585}
+  m_Layer: 0
+  m_Name: Exhauster_Atras_Lampiao
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1745199584
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1745199583}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1748129333}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0.3, y: 2.84}
+  m_SizeDelta: {x: 7, y: 7}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1745199585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1745199583}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 859473799527238769, guid: 64f1a17593cdb5345a9cb1ed20c1d676, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 1
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1745199586
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1745199583}
+  m_CullTransparentMesh: 1
 --- !u!1 &1748129332
 GameObject:
   m_ObjectHideFlags: 0
@@ -7912,12 +8006,13 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1745199584}
   - {fileID: 766002263}
   m_Father: {fileID: 2043306672}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -0.17999983, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1775992737
@@ -8970,6 +9065,9 @@ MonoBehaviour:
   darknessEnabled: 1
   darknessColor: {r: 0, g: 0, b: 0, a: 0.9843137}
   darknessMaterial: {fileID: 21000000, guid: 431c36749d824a159ad44a4c2eb00611, type: 2}
+  stairLamp: {fileID: 679983723}
+  lampMaxRadius: 550
+  lampMinRadiusFactor: 0.3
 --- !u!114 &1960000010
 MonoBehaviour:
   m_ObjectHideFlags: 0

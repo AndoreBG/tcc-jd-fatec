@@ -21,6 +21,7 @@ namespace Whispers.EditorTests
                 RunBurn(ref passed);
                 RunGrace(ref passed);
                 RunRelight(ref passed);
+                RunIncrementalRefill(ref passed);
                 RunNormalized(ref passed);
                 RunValidation(ref passed);
                 Debug.Log("[Exhauster] " + passed + " verificações do lampião passaram.");
@@ -29,6 +30,21 @@ namespace Whispers.EditorTests
             {
                 Debug.LogError("[Exhauster] Falha inesperada nos testes do lampião: " + exception);
             }
+        }
+
+        private static void RunIncrementalRefill(ref int passed)
+        {
+            LampMaintenanceConfig config = DefaultConfig();
+            LampMaintenanceState lamp = LampMaintenanceState.Begin(config);
+            LampMaintenanceMath.Step(ref lamp, config, false, 10f);
+            Check(LampMaintenanceMath.Refill(ref lamp, config, 1f, 5f), "Abastecimento parcial aceito", ref passed);
+            Check(lamp.lit && Mathf.Approximately(lamp.burnRemaining, 2f), "Um segundo abastece 20%", ref passed);
+            LampMaintenanceMath.Step(ref lamp, config, false, 1f);
+            Check(Mathf.Approximately(lamp.burnRemaining, 1f), "Queima continua após soltar", ref passed);
+            Check(LampMaintenanceMath.Refill(ref lamp, config, 20f, 5f), "Abastecimento longo aceito", ref passed);
+            Check(Mathf.Approximately(lamp.burnRemaining, 10f), "Carga limitada ao máximo", ref passed);
+            lamp.terminal = true;
+            Check(!LampMaintenanceMath.Refill(ref lamp, config, 1f, 5f), "Terminal impede abastecer", ref passed);
         }
 
         private static void RunBurn(ref int passed)
@@ -160,7 +176,8 @@ namespace Whispers.EditorTests
 
             List<string> errors = new List<string>();
             entry.CollectValidation(errors, null);
-            Check(errors.Count == 1, "Entrada sem definição é recusada", ref passed);
+            Check(!entry.IsConfigured && errors.Count == 0,
+                "Entrada sem definição fica desativada sem gerar erro", ref passed);
 
             ExhausterDefinition definition = ScriptableObject.CreateInstance<ExhausterDefinition>();
             definition.entityId = "exhauster";
@@ -168,6 +185,19 @@ namespace Whispers.EditorTests
             try
             {
                 entry.definition = definition;
+
+                entry.active = false;
+                errors = new List<string>();
+                entry.CollectValidation(errors, null);
+                Check(!entry.IsConfigured && errors.Count == 0,
+                    "Entrada inativa fica desativada sem gerar erro", ref passed);
+                entry.active = true;
+
+                definition.entityId = "";
+                errors = new List<string>();
+                entry.CollectValidation(errors, null);
+                Check(errors.Count == 1, "Definição ativa sem identificador é recusada", ref passed);
+                definition.entityId = "exhauster";
 
                 errors = new List<string>();
                 entry.CollectValidation(errors, null);

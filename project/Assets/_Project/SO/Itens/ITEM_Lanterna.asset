@@ -15,6 +15,6 @@ MonoBehaviour:
   id: item_lanterna
   displayName: "Lanterna de D\xEDnamo"
   description: "N\xE3o precisa de bateria e utiliza luz Hal\xF3gena."
-  icon: {fileID: -2320329584465383960, guid: 7e3ba469c71a8c541abd70acf3d01614, type: 3}
+  icon: {fileID: -5400509523208916458, guid: 68d45a1c28de34a4f96b0bebbe75ba8a, type: 3}
   isTool: 0
   consumesOnUse: 0

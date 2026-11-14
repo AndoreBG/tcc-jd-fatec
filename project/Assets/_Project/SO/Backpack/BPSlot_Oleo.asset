@@ -15,6 +15,6 @@ MonoBehaviour:
   acceptedItem: {fileID: 11400000, guid: 83ac078b656ea554ba5b01b8ef29ad77, type: 2}
   maxQuantity: 1
   slotSize: {x: 120, y: 120}
-  slotBackground: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  slotBackground: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
   dragEnabled: 0
   exitThreshold: 60

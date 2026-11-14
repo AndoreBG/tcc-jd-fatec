@@ -55,14 +55,14 @@ MonoBehaviour:
     predatorStruggleVariationPercent: 20
     predatorRecoverBelowClosedPercent: 40
     predatorDeathBelowClosedPercent: 20
-    predatorHoldOpenSpeed: 8
-    predatorReleaseOpenSpeed: 8
+    predatorHoldOpenSpeed: 12
+    predatorReleaseOpenSpeed: 16
     predatorRecoverCloseSpeed: 12
     predatorWobbleSpeed: 50
     predatorBangIntervalSeconds: 2
     predatorBangExtraPixels: 250
     predatorBangShoveSeconds: 0.1
-    predatorBangShakeIntensity: 3
+    predatorBangShakeIntensity: 2
     voyeurLightContactRequiredSeconds: 2
   exhauster:
     active: 1

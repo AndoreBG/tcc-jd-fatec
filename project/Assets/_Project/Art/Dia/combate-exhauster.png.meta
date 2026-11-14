@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 7e3ba469c71a8c541abd70acf3d01614
+guid: 325e8e20bf4aba048bc601b91c76568c
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -2320329584465383960
-    second: lanterna_0
+      213: -1551702413298637915
+    second: combate-exhauster_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,23 +126,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: lanterna_0
+      name: combate-exhauster_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 512
-        height: 512
+        x: 434
+        y: 79
+        width: 1000
+        height: 1000
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 8ed6c1c59888ccfd0800000000000000
-      internalID: -2320329584465383960
+      spriteID: 5a3e73a50ee377ae0800000000000000
+      internalID: -1551702413298637915
       vertices: []
       indices: 
       edges: []
@@ -151,7 +151,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: d3c7cf6fa602bd14283acce771bb393b
     internalID: 0
     vertices: []
     indices: 
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      lanterna_0: -2320329584465383960
+      combate-exhauster_0: -1551702413298637915
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

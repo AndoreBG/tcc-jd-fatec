@@ -21,11 +21,13 @@ Shader "Whispers/VHSOverlay"
             float hash(float2 p) { return frac(sin(dot(p, float2(127.1,311.7))) * 43758.5453); }
             fixed4 frag(v2f i) : SV_Target
             {
-                float scan = 0.5 + 0.5 * sin(i.uv.y * _ScreenParams.y * 3.14159);
-                float noise = hash(floor(i.uv * float2(420, 240)) + floor(_Time.y * 8.0));
-                float trackingBand = exp(-abs(frac(i.uv.y - _Time.y * 0.015) - 0.5) * 95.0);
-                float alpha = 0.018 + scan * 0.015 + (1.0 - noise) * 0.012 + trackingBand * 0.012;
-                return fixed4(0.025, 0.027, 0.035, alpha);
+                // Bandas e grão animados, mais visíveis sem capturar a tela.
+                float scan = 0.5 + 0.5 * sin(i.uv.y * _ScreenParams.y * 1.5707963);
+                float noise = hash(floor(i.uv * float2(460, 260)) + floor(_Time.y * 12.0));
+                float trackingBand = exp(-abs(frac(i.uv.y - _Time.y * 0.035) - 0.5) * 110.0);
+                float vignette = saturate(length((i.uv - 0.5) * float2(1.25, 1.05)) * 1.5 - 0.55);
+                float alpha = 0.025 + scan * 0.095 + (1.0 - noise) * 0.045 + trackingBand * 0.07 + vignette * 0.08;
+                return fixed4(0.025, 0.03, 0.045, saturate(alpha));
             }
             ENDCG
         }

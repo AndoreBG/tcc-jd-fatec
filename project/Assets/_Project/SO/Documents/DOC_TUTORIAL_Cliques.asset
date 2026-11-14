@@ -17,7 +17,8 @@ MonoBehaviour:
   body: "Mova o cursor pela casa e observe a mudan\xE7a dele: quando vira m\xE3o,
     algo pode ser pego; quando vira seta, voc\xEA vai se mover.\n\nClique com o bot\xE3o
     esquerdo do mouse para examinar, pegar ou abrir. Nas portas e nas bordas da tela
-    existem setas que levam a outros pontos de vista: o corredor liga todos os c\xF4modos.\n\nDocumentos
+    existem setas que levam a outros pontos de vista: o corredor liga todos os c\xF4modos.\n\nPressione
+    B para abrir a mochila. Todos os itens que voc\xEA pegar, ficar\xE3o salvos.\n\nDocumentos
     abrem sobre a tela e fecham com ESC.\n\nObjetivo do dia: encontre a lanterna
     antes de anoitecer."
   image: {fileID: 0}

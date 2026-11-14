@@ -1190,6 +1190,18 @@ namespace Whispers
             return true;
         }
 
+        /// <summary>Adiciona carga incremental durante o botão pressionado.</summary>
+        public bool TryRefillStairLamp(float heldSeconds, float secondsToFill)
+        {
+            if (!_initialized || !_exhausterEnabled || !_running || _sixAmHandled ||
+                _terminalActive || _lampState.terminal || _exhausterTerminalActive || IsPausedByDebug)
+                return false;
+            bool wasLit = _lampState.lit;
+            if (!LampMaintenanceMath.Refill(ref _lampState, _lampConfig, heldSeconds, secondsToFill)) return false;
+            if (!wasLit) _lampRelightCount++;
+            return true;
+        }
+
         /// <summary>Fotografia do lampião para apresentação e F8. Nunca altera estado.</summary>
         public bool TryGetLampSnapshot(out LampRuntimeSnapshot snapshot)
         {

@@ -19,5 +19,5 @@ MonoBehaviour:
     o lampi\xE3o, voc\xEA recarrega o compartimento de \xF3leo, que \xE9 o que mantem
     o lampi\xE3o aceso."
   proceedLabel: Prosseguir
-  illustration: {fileID: 0}
+  illustration: {fileID: -1551702413298637915, guid: 325e8e20bf4aba048bc601b91c76568c, type: 3}
   endPeriodOnProceed: 1

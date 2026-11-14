@@ -41,6 +41,9 @@ namespace Whispers
         private static readonly int DarknessIntensityId = Shader.PropertyToID("_LanternLightIntensity");
         private static readonly int LightTexId = Shader.PropertyToID("_LanternTex");
         private static readonly int LightTexUVId = Shader.PropertyToID("_LanternTexUV");
+        private static readonly int LampCenterId = Shader.PropertyToID("_LampDarknessCenter");
+        private static readonly int LampSizeId = Shader.PropertyToID("_LampDarknessSize");
+        private static readonly int LampIntensityId = Shader.PropertyToID("_LampLightIntensity");
 
         [Header("Configuração")]
         [Tooltip("Sprite do halo de luz (gradiente radial). Vazio = gerado proceduralmente em runtime. "
@@ -70,6 +73,14 @@ namespace Whispers
         [Tooltip("Material da camada de escuridão (shader 'Whispers/UI/LanternDarkness'). "
                + "Vazio = localiza o shader em runtime via Shader.Find.")]
         [SerializeField] private Material darknessMaterial;
+
+        [Header("Luz do lampião do sótão")]
+        [Tooltip("Controlador do lampião da Noite; vazio desativa a luz fixa.")]
+        [SerializeField] private StairLampController stairLamp;
+        [Tooltip("Raio máximo no Canvas de interface, com o lampião cheio.")]
+        [Min(1f)] [SerializeField] private float lampMaxRadius = 550f;
+        [Tooltip("Fração mínima do raio enquanto resta alguma carga.")]
+        [Range(0f, 1f)] [SerializeField] private float lampMinRadiusFactor = 0.3f;
 
         private Image _halo;
         private Image _darkness;
@@ -365,6 +376,39 @@ namespace Whispers
 
             if (darknessActive && _darknessMat != null)
                 _darknessMat.SetVector(DarknessCenterId, localPoint);
+        }
+
+        // A luz fixa e a luz do cursor compartilham o mesmo material de escuridão.
+        // LateUpdate acompanha a câmera e o parallax após seus movimentos do frame.
+        private void LateUpdate()
+        {
+            if (_darknessMat == null) return;
+            _darknessMat.SetFloat(LampIntensityId, 0f);
+            if (!_visible || _darkness == null || !_darkness.isActiveAndEnabled || stairLamp == null) return;
+            RectTransform source = stairLamp.LightSource;
+            LampRuntimeSnapshot snapshot;
+            if (source == null || !source.gameObject.activeInHierarchy ||
+                !stairLamp.TryGetSnapshot(out snapshot) || !snapshot.configured ||
+                !snapshot.lit || snapshot.broken) return;
+
+            float intensity = Mathf.Clamp01(snapshot.burnNormalized);
+            if (intensity <= 0.001f) return;
+            Canvas sourceCanvas = source.GetComponentInParent<Canvas>();
+            RectTransform destination = targetCanvas != null ? targetCanvas.transform as RectTransform : null;
+            if (sourceCanvas == null || destination == null) return;
+            Camera sourceCamera = ResolveCanvasCamera(sourceCanvas);
+            if (sourceCanvas.renderMode != RenderMode.ScreenSpaceOverlay && sourceCamera == null) return;
+            Vector3 worldCenter = source.TransformPoint(source.rect.center);
+            if (sourceCamera != null && sourceCamera.WorldToViewportPoint(worldCenter).z <= 0f) return;
+            Vector2 screen = RectTransformUtility.WorldToScreenPoint(sourceCamera, worldCenter);
+            Camera destinationCamera = ResolveCanvasCamera(targetCanvas);
+            Vector2 canvasPoint;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(destination, screen, destinationCamera, out canvasPoint)) return;
+
+            float radius = Mathf.Max(1f, lampMaxRadius) * Mathf.Lerp(Mathf.Clamp01(lampMinRadiusFactor), 1f, intensity);
+            _darknessMat.SetVector(LampCenterId, canvasPoint);
+            _darknessMat.SetFloat(LampSizeId, radius * 2f);
+            _darknessMat.SetFloat(LampIntensityId, intensity);
         }
 
         private void OnDestroy()

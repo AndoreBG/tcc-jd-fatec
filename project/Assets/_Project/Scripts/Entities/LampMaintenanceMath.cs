@@ -123,6 +123,22 @@ namespace Whispers
             return events;
         }
 
+        /// <summary>Adiciona carga proporcional ao tempo segurado, sem ultrapassar o máximo.</summary>
+        public static bool Refill(ref LampMaintenanceState state, LampMaintenanceConfig config,
+            float heldSeconds, float secondsToFill)
+        {
+            if (state.terminal || heldSeconds <= 0f || secondsToFill <= 0f || config.burnSeconds <= 0f)
+                return false;
+            float added = config.burnSeconds * heldSeconds / secondsToFill;
+            // Enquanto aceso a queima continua. Compensa-a para que vazio->cheio leve
+            // aproximadamente secondsToFill, independentemente do tempo de queima.
+            if (state.lit) added += heldSeconds;
+            state.burnRemaining = Mathf.Min(config.burnSeconds, Mathf.Max(0f, state.burnRemaining) + added);
+            state.lit = true;
+            state.darkRemaining = 0f;
+            return true;
+        }
+
         /// <summary>Fração de chama restante (0 = apagado, 1 = cheio). Base do escurecimento.</summary>
         public static float BurnNormalized(in LampMaintenanceState state, LampMaintenanceConfig config)
         {

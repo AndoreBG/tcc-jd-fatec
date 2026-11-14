@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: TUTORIAL_Dia4
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.TutorialPanelDefinition
   tutorialId: tutorial_dia_4
-  title: 
-  body: 
+  title: Ultima noite
+  body: "Essa \xE9 a ultima noite desenvolvida. Todos os inimigos est\xE3o mais perigosos.\n\nBoa
+    sorte!"
   proceedLabel: Prosseguir
   illustration: {fileID: 0}
   endPeriodOnProceed: 1

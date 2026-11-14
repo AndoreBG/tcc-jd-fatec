@@ -125,6 +125,20 @@ namespace Whispers
             _lastRelightCount = snapshot.relightCount;
         }
 
+        /// <summary>Posição visual autorada para o recorte de luz no shader da lanterna.</summary>
+        public RectTransform LightSource => lampImage != null ? lampImage.rectTransform : null;
+
+        public bool TryRefillHeld(float seconds, float secondsToFill)
+        {
+            if (_director == null) Bind();
+            if (_director == null) return false;
+            ExhausterDefinition definition = _director.ExhausterDefinitionForPresentation;
+            string item = definition != null ? definition.requiredRelightItemId : requiredItemId;
+            GameSessionManager session = GameSessionManager.Instance;
+            if (!string.IsNullOrWhiteSpace(item) && (session == null || !session.HasItem(item))) return false;
+            return _director.TryRefillStairLamp(seconds, secondsToFill);
+        }
+
         private float TargetDimAlpha(in LampRuntimeSnapshot snapshot)
         {
             if (!snapshot.lit) return dimMaxAlpha;

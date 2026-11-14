@@ -32,6 +32,9 @@ Shader "Whispers/UI/LanternDarkness"
         _LanternDarknessCenter ("Lantern Center (Canvas)", Vector) = (960,540,0,0)
         _LanternDarknessSize ("Lit Diameter (Canvas)", Float) = 800
         _LanternLightIntensity ("Light Intensity", Range(0,1)) = 1
+        _LampDarknessCenter ("Lamp Center (Canvas)", Vector) = (0,0,0,0)
+        _LampDarknessSize ("Lamp Lit Diameter (Canvas)", Float) = 1
+        _LampLightIntensity ("Lamp Light Intensity", Range(0,1)) = 0
 
         _StencilComp ("Stencil Comparison", Float) = 8
         _Stencil ("Stencil ID", Float) = 0
@@ -113,6 +116,9 @@ Shader "Whispers/UI/LanternDarkness"
             float4 _LanternDarknessCenter;
             float  _LanternDarknessSize;
             float  _LanternLightIntensity;
+            float4 _LampDarknessCenter;
+            float  _LampDarknessSize;
+            float  _LampLightIntensity;
 
             v2f vert(appdata_t v)
             {
@@ -142,8 +148,16 @@ Shader "Whispers/UI/LanternDarkness"
                 float2 lightUV = _LanternTexUV.xy + saturate(haloUV) * _LanternTexUV.zw;
                 float lightAlpha = tex2D(_LanternTex, lightUV).a * inside;
 
-                // Luz = alpha do sprite × carga da bateria; escuridão é o complemento.
-                float darknessMask = saturate(1.0 - lightAlpha * _LanternLightIntensity);
+                // Segunda fonte: mesma máscara do halo, projetada na posição do lampião.
+                float2 lampUV = (IN.worldPosition.xy - _LampDarknessCenter.xy)
+                              / max(_LampDarknessSize, 0.0001) + 0.5;
+                float2 lampEdge = step(0.0, lampUV) * step(lampUV, 1.0);
+                float2 lampTextureUV = _LanternTexUV.xy + saturate(lampUV) * _LanternTexUV.zw;
+                float lampAlpha = tex2D(_LanternTex, lampTextureUV).a * lampEdge.x * lampEdge.y;
+                float lanternLight = lightAlpha * _LanternLightIntensity;
+                float lampLight = lampAlpha * _LampLightIntensity;
+                // União das fontes: uma não escurece a outra, sem somar além de 100%.
+                float darknessMask = 1.0 - saturate(max(lanternLight, lampLight));
 
                 half4 color = (tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd) * IN.color;
                 color.a *= darknessMask;
