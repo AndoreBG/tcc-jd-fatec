@@ -8,6 +8,37 @@ namespace Whispers
     // Inicializado pelo menu, mesmo enquanto o painel de opções estiver desativado.
     public class DisplaySettingsController : MonoBehaviour
     {
+        private static TMP_FontAsset specialEliteFont;
+        private static bool fontLookupAttempted;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetFontCache()
+        {
+            specialEliteFont = null;
+            fontLookupAttempted = false;
+        }
+
+        private static TMP_FontAsset SpecialEliteFont()
+        {
+            if (fontLookupAttempted) return specialEliteFont;
+            fontLookupAttempted = true;
+            specialEliteFont = Resources.Load<TMP_FontAsset>("Fonts/SpecialElite SDF");
+            if (specialEliteFont == null)
+                Debug.LogWarning("[Special Elite] Asset TMP ausente; execute Whispers > Interface > Aplicar fonte Special Elite.");
+            return specialEliteFont;
+        }
+
+        private static void ApplySpecialElite(TMP_Text text)
+        {
+            TMP_FontAsset font = SpecialEliteFont();
+            if (text != null && font != null && text.font != font) text.font = font;
+        }
+
+        private static void ApplyDropdownFont(GameObject root)
+        {
+            foreach (TMP_Text text in root.GetComponentsInChildren<TMP_Text>(true)) ApplySpecialElite(text);
+        }
+
         private const string WidthKey = "Display_Width";
         private const string HeightKey = "Display_Height";
         private const string ModeKey = "Display_Mode";
@@ -36,6 +67,9 @@ namespace Whispers
                 Debug.LogError("[DisplaySettingsController] Seletores de exibição não configurados.", this);
                 return;
             }
+            // Os dropdowns clonam seus templates quando abertos; atualize também textos inativos.
+            ApplyDropdownFont(mode.gameObject);
+            ApplyDropdownFont(resolution.gameObject);
             CreateModeLabel(oldLabel, mode.captionText);
             mode.ClearOptions();
             mode.AddOptions(new List<string> { "Tela Cheia", "Tela Cheia em Janela", "Janela" });
@@ -111,6 +145,7 @@ namespace Whispers
             rect.sizeDelta = new Vector2(270, 70);
             var label = labelObject.GetComponent<TextMeshProUGUI>();
             if (style != null) { label.font = style.font; label.color = style.color; }
+            ApplySpecialElite(label);
             label.text = "";
             label.fontSize = 26;
             label.enableAutoSizing = true;

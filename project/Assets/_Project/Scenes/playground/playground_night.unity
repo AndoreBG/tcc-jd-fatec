@@ -258,6 +258,8 @@ MonoBehaviour:
   visualGroup: {fileID: 0}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -451,6 +453,8 @@ MonoBehaviour:
   visualGroup: {fileID: 0}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -565,6 +569,8 @@ MonoBehaviour:
   visualGroup: {fileID: 0}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -679,6 +685,8 @@ MonoBehaviour:
   visualGroup: {fileID: 0}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -1078,6 +1086,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ParallaxLayer
   multiplier: 1
   scale: 1
+  axisMultiplier: {x: 1, y: 1}
+  useViewNodeProfileIntensity: 1
+  localIntensity: 0.3
+  maxOffset: {x: 0, y: 0}
+  ignoreParallaxAndCameraPan: 0
 --- !u!1 &352498855
 GameObject:
   m_ObjectHideFlags: 0
@@ -1195,8 +1208,10 @@ MonoBehaviour:
   cycleDefinition: {fileID: 11400000, guid: 78640dafc1f5af647995893fbb625887, type: 2}
   backpack: {fileID: 1914810880}
   lantern: {fileID: 2024472449}
+  dayFlow: {fileID: 0}
   globalSettings: {fileID: 11400000, guid: 981a7ab0623904d47a8b7c957e0e4bd1, type: 2}
   feedbackAudioSource: {fileID: 0}
+  tooltip: {fileID: 0}
 --- !u!4 &391696333
 Transform:
   m_ObjectHideFlags: 0
@@ -1653,6 +1668,8 @@ MonoBehaviour:
   visualGroup: {fileID: 0}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -1759,6 +1776,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ParallaxLayer
   multiplier: 0.4
   scale: 1
+  axisMultiplier: {x: 1, y: 1}
+  useViewNodeProfileIntensity: 1
+  localIntensity: 0.3
+  maxOffset: {x: 0, y: 0}
+  ignoreParallaxAndCameraPan: 0
 --- !u!114 &727662547
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1914,6 +1936,8 @@ MonoBehaviour:
   visualGroup: {fileID: 848701245}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls:
@@ -2176,6 +2200,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ParallaxLayer
   multiplier: 0.4
   scale: 1
+  axisMultiplier: {x: 1, y: 1}
+  useViewNodeProfileIntensity: 1
+  localIntensity: 0.3
+  maxOffset: {x: 0, y: 0}
+  ignoreParallaxAndCameraPan: 0
 --- !u!114 &895748987
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2320,6 +2349,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ParallaxLayer
   multiplier: 1
   scale: 1
+  axisMultiplier: {x: 1, y: 1}
+  useViewNodeProfileIntensity: 1
+  localIntensity: 0.3
+  maxOffset: {x: 0, y: 0}
+  ignoreParallaxAndCameraPan: 0
 --- !u!1 &953035625
 GameObject:
   m_ObjectHideFlags: 0
@@ -2372,6 +2406,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ParallaxLayer
   multiplier: 1
   scale: 1
+  axisMultiplier: {x: 1, y: 1}
+  useViewNodeProfileIntensity: 1
+  localIntensity: 0.3
+  maxOffset: {x: 0, y: 0}
+  ignoreParallaxAndCameraPan: 0
 --- !u!1 &960819037
 GameObject:
   m_ObjectHideFlags: 0
@@ -2431,8 +2470,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "+++++T\xEDtulo+++++"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e6ed1331e1fc98a47a6e36d901e30c13, type: 2}
+  m_sharedMaterial: {fileID: -6154018322158180345, guid: e6ed1331e1fc98a47a6e36d901e30c13, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2569,6 +2608,8 @@ MonoBehaviour:
   visualGroup: {fileID: 0}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -2697,6 +2738,8 @@ MonoBehaviour:
   visualGroup: {fileID: 1022764829}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -2805,6 +2848,8 @@ MonoBehaviour:
   visualGroup: {fileID: 0}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -2919,6 +2964,8 @@ MonoBehaviour:
   visualGroup: {fileID: 0}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -3086,6 +3133,8 @@ MonoBehaviour:
   visualGroup: {fileID: 0}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -3192,6 +3241,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ParallaxLayer
   multiplier: 0.4
   scale: 1
+  axisMultiplier: {x: 1, y: 1}
+  useViewNodeProfileIntensity: 1
+  localIntensity: 0.3
+  maxOffset: {x: 0, y: 0}
+  ignoreParallaxAndCameraPan: 0
 --- !u!114 &1140852575
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3335,6 +3389,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ParallaxLayer
   multiplier: 0.4
   scale: 1
+  axisMultiplier: {x: 1, y: 1}
+  useViewNodeProfileIntensity: 1
+  localIntensity: 0.3
+  maxOffset: {x: 0, y: 0}
+  ignoreParallaxAndCameraPan: 0
 --- !u!114 &1141776312
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3425,6 +3484,13 @@ MonoBehaviour:
   targetCanvas: {fileID: 1393504266}
   halogenRadius: 240
   halogenColor: {r: 1, g: 0.93, b: 0.75, a: 0.55}
+  dischargeMinRadiusFactor: 0.35
+  darknessEnabled: 0
+  darknessColor: {r: 0, g: 0, b: 0, a: 0.93}
+  darknessMaterial: {fileID: 0}
+  stairLamp: {fileID: 0}
+  lampMaxRadius: 550
+  lampMinRadiusFactor: 0.3
 --- !u!1 &1229143608
 GameObject:
   m_ObjectHideFlags: 0
@@ -3564,6 +3630,8 @@ MonoBehaviour:
   visualGroup: {fileID: 0}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -3678,6 +3746,8 @@ MonoBehaviour:
   visualGroup: {fileID: 0}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -3784,6 +3854,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ParallaxLayer
   multiplier: 0.4
   scale: 1
+  axisMultiplier: {x: 1, y: 1}
+  useViewNodeProfileIntensity: 1
+  localIntensity: 0.3
+  maxOffset: {x: 0, y: 0}
+  ignoreParallaxAndCameraPan: 0
 --- !u!114 &1352748518
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4061,6 +4136,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ParallaxLayer
   multiplier: 0.4
   scale: 1
+  axisMultiplier: {x: 1, y: 1}
+  useViewNodeProfileIntensity: 1
+  localIntensity: 0.3
+  maxOffset: {x: 0, y: 0}
+  ignoreParallaxAndCameraPan: 0
 --- !u!114 &1483051159
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4173,6 +4253,8 @@ MonoBehaviour:
   visualGroup: {fileID: 1518205166}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -4273,6 +4355,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ParallaxLayer
   multiplier: 1
   scale: 1
+  axisMultiplier: {x: 1, y: 1}
+  useViewNodeProfileIntensity: 1
+  localIntensity: 0.3
+  maxOffset: {x: 0, y: 0}
+  ignoreParallaxAndCameraPan: 0
 --- !u!1 &1575671111
 GameObject:
   m_ObjectHideFlags: 0
@@ -4434,6 +4521,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ParallaxLayer
   multiplier: 1
   scale: 1
+  axisMultiplier: {x: 1, y: 1}
+  useViewNodeProfileIntensity: 1
+  localIntensity: 0.3
+  maxOffset: {x: 0, y: 0}
+  ignoreParallaxAndCameraPan: 0
 --- !u!1 &1678400538
 GameObject:
   m_ObjectHideFlags: 0
@@ -4488,6 +4580,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ParallaxLayer
   multiplier: 1
   scale: 1
+  axisMultiplier: {x: 1, y: 1}
+  useViewNodeProfileIntensity: 1
+  localIntensity: 0.3
+  maxOffset: {x: 0, y: 0}
+  ignoreParallaxAndCameraPan: 0
 --- !u!1 &1682985210
 GameObject:
   m_ObjectHideFlags: 0
@@ -4539,6 +4636,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ParallaxLayer
   multiplier: 1
   scale: 1
+  axisMultiplier: {x: 1, y: 1}
+  useViewNodeProfileIntensity: 1
+  localIntensity: 0.3
+  maxOffset: {x: 0, y: 0}
+  ignoreParallaxAndCameraPan: 0
 --- !u!1 &1695456208
 GameObject:
   m_ObjectHideFlags: 0
@@ -4599,6 +4701,8 @@ MonoBehaviour:
   visualGroup: {fileID: 0}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -4851,6 +4955,8 @@ MonoBehaviour:
   visualGroup: {fileID: 1717743715}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -4959,6 +5065,8 @@ MonoBehaviour:
   visualGroup: {fileID: 0}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -5136,6 +5244,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ParallaxLayer
   multiplier: 1
   scale: 1
+  axisMultiplier: {x: 1, y: 1}
+  useViewNodeProfileIntensity: 1
+  localIntensity: 0.3
+  maxOffset: {x: 0, y: 0}
+  ignoreParallaxAndCameraPan: 0
 --- !u!1 &1764266116
 GameObject:
   m_ObjectHideFlags: 0
@@ -5196,6 +5309,8 @@ MonoBehaviour:
   visualGroup: {fileID: 0}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -5378,6 +5493,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ParallaxLayer
   multiplier: 0.4
   scale: 1
+  axisMultiplier: {x: 1, y: 1}
+  useViewNodeProfileIntensity: 1
+  localIntensity: 0.3
+  maxOffset: {x: 0, y: 0}
+  ignoreParallaxAndCameraPan: 0
 --- !u!114 &1797552136
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5468,6 +5588,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ParallaxLayer
   multiplier: 0.4
   scale: 1
+  axisMultiplier: {x: 1, y: 1}
+  useViewNodeProfileIntensity: 1
+  localIntensity: 0.3
+  maxOffset: {x: 0, y: 0}
+  ignoreParallaxAndCameraPan: 0
 --- !u!114 &1818433990
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5573,8 +5698,8 @@ MonoBehaviour:
     Teste TESTE Teste TESTE Teste TESTE Teste TESTE Teste TESTE Teste TESTE Teste
     TESTE Teste TESTE Teste TESTE Teste TESTE Teste TESTE Teste TESTE '
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e6ed1331e1fc98a47a6e36d901e30c13, type: 2}
+  m_sharedMaterial: {fileID: -6154018322158180345, guid: e6ed1331e1fc98a47a6e36d901e30c13, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -5758,7 +5883,224 @@ MonoBehaviour:
   predatorController: {fileID: 1900000021}
   voyeurController: {fileID: 1900000023}
   gameOverController: {fileID: 1900000022}
+  exhausterController: {fileID: 0}
   debugInitialSeed: 0
+--- !u!114 &1900000020
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1900000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3cda1d6dc19d60cc2535f80b172a66dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.EntityPresentationCoordinator
+--- !u!114 &1900000021
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1900000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f09aa28888fd061836a1c5419d57bb92, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.PredatorController
+  entityId: predator
+--- !u!114 &1900000022
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1900000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1b55e03dbf61de75b25aec4dff66c6c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.NightGameOverController
+  overlayRoot: {fileID: 0}
+  fullscreenImage: {fileID: 0}
+  fallbackAudioSource: {fileID: 0}
+  failureRequestRetryTimeoutSeconds: 10
+--- !u!114 &1900000023
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1900000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15aabbccddeeff001122334455667788, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.VoyeurController
+  entityId: voyeur
+--- !u!114 &1900000030
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 568243455}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a9df7d5ccd18f6bf38e135cc5cc15d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.EntityVisualBinding
+  entityDefinition: {fileID: 11400000, guid: b84bd0b69db5b1f7e67d00a7811c59ce, type: 2}
+  anchorDefinition: {fileID: 11400000, guid: 18c98a1870536ac72f037eb057cd84b6, type: 2}
+  states: 02000000030000000400000006000000
+  presentationRoot: {fileID: 0}
+  encounterRegion: {fileID: 1384918681}
+  onShown:
+    m_PersistentCalls:
+      m_Calls: []
+  onHidden:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &1900000031
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1575671111}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a9df7d5ccd18f6bf38e135cc5cc15d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.EntityVisualBinding
+  entityDefinition: {fileID: 11400000, guid: b84bd0b69db5b1f7e67d00a7811c59ce, type: 2}
+  anchorDefinition: {fileID: 11400000, guid: 23f1397608231551c076ab075559a1d7, type: 2}
+  states: 02000000030000000400000006000000
+  presentationRoot: {fileID: 0}
+  encounterRegion: {fileID: 2078167562}
+  onShown:
+    m_PersistentCalls:
+      m_Calls: []
+  onHidden:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &1900000032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 559245014}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a9df7d5ccd18f6bf38e135cc5cc15d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.EntityVisualBinding
+  entityDefinition: {fileID: 11400000, guid: 8c8f3c7979b83788f9153d34420a531e, type: 2}
+  anchorDefinition: {fileID: 11400000, guid: 51836ea708df5237b41bee5057837225, type: 2}
+  states: 02000000030000000400000006000000
+  presentationRoot: {fileID: 0}
+  encounterRegion: {fileID: 1900000040}
+  onShown:
+    m_PersistentCalls:
+      m_Calls: []
+  onHidden:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &1900000033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 534372619}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a9df7d5ccd18f6bf38e135cc5cc15d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Whispers.EntityVisualBinding
+  entityDefinition: {fileID: 11400000, guid: 8c8f3c7979b83788f9153d34420a531e, type: 2}
+  anchorDefinition: {fileID: 11400000, guid: f32a7a03aa7657f29c786ba0e274a37e, type: 2}
+  states: 02000000030000000400000006000000
+  presentationRoot: {fileID: 0}
+  encounterRegion: {fileID: 1900000041}
+  onShown:
+    m_PersistentCalls:
+      m_Calls: []
+  onHidden:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!1 &1900000034
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1900000040}
+  m_Layer: 0
+  m_Name: __ENT_VoyeurRegion_Sala
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!1 &1900000035
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1900000041}
+  m_Layer: 0
+  m_Name: __ENT_VoyeurRegion_Corredor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1900000040
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1900000034}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 215251833}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -0.05, y: 0.9}
+  m_SizeDelta: {x: 2.7, y: 3.5}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!224 &1900000041
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1900000035}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 244853524}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 1.12}
+  m_SizeDelta: {x: 2.2, y: 2.9}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1910583649
 GameObject:
   m_ObjectHideFlags: 0
@@ -6077,6 +6419,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ParallaxLayer
   multiplier: 1
   scale: 1
+  axisMultiplier: {x: 1, y: 1}
+  useViewNodeProfileIntensity: 1
+  localIntensity: 0.3
+  maxOffset: {x: 0, y: 0}
+  ignoreParallaxAndCameraPan: 0
 --- !u!1 &2011482711
 GameObject:
   m_ObjectHideFlags: 0
@@ -6202,6 +6549,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.LanternController
   dischargeDuration: 3
+  voyeurBattleDrainMultiplier: 2
   rechargeKey: 32
   chargePerTap: 0.25
   dynamoAudioClip: {fileID: 0}
@@ -6279,8 +6627,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Pressione E para sair...
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e6ed1331e1fc98a47a6e36d901e30c13, type: 2}
+  m_sharedMaterial: {fileID: -6154018322158180345, guid: e6ed1331e1fc98a47a6e36d901e30c13, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -6488,6 +6836,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Whispers.ParallaxLayer
   multiplier: 0.4
   scale: 1
+  axisMultiplier: {x: 1, y: 1}
+  useViewNodeProfileIntensity: 1
+  localIntensity: 0.3
+  maxOffset: {x: 0, y: 0}
+  ignoreParallaxAndCameraPan: 0
 --- !u!114 &2121596877
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6586,6 +6939,8 @@ MonoBehaviour:
   visualGroup: {fileID: 0}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -6700,6 +7055,8 @@ MonoBehaviour:
   visualGroup: {fileID: 0}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -6814,6 +7171,8 @@ MonoBehaviour:
   visualGroup: {fileID: 0}
   dwellProgressImage: {fileID: 0}
   feedbackProfile: {fileID: 0}
+  cursorSkin: {fileID: 0}
+  cursorSkinHotspot: {x: 16, y: 16}
   onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -6862,239 +7221,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2139291573}
   m_CullTransparentMesh: 1
-
---- !u!114 &1900000020
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1900000001}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3cda1d6dc19d60cc2535f80b172a66dc, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::Whispers.EntityPresentationCoordinator
---- !u!114 &1900000021
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1900000001}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f09aa28888fd061836a1c5419d57bb92, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::Whispers.PredatorController
-  entityId: predator
---- !u!114 &1900000022
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1900000001}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f1b55e03dbf61de75b25aec4dff66c6c, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::Whispers.NightGameOverController
-  overlayRoot: {fileID: 0}
-  fullscreenImage: {fileID: 0}
-  fallbackAudioSource: {fileID: 0}
-  failureRequestRetryTimeoutSeconds: 10
---- !u!114 &1900000030
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 568243455}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7a9df7d5ccd18f6bf38e135cc5cc15d1, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::Whispers.EntityVisualBinding
-  entityDefinition: {fileID: 11400000, guid: b84bd0b69db5b1f7e67d00a7811c59ce, type: 2}
-  anchorDefinition: {fileID: 11400000, guid: 18c98a1870536ac72f037eb057cd84b6, type: 2}
-  states:
-  - 2
-  - 3
-  - 4
-  - 6
-  presentationRoot: {fileID: 0}
-  encounterRegion: {fileID: 1384918681}
-  onShown:
-    m_PersistentCalls:
-      m_Calls: []
-  onHidden:
-    m_PersistentCalls:
-      m_Calls: []
---- !u!114 &1900000031
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1575671111}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7a9df7d5ccd18f6bf38e135cc5cc15d1, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::Whispers.EntityVisualBinding
-  entityDefinition: {fileID: 11400000, guid: b84bd0b69db5b1f7e67d00a7811c59ce, type: 2}
-  anchorDefinition: {fileID: 11400000, guid: 23f1397608231551c076ab075559a1d7, type: 2}
-  states:
-  - 2
-  - 3
-  - 4
-  - 6
-  presentationRoot: {fileID: 0}
-  encounterRegion: {fileID: 2078167562}
-  onShown:
-    m_PersistentCalls:
-      m_Calls: []
-  onHidden:
-    m_PersistentCalls:
-      m_Calls: []
---- !u!114 &1900000023
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1900000001}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 15aabbccddeeff001122334455667788, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::Whispers.VoyeurController
-  entityId: voyeur
---- !u!114 &1900000032
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 559245014}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7a9df7d5ccd18f6bf38e135cc5cc15d1, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::Whispers.EntityVisualBinding
-  entityDefinition: {fileID: 11400000, guid: 8c8f3c7979b83788f9153d34420a531e, type: 2}
-  anchorDefinition: {fileID: 11400000, guid: 51836ea708df5237b41bee5057837225, type: 2}
-  states:
-  - 2
-  - 3
-  - 4
-  - 6
-  presentationRoot: {fileID: 0}
-  encounterRegion: {fileID: 1900000040}
-  onShown:
-    m_PersistentCalls:
-      m_Calls: []
-  onHidden:
-    m_PersistentCalls:
-      m_Calls: []
---- !u!114 &1900000033
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 534372619}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7a9df7d5ccd18f6bf38e135cc5cc15d1, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::Whispers.EntityVisualBinding
-  entityDefinition: {fileID: 11400000, guid: 8c8f3c7979b83788f9153d34420a531e, type: 2}
-  anchorDefinition: {fileID: 11400000, guid: f32a7a03aa7657f29c786ba0e274a37e, type: 2}
-  states:
-  - 2
-  - 3
-  - 4
-  - 6
-  presentationRoot: {fileID: 0}
-  encounterRegion: {fileID: 1900000041}
-  onShown:
-    m_PersistentCalls:
-      m_Calls: []
-  onHidden:
-    m_PersistentCalls:
-      m_Calls: []
---- !u!1 &1900000034
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1900000040}
-  m_Layer: 0
-  m_Name: __ENT_VoyeurRegion_Sala
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1900000040
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1900000034}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 215251833}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.05, y: 0.9}
-  m_SizeDelta: {x: 2.7, y: 3.5}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!1 &1900000035
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1900000041}
-  m_Layer: 0
-  m_Name: __ENT_VoyeurRegion_Corredor
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1900000041
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1900000035}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 244853524}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 1.12}
-  m_SizeDelta: {x: 2.2, y: 2.9}
-  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

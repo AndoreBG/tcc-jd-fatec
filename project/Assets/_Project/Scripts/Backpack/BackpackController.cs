@@ -22,6 +22,21 @@ namespace Whispers
     /// </summary>
     public class BackpackController : MonoBehaviour
     {
+        // Auto-contido: não depende de outro script para compilar.
+        private static void ApplySlotFonts(GameObject root)
+        {
+            TMPro.TMP_FontAsset font = Resources.Load<TMPro.TMP_FontAsset>("Fonts/SpecialElite SDF");
+            if (font == null)
+                Debug.LogWarning("[Special Elite] Asset TMP ausente; execute Whispers > Interface > Aplicar fonte Special Elite.");
+            else
+                foreach (TMPro.TMP_Text text in root.GetComponentsInChildren<TMPro.TMP_Text>(true))
+                    if (text.font != font) text.font = font;
+            Font legacy = Resources.Load<Font>("Fonts/SpecialElite-Regular");
+            if (legacy != null)
+                foreach (UnityEngine.UI.Text text in root.GetComponentsInChildren<UnityEngine.UI.Text>(true))
+                    if (text.font != legacy) text.font = legacy;
+        }
+
         [Header("Teclas (Input Manager legado)")]
         [Tooltip("Tecla que abre/fecha a Backpack (somente durante o Dia).")]
         [SerializeField] private KeyCode toggleKey = KeyCode.B;
@@ -364,6 +379,7 @@ namespace Whispers
             {
                 BackpackSlotDefinition def = slotDefinitions[i];
                 BackpackSlotUI ui = Instantiate(slotUIPrefab, slotsRoot);
+                ApplySlotFonts(ui.gameObject);
 
                 RectTransform rt = (RectTransform)ui.transform;
                 float width = def != null ? def.slotSize.x : 90f;

@@ -102,7 +102,23 @@ namespace Whispers
 
         private void OnDisable() { ReleasePause(); }
 
+        private Font _specialEliteGuiFont;
+
         private void OnGUI()
+        {
+            if (_specialEliteGuiFont == null)
+                _specialEliteGuiFont = Resources.Load<Font>("Fonts/SpecialElite-Regular");
+            GUISkin skin = GUI.skin;
+            Font previous = skin.font;
+            try
+            {
+                if (_specialEliteGuiFont != null) skin.font = _specialEliteGuiFont;
+                DrawGui();
+            }
+            finally { skin.font = previous; }
+        }
+
+        private void DrawGui()
         {
             if (scene == null || Session == null) return;
             if (!_open)

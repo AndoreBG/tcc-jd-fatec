@@ -242,6 +242,9 @@ namespace Whispers
 
             TextMeshProUGUI text = textObject.AddComponent<TextMeshProUGUI>();
             text.font = TMP_Settings.defaultFontAsset;
+            TMP_FontAsset specialElite = Resources.Load<TMP_FontAsset>("Fonts/SpecialElite SDF");
+            if (specialElite != null) text.font = specialElite;
+            else Debug.LogWarning("[Special Elite] Asset TMP ausente; execute Whispers > Interface > Aplicar fonte Special Elite.");
             text.text = value;
             text.fontSize = size;
             text.color = color;
